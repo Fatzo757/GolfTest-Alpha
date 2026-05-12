@@ -1197,7 +1197,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
         )}
       </AnimatePresence>
       
-      <Chat gameId={gameId} userId={userId || ''} user={user} />
+      <Chat gameId={gameId} userId={userId || ''} user={user} token={token} />
     </div>
     </LayoutGroup>
     </motion.div>

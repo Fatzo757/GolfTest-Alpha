@@ -18,9 +18,10 @@ interface ChatProps {
   gameId: string;
   userId: string;
   user: User;
+  token: string;
 }
 
-export function Chat({ gameId, userId, user }: ChatProps) {
+export function Chat({ gameId, userId, user, token }: ChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -28,10 +29,8 @@ export function Chat({ gameId, userId, user }: ChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = async () => {
-    if (!gameId) return;
+    if (!gameId || !token) return;
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
       const res = await fetch(`/api/games/${gameId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -71,11 +70,10 @@ export function Chat({ gameId, userId, user }: ChatProps) {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || loading) return;
+    if (!newMessage.trim() || loading || !token) return;
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       await fetch(`/api/games/${gameId}/messages`, {
         method: 'POST',
         headers: {
