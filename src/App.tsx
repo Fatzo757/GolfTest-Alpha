@@ -38,7 +38,7 @@ export default function App() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
     if (token) {
       setLoading(true);
@@ -58,6 +58,7 @@ export default function App() {
         }
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return;
         console.error('Auth check failed:', err);
         setError(`Authentication service unavailable: ${err.message}`);
         setToken(null);

@@ -26,7 +26,7 @@ declare global {
 async function startServer() {
   console.log("SERVER: Initializing server...");
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
   // 1. Listen immediately to open the port
   const server = app.listen(PORT, "0.0.0.0", () => {
