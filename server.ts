@@ -85,28 +85,43 @@ async function startServer() {
   }
 
   function calculateHandScore(hand: any[]) {
-    let total = 0;
-    const sortedHand = [...hand].sort((a, b) => a.card_index - b.card_index);
+    if (hand.length < 9) {
+      return hand.reduce((total, c) => total + getPoints(c.value), 0);
+    }
     
-    // Check rows: (0,1,2), (3,4,5), (6,7,8)
-    const rows = [
-      [sortedHand[0], sortedHand[1], sortedHand[2]],
-      [sortedHand[3], sortedHand[4], sortedHand[5]],
-      [sortedHand[6], sortedHand[7], sortedHand[8]]
-    ];
+    const sortedHand = [...hand].sort((a, b) => a.card_index - b.card_index);
+    const partOfSet = new Set<number>();
 
-    rows.forEach(row => {
-      // Safety check for 9 cards
-      if (row.length === 3 && row[0] && row[1] && row[2]) {
-        if (row[0].value === row[1].value && row[1].value === row[2].value) {
-          // Three of a kind in a row = 0 points
-          total += 0;
-        } else {
-          row.forEach(c => total += getPoints(c.value));
-        }
-      } else {
-        // Fallback if hand is incomplete for some reason
-        row.forEach(c => { if(c) total += getPoints(c.value); });
+    // 0 1 2
+    // 3 4 5
+    // 6 7 8
+    const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+    const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
+
+    // Check rows for 3 of a kind
+    rows.forEach(indices => {
+      const v0 = sortedHand[indices[0]]?.value;
+      const v1 = sortedHand[indices[1]]?.value;
+      const v2 = sortedHand[indices[2]]?.value;
+      if (v0 && v0 === v1 && v1 === v2) {
+        indices.forEach(i => partOfSet.add(i));
+      }
+    });
+
+    // Check columns for 3 of a kind
+    cols.forEach(indices => {
+      const v0 = sortedHand[indices[0]]?.value;
+      const v1 = sortedHand[indices[1]]?.value;
+      const v2 = sortedHand[indices[2]]?.value;
+      if (v0 && v0 === v1 && v1 === v2) {
+        indices.forEach(i => partOfSet.add(i));
+      }
+    });
+
+    let total = 0;
+    sortedHand.forEach((card, index) => {
+      if (!partOfSet.has(index)) {
+        total += getPoints(card.value);
       }
     });
 
@@ -818,30 +833,29 @@ async function startServer() {
       const opponentFaceDownCount = opponentCards.filter(c => !c.is_face_up).length;
       const isClosingIn = opponentFaceDownCount <= 2;
 
-      const rows = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8]
-      ];
+      const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+      const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
 
       function evaluateSlotValue(slotIndex: number, prospectiveValue: string) {
         const rowIndices = rows.find(r => r.includes(slotIndex))!;
-        const otherIndices = rowIndices.filter(i => i !== slotIndex);
-        const card1 = cpuCardsArray[otherIndices[0]];
-        const card2 = cpuCardsArray[otherIndices[1]];
+        const colIndices = cols.find(c => c.includes(slotIndex))!;
         
-        let score = getPoints(prospectiveValue);
+        function getMatches(indices: number[]) {
+          const others = indices.filter(idx => idx !== slotIndex);
+          let m = 0;
+          if (cpuCardsArray[others[0]].is_face_up && cpuCardsArray[others[0]].value === prospectiveValue) m++;
+          if (cpuCardsArray[others[1]].is_face_up && cpuCardsArray[others[1]].value === prospectiveValue) m++;
+          return m;
+        }
+
+        const rowMatches = getMatches(rowIndices);
+        const colMatches = getMatches(colIndices);
+        const bestMatches = Math.max(rowMatches, colMatches);
         
-        // Match bonus: if this card matches another in the row, it's very valuable
-        // If it matches BOTH, it's a guaranteed 0 for the row (if both are revealed or we know their value)
-        let matches = 0;
-        if (card1.is_face_up && card1.value === prospectiveValue) matches++;
-        if (card2.is_face_up && card2.value === prospectiveValue) matches++;
+        if (bestMatches === 2) return -20; // Extremely good
+        if (bestMatches === 1) return -5;  // Very good
         
-        if (matches === 2) return -20; // Extremely good
-        if (matches === 1) return -5;  // Very good
-        
-        return score;
+        return getPoints(prospectiveValue);
       }
 
       // 1. Drawing Phase

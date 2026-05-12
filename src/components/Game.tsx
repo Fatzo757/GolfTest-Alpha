@@ -272,23 +272,32 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
       .filter(c => c.player_id === player_id)
       .sort((a, b) => (a.card_index || 0) - (b.card_index || 0));
     
-    let total = 0;
-    const rows = [
-      [playerCards[0], playerCards[1], playerCards[2]],
-      [playerCards[3], playerCards[4], playerCards[5]],
-      [playerCards[6], playerCards[7], playerCards[8]]
-    ];
+    const partOfSet = new Set<number>();
+    const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+    const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
 
-    rows.forEach(row => {
+    // Check rows
+    rows.forEach(indices => {
+      const row = indices.map(i => playerCards[i]);
       const allFaceUp = row.every(c => c && c.is_face_up);
       if (allFaceUp && row[0].value === row[1].value && row[1].value === row[2].value) {
-        // Three of a kind in a row = 0 points
-      } else {
-        row.forEach(c => {
-          if (c && c.is_face_up) {
-            total += getPoints(c.value);
-          }
-        });
+        indices.forEach(i => partOfSet.add(i));
+      }
+    });
+
+    // Check columns
+    cols.forEach(indices => {
+      const col = indices.map(i => playerCards[i]);
+      const allFaceUp = col.every(c => c && c.is_face_up);
+      if (allFaceUp && col[0].value === col[1].value && col[1].value === col[2].value) {
+        indices.forEach(i => partOfSet.add(i));
+      }
+    });
+
+    let total = 0;
+    playerCards.forEach((card, index) => {
+      if (card && card.is_face_up && !partOfSet.has(index)) {
+        total += getPoints(card.value);
       }
     });
 
