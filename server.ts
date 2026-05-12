@@ -305,11 +305,15 @@ async function startServer() {
     if (!targetUserId) return res.status(400).json({ error: "Target user ID required" });
 
     try {
-      const gameId = Math.random().toString(36).substring(2, 9);
+      const gameId = nanoid();
+      const roomCode = nanoid(6).toUpperCase();
+      
       db.prepare(`
-        INSERT INTO games (id, player1_id, player2_id, status)
-        VALUES (?, ?, ?, 'playing')
-      `).run(gameId, userId, targetUserId);
+        INSERT INTO games (id, room_code, player1_id, player2_id, is_vs_cpu, status, player1_total_score, player2_total_score)
+        VALUES (?, ?, ?, ?, 0, 'initializing', 0, 0)
+      `).run(gameId, roomCode, userId, targetUserId);
+
+      setupNewRound(gameId, userId, targetUserId);
       
       res.json({ success: true, gameId });
     } catch (err) {
