@@ -35,6 +35,12 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   const prevStateRef = useRef<GameState | null>(null);
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const fetchState = useCallback(async (silent = false) => {
     if (loadingStateRef.current && !silent) return;
     if (!token) return;
@@ -70,6 +76,20 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
         // Turn notification
         if (prevState && prevState.game.current_turn_player_id !== userId && data.game.current_turn_player_id === userId) {
           setNotification({ title: "IT'S YOUR TURN!", subtitle: "Choose your next move" });
+          
+          // Browser Notification
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
+            try {
+              new Notification("GOLF CARD GAME", {
+                body: "IT'S YOUR TURN! Choose your next move.",
+                tag: 'golf-turn',
+                renotify: true
+              });
+            } catch (err) {
+              console.error("Notification failed:", err);
+            }
+          }
+
           if (user.mute_sounds === 0) {
             soundService.playTurn();
           }
