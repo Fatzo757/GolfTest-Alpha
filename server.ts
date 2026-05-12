@@ -1,0 +1,1105 @@
+import express from "express";
+import { createServer as createViteServer } from "vite";
+import path from "path";
+import { fileURLToPath } from "url";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { nanoid } from "nanoid";
+import db from "./src/db.ts";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const JWT_SECRET = process.env.JWT_SECRET || "default-secret-key-123";
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: { id: string; username: string };
+    }
+  }
+}
+
+async function startServer() {
+  console.log("SERVER: Initializing server...");
+  const app = express();
+  const PORT = 3000;
+
+  // 1. Listen immediately to open the port
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`SERVER: Listening on http://0.0.0.0:${PORT}`);
+  });
+
+  server.on('error', (err: any) => {
+    console.error("SERVER: Listen error callback:", err);
+    if (err.code === 'EADDRINUSE') {
+      console.error(`SERVER: Port ${PORT} is already in use.`);
+    }
+  });
+
+  // 2. Global request logger
+  app.use((req, res, next) => {
+    next();
+  });
+
+  app.use(express.json());
+  
+  // 3. Early API routes
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", time: new Date().toISOString() });
+  });
+
+  // DEBUG: verify DB schema
+  try {
+     console.log("SERVER: Verifying database schema...");
+     const cols = db.pragma("table_info(users)") as any[];
+     console.log("SERVER: users table columns:", cols.map(c => c.name).join(", "));
+  } catch (e) {
+     console.error("SERVER: Failed to verify schema:", e);
+  }
+
+  // --- Auth Middleware ---
+  const authenticate = (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing authorization header" });
+    const token = authHeader.split(" ")[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as { id: string; username: string };
+      req.user = decoded;
+      next();
+    } catch (err) {
+      res.status(401).json({ error: "Invalid token" });
+    }
+  };
+
+
+  function getPoints(value: string) {
+    if (value === 'J') return -2;
+    if (value === 'K') return 0;
+    if (value === 'Q') return 10;
+    if (value === 'A') return 1;
+    return parseInt(value) || 10;
+  }
+
+  function calculateHandScore(hand: any[]) {
+    let total = 0;
+    const sortedHand = [...hand].sort((a, b) => a.card_index - b.card_index);
+    
+    // Check rows: (0,1,2), (3,4,5), (6,7,8)
+    const rows = [
+      [sortedHand[0], sortedHand[1], sortedHand[2]],
+      [sortedHand[3], sortedHand[4], sortedHand[5]],
+      [sortedHand[6], sortedHand[7], sortedHand[8]]
+    ];
+
+    rows.forEach(row => {
+      // Safety check for 9 cards
+      if (row.length === 3 && row[0] && row[1] && row[2]) {
+        if (row[0].value === row[1].value && row[1].value === row[2].value) {
+          // Three of a kind in a row = 0 points
+          total += 0;
+        } else {
+          row.forEach(c => total += getPoints(c.value));
+        }
+      } else {
+        // Fallback if hand is incomplete for some reason
+        row.forEach(c => { if(c) total += getPoints(c.value); });
+      }
+    });
+
+    return total;
+  }
+
+  function setupNewRound(gameId: string, player1Id: string, player2Id: string | null) {
+    const deck = createDeck();
+    shuffle(deck);
+
+    const p1Hand = deck.splice(0, 9);
+    const p2Hand = deck.splice(0, 9);
+    const discard = [deck.pop()];
+
+    db.transaction(() => {
+      // Clear move records for the new round
+      db.prepare("DELETE FROM moves WHERE game_id = ?").run(gameId);
+      db.prepare("DELETE FROM game_cards WHERE game_id = ?").run(gameId);
+      
+      // Record round start for replay (or just log)
+      db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_suit, card_value) VALUES (?, ?, ?, ?, ?, ?)")
+        .run(nanoid(), gameId, 'system', 'round_start', null, null);
+
+      const insertCard = db.prepare(`INSERT INTO game_cards (game_id, player_id, card_index, suit, value, is_face_up) VALUES (?, ?, ?, ?, ?, ?)`);
+      const logInitialCard = db.prepare(`INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value) VALUES (?, ?, ?, 'initial_card', ?, ?, ?)`);
+
+      p1Hand.forEach((card, idx) => {
+        insertCard.run(gameId, player1Id, idx, card.suit, card.value, 0); 
+        logInitialCard.run(nanoid(), gameId, player1Id, idx, card.suit, card.value);
+      });
+      const p2Id = player2Id || "cpu";
+      p2Hand.forEach((card, idx) => {
+        insertCard.run(gameId, p2Id, idx, card.suit, card.value, 0); 
+        logInitialCard.run(nanoid(), gameId, p2Id, idx, card.suit, card.value);
+      });
+      
+      db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_suit, card_value) VALUES (?, ?, ?, 'initial_discard', ?, ?)")
+        .run(nanoid(), gameId, 'system', discard[0].suit, discard[0].value);
+
+      db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, status = 'initializing', current_turn_player_id = ?, first_revealer_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .run(JSON.stringify(deck), JSON.stringify(discard), player1Id, gameId);
+      
+      if (p2Id === "cpu") {
+        const cpuIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        shuffle(cpuIndices);
+        const toReveal = cpuIndices.slice(0, 2);
+        toReveal.forEach(idx => {
+          db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?").run(gameId, idx);
+        });
+      }
+    })();
+  }
+
+  // User Registration
+  app.post("/api/auth/register", (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: "Username and password required" });
+
+    try {
+      const id = nanoid();
+      const password_hash = bcrypt.hashSync(password, 10);
+      db.prepare("INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)").run(id, username, password_hash);
+      const token = jwt.sign({ id, username }, JWT_SECRET);
+      res.json({ token, user: { id, username } });
+    } catch (err: any) {
+      if (err.message.includes("UNIQUE constraint failed")) {
+        res.status(400).json({ error: "Username already exists" });
+      } else {
+        res.status(500).json({ error: "Server error" });
+      }
+    }
+  });
+
+  // User Login
+  app.post("/api/auth/login", (req, res) => {
+    const { username, password } = req.body;
+    const user: any = db.prepare("SELECT * FROM users WHERE username = ?").get(username);
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
+    res.json({ token, user: { id: user.id, username: user.username } });
+  });
+
+  // Get Current User
+  app.get("/api/auth/me", authenticate, (req: any, res) => {
+    const user: any = db.prepare("SELECT id, username, theme, card_style, avatar, mute_sounds, time_zone, time_format, show_date, show_move_date FROM users WHERE id = ?").get(req.user.id);
+    res.json({ user });
+  });
+
+  // Update Avatar
+  app.post("/api/users/avatar", authenticate, (req: any, res) => {
+    const { avatar } = req.body;
+    if (!avatar) return res.status(400).json({ error: "Avatar required" });
+    db.prepare("UPDATE users SET avatar = ? WHERE id = ?").run(avatar, req.user.id);
+    res.json({ success: true });
+  });
+
+  app.post("/api/auth/change-password", authenticate, (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: "Missing current password or invalid new password (min 6 chars)" });
+    }
+
+    const user: any = db.prepare("SELECT password_hash FROM users WHERE id = ?").get(req.user.id);
+    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
+      return res.status(401).json({ error: "Invalid current password" });
+    }
+
+    const newHash = bcrypt.hashSync(newPassword, 10);
+    db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(newHash, req.user.id);
+    res.json({ success: true });
+  });
+
+  // Update Preferences
+  app.post("/api/auth/preferences", authenticate, (req: any, res) => {
+    const { theme, card_style, mute_sounds, time_zone, time_format, show_date, show_move_date } = req.body;
+    db.prepare("UPDATE users SET theme = ?, card_style = ?, mute_sounds = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ? WHERE id = ?")
+      .run(theme, card_style, mute_sounds ? 1 : 0, time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, req.user.id);
+    res.json({ success: true });
+  });
+
+  // Get Online Users
+  app.get("/api/users/online", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    // Users active in the last 5 minutes
+    const users = db.prepare(`
+      SELECT id, username, avatar, last_active_at 
+      FROM users 
+      WHERE id != ? AND last_active_at > datetime('now', '-5 minutes')
+      ORDER BY last_active_at DESC
+      LIMIT 10
+    `).all(userId);
+    res.json({ users });
+  });
+
+  // Get Active Games for user (resumable)
+  app.get("/api/games/active", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    const games = db.prepare(`
+      SELECT g.*, 
+             u1.username as player1_name, u1.avatar as player1_avatar,
+             u2.username as player2_name, u2.avatar as player2_avatar
+      FROM games g
+      LEFT JOIN users u1 ON g.player1_id = u1.id
+      LEFT JOIN users u2 ON g.player2_id = u2.id
+      WHERE (g.player1_id = ? OR g.player2_id = ?) AND g.status != 'finished'
+      ORDER BY g.updated_at DESC
+    `).all(userId, userId);
+    res.json({ games });
+  });
+
+  // Delete/Abandon Game
+  app.delete("/api/games/:id", authenticate, (req: any, res) => {
+    const gameId = req.params.id;
+    const userId = req.user.id;
+
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+
+    // Only allow participants to delete the game
+    if (game.player1_id !== userId && game.player2_id !== userId) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    // Clean up all related data
+    db.transaction(() => {
+      db.prepare("DELETE FROM game_cards WHERE game_id = ?").run(gameId);
+      db.prepare("DELETE FROM moves WHERE game_id = ?").run(gameId);
+      db.prepare("DELETE FROM messages WHERE game_id = ?").run(gameId);
+      db.prepare("DELETE FROM games WHERE id = ?").run(gameId);
+    })();
+
+    res.json({ success: true });
+  });
+
+  // Get Joinable Games (public waiting rooms)
+  app.get("/api/games/joinable", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    const games = db.prepare(`
+      SELECT g.id, g.room_code, g.created_at,
+             u1.username as host_name, u1.avatar as host_avatar
+      FROM games g
+      JOIN users u1 ON g.player1_id = u1.id
+      WHERE g.status = 'waiting' AND g.player1_id != ?
+      ORDER BY g.created_at DESC
+      LIMIT 20
+    `).all(userId);
+    res.json({ games });
+  });
+
+  // Invite to Match
+  app.post("/api/games/invite", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    const { targetUserId } = req.body;
+    if (!targetUserId) return res.status(400).json({ error: "Target user ID required" });
+
+    try {
+      const gameId = Math.random().toString(36).substring(2, 9);
+      db.prepare(`
+        INSERT INTO games (id, player1_id, player2_id, status)
+        VALUES (?, ?, ?, 'playing')
+      `).run(gameId, userId, targetUserId);
+      
+      res.json({ success: true, gameId });
+    } catch (err) {
+      console.error("Invite error:", err);
+      res.status(500).json({ error: "Failed to create invitation" });
+    }
+  });
+
+  // Get User Stats
+  app.get("/api/users/stats", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    const games = db.prepare(`
+      SELECT * FROM games 
+      WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'
+    `).all(userId, userId);
+
+    const wins = games.filter((g: any) => g.winner_player_id === userId).length;
+    const losses = games.length - wins;
+    const ratio = games.length > 0 ? ((wins / games.length) * 100).toFixed(0) : "0";
+
+    res.json({ wins, losses, ratio, total: games.length });
+  });
+
+  // Get User History
+  app.get("/api/games/history", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    const history = db.prepare(`
+      SELECT g.*, 
+             u1.username as player1_name, 
+             u1.avatar as player1_avatar,
+             u2.username as player2_name,
+             u2.avatar as player2_avatar
+      FROM games g
+      LEFT JOIN users u1 ON g.player1_id = u1.id
+      LEFT JOIN users u2 ON g.player2_id = u2.id
+      WHERE (g.player1_id = ? OR g.player2_id = ?) AND g.status = 'finished' AND g.is_hidden_from_history = 0
+      ORDER BY g.updated_at DESC
+    `).all(userId, userId);
+    
+    res.json({ history });
+  });
+
+  // Clear History (Archive)
+  app.post("/api/games/history/clear", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    const { filter } = req.body; // 'all' or 'old'
+    try {
+      let query = `UPDATE games SET is_hidden_from_history = 1 WHERE (player1_id = ? OR player2_id = ?) AND status = 'finished'`;
+      const params: any[] = [userId, userId];
+      
+      if (filter === 'old') {
+        query += ` AND updated_at < datetime('now', '-30 days')`;
+      }
+
+      db.prepare(query).run(...params);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Clear history error:", err);
+      res.status(500).json({ error: "Failed to clear history" });
+    }
+  });
+
+  // Archive Single Match
+  app.post("/api/games/:gameId/archive", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const userId = req.user.id;
+    try {
+      db.prepare(`
+        UPDATE games SET is_hidden_from_history = 1 
+        WHERE id = ? AND (player1_id = ? OR player2_id = ?)
+      `).run(gameId, userId, userId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to archive match" });
+    }
+  });
+
+  // Reset Statistics (Actually Delete EVERYTHING)
+  app.post("/api/users/stats/reset", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    console.log(`Hard reset requested for user: ${userId}`);
+    try {
+      const games = db.prepare(`
+        SELECT id FROM games 
+        WHERE (player1_id = ? OR player2_id = ?)
+      `).all(userId, userId) as { id: string }[];
+      
+      const gameIds = games.map(g => g.id);
+      
+      if (gameIds.length > 0) {
+        const deleteTransaction = db.transaction((ids: string[]) => {
+          const CHUNK_SIZE = 500; // Smaller chunks for safety
+          for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+            const chunk = ids.slice(i, i + CHUNK_SIZE);
+            const placeholders = chunk.map(() => "?").join(",");
+            
+            db.prepare(`DELETE FROM moves WHERE game_id IN (${placeholders})`).run(...chunk);
+            db.prepare(`DELETE FROM game_cards WHERE game_id IN (${placeholders})`).run(...chunk);
+            db.prepare(`DELETE FROM messages WHERE game_id IN (${placeholders})`).run(...chunk);
+            db.prepare(`DELETE FROM games WHERE id IN (${placeholders})`).run(...chunk);
+          }
+        });
+
+        deleteTransaction(gameIds);
+      }
+      
+      console.log(`Hard reset SUCCESS for user ${userId}. Records cleared for ${gameIds.length} games.`);
+      res.json({ success: true, deletedCount: gameIds.length });
+    } catch (err) {
+      console.error("Hard reset FATAL error:", err);
+      res.status(500).json({ error: "Failed to perform hard reset. Database error." });
+    }
+  });
+
+  // Get Replay Data
+  app.get("/api/games/:gameId/replay", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+
+    const moves = db.prepare("SELECT * FROM moves WHERE game_id = ? ORDER BY timestamp ASC").all(gameId);
+    
+    // Fetch player info
+    const p1: any = db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player1_id);
+    const p2: any = game.player2_id && game.player2_id !== 'cpu' 
+      ? db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player2_id)
+      : { username: game.player2_id === 'cpu' ? 'CPU' : 'Unknown', avatar: 'robot' };
+
+    res.json({ 
+      game: {
+        ...game,
+        player1_name: p1?.username || 'Unknown',
+        player1_avatar: p1?.avatar || 'user',
+        player2_name: p2?.username || (game.player2_id === 'cpu' ? 'CPU' : 'Unknown'),
+        player2_avatar: p2?.avatar || (game.player2_id === 'cpu' ? 'robot' : 'user')
+      }, 
+      moves 
+    });
+  });
+
+  // Heartbeat - keep online status alive
+  app.post("/api/heartbeat", authenticate, (req: any, res) => {
+    db.prepare("UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id);
+    res.json({ success: true });
+  });
+
+  // Get game messages
+  app.get("/api/games/:gameId/messages", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const messages = db.prepare(`
+      SELECT m.*, u.username as sender_name, u.avatar as sender_avatar
+      FROM messages m
+      JOIN users u ON m.sender_id = u.id
+      WHERE m.game_id = ?
+      ORDER BY m.created_at ASC
+    `).all(gameId);
+    res.json({ messages });
+  });
+
+  // Send game message
+  app.post("/api/games/:gameId/messages", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ error: "Content required" });
+    
+    const messageId = nanoid();
+    db.prepare("INSERT INTO messages (id, game_id, sender_id, content) VALUES (?, ?, ?, ?)")
+      .run(messageId, gameId, req.user.id, content);
+    
+    res.json({ success: true });
+  });
+
+  // Check online status of opponent
+  app.get("/api/games/:gameId/online", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+
+    const opponentId = game.player1_id === req.user.id ? game.player2_id : game.player1_id;
+    if (!opponentId || opponentId === 'cpu') return res.json({ online: true }); // CPU is always online
+
+    const opponent: any = db.prepare("SELECT last_active_at FROM users WHERE id = ?").get(opponentId);
+    if (!opponent) return res.json({ online: false });
+
+    const lastActive = new Date(opponent.last_active_at + 'Z').getTime();
+    const now = new Date().getTime();
+    const isOnline = (now - lastActive) < 15000; // 15 seconds threshold
+
+    res.json({ online: isOnline });
+  });
+
+  // Create Game
+  app.post("/api/games/create", authenticate, (req: any, res) => {
+    const { isVsCpu, difficulty } = req.body;
+    const gameId = nanoid();
+    const roomCode = nanoid(6).toUpperCase();
+    const player1Id = req.user.id;
+    const player2Id = isVsCpu ? "cpu" : null;
+    const currentTurn = player1Id;
+    const status = isVsCpu ? "initializing" : "waiting";
+    const cpuDifficulty = difficulty || 'normal';
+
+    // Initialize Deck
+    const deck = createDeck();
+    shuffle(deck);
+
+    // Initial hands (all face down now)
+    const p1Hand = deck.splice(0, 9);
+    const p2Hand = deck.splice(0, 9);
+    const discard = [deck.pop()];
+
+    try {
+      db.transaction(() => {
+        db.prepare(`
+          INSERT INTO games (id, room_code, player1_id, player2_id, is_vs_cpu, current_turn_player_id, status, deck_json, discard_json, player1_total_score, player2_total_score, first_revealer_id, cpu_difficulty)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, NULL, ?)
+        `).run(gameId, roomCode, player1Id, player2Id, isVsCpu ? 1 : 0, currentTurn, status, JSON.stringify(deck), JSON.stringify(discard), cpuDifficulty);
+
+        // Insert hands
+        const insertCard = db.prepare(`INSERT INTO game_cards (game_id, player_id, card_index, suit, value, is_face_up) VALUES (?, ?, ?, ?, ?, ?)`);
+        const logInitialCard = db.prepare(`INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value) VALUES (?, ?, ?, 'initial_card', ?, ?, ?)`);
+
+        p1Hand.forEach((card, idx) => {
+          insertCard.run(gameId, player1Id, idx, card.suit, card.value, 0); // Face down
+          logInitialCard.run(nanoid(), gameId, player1Id, idx, card.suit, card.value);
+        });
+        const p2TargetId = player2Id || "cpu";
+        p2Hand.forEach((card, idx) => {
+          insertCard.run(gameId, p2TargetId, idx, card.suit, card.value, 0); // Face down
+          logInitialCard.run(nanoid(), gameId, p2TargetId, idx, card.suit, card.value);
+        });
+
+        // Log initial discard
+        db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_suit, card_value) VALUES (?, ?, ?, 'initial_discard', ?, ?)")
+          .run(nanoid(), gameId, 'system', discard[0].suit, discard[0].value);
+
+        if (isVsCpu) {
+          // CPU reveals 2 cards immediately
+          const cpuIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+          shuffle(cpuIndices);
+          const toReveal = cpuIndices.slice(0, 2);
+          toReveal.forEach(idx => {
+            db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?").run(gameId, idx);
+          });
+        }
+      })();
+
+      res.json({ gameId, roomCode });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Could not create game" });
+    }
+  });
+
+  // Join Game
+  app.post("/api/games/join/:roomCode", authenticate, (req: any, res) => {
+    const { roomCode } = req.params;
+    const game: any = db.prepare("SELECT * FROM games WHERE room_code = ? AND status = 'waiting'").get(roomCode.toUpperCase());
+    if (!game) return res.status(404).json({ error: "Game not found or already full" });
+    if (game.player1_id === req.user.id) return res.status(400).json({ error: "You are already in this game" });
+
+    db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, game.id);
+    res.json({ gameId: game.id });
+  });
+
+  // Get Game State
+  app.get("/api/games/:gameId", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+
+    const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
+    const moves = db.prepare("SELECT * FROM moves WHERE game_id = ? ORDER BY timestamp DESC LIMIT 50").all(gameId);
+
+    // Fetch player info
+    const p1: any = db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player1_id);
+    const p2: any = game.player2_id && game.player2_id !== 'cpu' 
+      ? db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player2_id)
+      : { username: game.player2_id === 'cpu' ? 'CPU' : 'Waiting...', avatar: 'robot' };
+
+    res.json({
+      game: {
+        ...game,
+        deck_json: undefined,
+        deck_count: JSON.parse(game.deck_json).length,
+        discard: JSON.parse(game.discard_json),
+        drawn_card: game.drawn_card_json ? JSON.parse(game.drawn_card_json) : null,
+        player1_name: p1?.username || 'Unknown',
+        player1_avatar: p1?.avatar || 'user',
+        player2_name: p2?.username || (game.player2_id === 'cpu' ? 'CPU' : 'Waiting...'),
+        player2_avatar: p2?.avatar || (game.player2_id === 'cpu' ? 'robot' : 'user')
+      },
+      cards,
+      moves
+    });
+  });
+
+  // Draw Action
+  app.post("/api/games/:gameId/draw", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const { source } = req.body; // 'deck' or 'discard'
+    
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+    if (game.status === 'initializing') return res.status(400).json({ error: "Flip 2 cards first" });
+    if (game.current_turn_player_id !== req.user.id) return res.status(400).json({ error: "Not your turn" });
+    if (game.drawn_card_json) return res.status(400).json({ error: "Already holding a card" });
+
+    const deck = JSON.parse(game.deck_json);
+    const discard = JSON.parse(game.discard_json);
+    let drawn;
+
+    if (source === 'deck') {
+      if (deck.length === 0) return res.status(400).json({ error: "Deck is empty" });
+      drawn = deck.pop();
+    } else {
+      if (discard.length === 0) return res.status(400).json({ error: "Discard is empty" });
+      drawn = discard.pop();
+    }
+
+    db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = ? WHERE id = ?")
+      .run(JSON.stringify(deck), JSON.stringify(discard), JSON.stringify(drawn), gameId);
+
+    res.json({ drawn });
+  });
+
+  // Execute Move
+  app.post("/api/games/:gameId/move", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const { moveType, cardIndex } = req.body; 
+    
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+    if (game.status === 'initializing') return res.status(400).json({ error: "Flip 2 cards first" });
+    if (game.status === 'finished') return res.status(400).json({ error: "Game is over" });
+    if (game.current_turn_player_id !== req.user.id) return res.status(400).json({ error: "Not your turn" });
+    if (!game.drawn_card_json) return res.status(400).json({ error: "Draw a card first" });
+
+    const deck = JSON.parse(game.deck_json);
+    const discard = JSON.parse(game.discard_json);
+    const cardToPlace = JSON.parse(game.drawn_card_json);
+
+    try {
+      db.transaction(() => {
+        let existingCard: any = null;
+        if (moveType === 'replace') {
+          existingCard = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
+          db.prepare("UPDATE game_cards SET suit = ?, value = ?, is_face_up = 1 WHERE game_id = ? AND player_id = ? AND card_index = ?")
+            .run(cardToPlace.suit, cardToPlace.value, gameId, req.user.id, cardIndex);
+          
+          discard.push({ suit: existingCard.suit, value: existingCard.value });
+        } else if (moveType === 'discard_drawn') {
+          discard.push(cardToPlace);
+          existingCard = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
+          db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ? AND player_id = ? AND card_index = ?").run(gameId, req.user.id, cardIndex);
+        }
+
+        const faceDownCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 0").get(gameId, req.user.id);
+        
+        const nextPlayer = game.player1_id === req.user.id ? game.player2_id : game.player1_id;
+        
+        let status = game.status;
+        let firstRevealerId = game.first_revealer_id;
+
+        if (faceDownCount.count === 0 && game.status === 'active') {
+          status = 'last_turns';
+          firstRevealerId = req.user.id;
+        } else if (game.status === 'last_turns' && nextPlayer === firstRevealerId) {
+          status = 'round_end';
+        }
+
+        if (status === 'round_end') {
+          db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
+          const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
+          
+          const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
+          const p2Cards = cards.filter((c: any) => c.player_id === (game.player2_id || 'cpu'));
+          
+          const p1Round = calculateHandScore(p1Cards);
+          const p2Round = calculateHandScore(p2Cards);
+
+          const p1Total = game.player1_total_score + p1Round;
+          const p2Total = game.player2_total_score + p2Round;
+
+          if (p1Total >= 100 || p2Total >= 100) {
+            status = 'finished';
+            const winner = p1Total < p2Total ? game.player1_id : (game.player2_id || 'cpu');
+            db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'finished', winner_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+              .run(p1Total, p2Total, winner, gameId);
+          } else {
+            db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'round_end' WHERE id = ?").run(p1Total, p2Total, gameId);
+            // We'll keep status as round_end so the client can show the summary.
+            // Requirement said "show a update screen showing hands and point totals".
+            // After the user clicks "Next Round", we call setupNewRound.
+            // So I need a new API endpoint or just handle it in the next "fetch".
+            // Actually, I'll just change status to 'round_end' and let the client trigger the next round.
+          }
+        } else {
+          db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(JSON.stringify(deck), JSON.stringify(discard), nextPlayer, status, firstRevealerId, gameId);
+        }
+
+        db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value, replaced_card_suit, replaced_card_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .run(nanoid(), gameId, req.user.id, moveType, cardIndex, cardToPlace.suit, cardToPlace.value, existingCard?.suit, existingCard?.value);
+
+        if (nextPlayer === "cpu" && status !== "finished" && status !== "round_end") {
+          setTimeout(() => executeCpuMove(gameId), 1000);
+        }
+      })();
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Move failed" });
+    }
+  });
+
+  function createDeck() {
+    const suits = ["hearts", "diamonds", "clubs", "spades"];
+    const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+    const deck = [];
+    for (const suit of suits) {
+      for (const value of values) {
+        deck.push({ suit, value });
+      }
+    }
+    return deck;
+  }
+
+  function shuffle(deck: any[]) {
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+  }
+
+  async function executeCpuMove(gameId: string) {
+    try {
+      const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game || game.status === 'finished' || game.status === 'round_end' || game.status === 'initializing') return;
+
+    const deck = JSON.parse(game.deck_json);
+    const discard = JSON.parse(game.discard_json);
+    const topDiscard = discard[discard.length - 1];
+    
+    const cpuCards = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = 'cpu' ORDER BY card_index ASC").all(gameId);
+    
+    let cardToPlace;
+    let indexToReplace = -1;
+    let cpuSource: 'deck' | 'discard' = 'deck';
+
+    const difficulty = game.cpu_difficulty || 'normal';
+
+    if (difficulty === 'easy') {
+      // Easy: 50% chance for discard, replaces random card
+      if (Math.random() < 0.5 && discard.length > 0) {
+        cardToPlace = discard.pop();
+        cpuSource = 'discard';
+      } else if (deck.length > 0) {
+        cardToPlace = deck.pop();
+        cpuSource = 'deck';
+      } else {
+        return; // No cards?
+      }
+      indexToReplace = Math.floor(Math.random() * 9);
+    } else if (difficulty === 'normal') {
+      const discardValue = getPoints(topDiscard.value);
+      if (discardValue <= 3) {
+        cardToPlace = discard.pop();
+        cpuSource = 'discard';
+      } else {
+        cardToPlace = deck.pop();
+        cpuSource = 'deck';
+      }
+      const faceDownIndex = (cpuCards as any[]).findIndex(c => !c.is_face_up);
+      indexToReplace = faceDownIndex !== -1 ? faceDownIndex : Math.floor(Math.random() * 9);
+    } else {
+      // Hard: Strategic logic
+      const cpuCardsArray = cpuCards as any[];
+      const opponentCards = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ?").all(gameId, game.player1_id) as any[];
+      const opponentFaceDownCount = opponentCards.filter(c => !c.is_face_up).length;
+      const isClosingIn = opponentFaceDownCount <= 2;
+
+      const rows = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8]
+      ];
+
+      function evaluateSlotValue(slotIndex: number, prospectiveValue: string) {
+        const rowIndices = rows.find(r => r.includes(slotIndex))!;
+        const otherIndices = rowIndices.filter(i => i !== slotIndex);
+        const card1 = cpuCardsArray[otherIndices[0]];
+        const card2 = cpuCardsArray[otherIndices[1]];
+        
+        let score = getPoints(prospectiveValue);
+        
+        // Match bonus: if this card matches another in the row, it's very valuable
+        // If it matches BOTH, it's a guaranteed 0 for the row (if both are revealed or we know their value)
+        let matches = 0;
+        if (card1.is_face_up && card1.value === prospectiveValue) matches++;
+        if (card2.is_face_up && card2.value === prospectiveValue) matches++;
+        
+        if (matches === 2) return -20; // Extremely good
+        if (matches === 1) return -5;  // Very good
+        
+        return score;
+      }
+
+      // 1. Drawing Phase
+      const topDiscardValue = topDiscard.value;
+      const discardProspectiveUtility = Math.min(...rows.map(row => {
+        return Math.min(...row.map(slotIdx => evaluateSlotValue(slotIdx, topDiscardValue)));
+      }));
+
+      // Decide if we take discard
+      // Utility < 3 is usually a good bet (J, K, A, 2, 3 or a match)
+      if (discardProspectiveUtility <= 3 || (isClosingIn && discardProspectiveUtility <= 5)) {
+        cardToPlace = discard.pop();
+        cpuSource = 'discard';
+      } else {
+        cardToPlace = deck.pop();
+        cpuSource = 'deck';
+      }
+
+      const drawnValue = getPoints(cardToPlace.value);
+
+      // 2. Placement Phase
+      // Evaluate all 9 slots and find the one where replacing gives the best improvement
+      let bestImprovement = -999;
+      
+      for (let i = 0; i < 9; i++) {
+        const currentCard = cpuCardsArray[i];
+        const currentVal = currentCard.is_face_up ? getPoints(currentCard.value) : 8; // Assume hidden cards are average (8 is weighted high to encourage revealing)
+        const currentUtility = evaluateSlotValue(i, currentCard.is_face_up ? currentCard.value : '10'); // Placeholder '10' for hidden
+        
+        const prospectiveUtility = evaluateSlotValue(i, cardToPlace.value);
+        const improvement = currentUtility - prospectiveUtility;
+
+        if (improvement > bestImprovement) {
+          bestImprovement = improvement;
+          indexToReplace = i;
+        }
+      }
+
+      // Fallback
+      if (indexToReplace === -1) indexToReplace = (cpuCardsArray as any[]).findIndex(c => !c.is_face_up) || 0;
+    }
+
+    db.transaction(() => {
+      const existingCard: any = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?").get(gameId, indexToReplace);
+      db.prepare("UPDATE game_cards SET suit = ?, value = ?, is_face_up = 1 WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?")
+        .run(cardToPlace.suit, cardToPlace.value, gameId, indexToReplace);
+      discard.push({ suit: existingCard.suit, value: existingCard.value });
+
+      const nextPlayer = game.player1_id;
+      const faceDownCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = 'cpu' AND is_face_up = 0").get(gameId);
+      
+      let status = game.status;
+      let firstRevealerId = game.first_revealer_id;
+
+      if (faceDownCount.count === 0 && game.status === 'active') {
+        status = 'last_turns';
+        firstRevealerId = 'cpu';
+      } else if (game.status === 'last_turns' && nextPlayer === firstRevealerId) {
+        status = 'round_end';
+      }
+
+      if (status === 'round_end') {
+        db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
+        const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
+        
+        const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
+        const p2Cards = cards.filter((c: any) => c.player_id === (game.player2_id || 'cpu'));
+        
+        const p1Round = calculateHandScore(p1Cards);
+        const p2Round = calculateHandScore(p2Cards);
+
+        const p1Total = game.player1_total_score + p1Round;
+        const p2Total = game.player2_total_score + p2Round;
+
+        if (p1Total >= 100 || p2Total >= 100) {
+          status = 'finished';
+          const winner = p1Total < p2Total ? game.player1_id : (game.player2_id || 'cpu');
+          db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'finished', winner_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(p1Total, p2Total, winner, gameId);
+        } else {
+          db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'round_end' WHERE id = ?").run(p1Total, p2Total, gameId);
+        }
+      } else {
+        db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+          .run(JSON.stringify(deck), JSON.stringify(discard), nextPlayer, status, firstRevealerId, gameId);
+      }
+      
+       db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value, replaced_card_suit, replaced_card_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .run(nanoid(), gameId, 'cpu', `cpu_replace_${cpuSource}`, indexToReplace, cardToPlace.suit, cardToPlace.value, existingCard?.suit, existingCard?.value);
+    })();
+    } catch (err) {
+      console.error("CPU Move error:", err);
+    }
+  }
+
+  app.post("/api/games/:id/reveal", authenticate, (req: any, res) => {
+    const gameId = req.params.id;
+    const { cardIndex } = req.body;
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+    if (game.status !== 'initializing') return res.status(400).json({ error: "Not in initializing status" });
+
+    const card: any = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
+    if (!card) return res.status(404).json({ error: "Card not found" });
+    if (card.is_face_up) return res.status(400).json({ error: "Card already face up" });
+
+    db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ? AND player_id = ? AND card_index = ?").run(gameId, req.user.id, cardIndex);
+
+    // Check if player has 2 cards face up
+    const faceUpCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, req.user.id);
+    
+    // If it's a 2 player game, we need both players to be ready. 
+    // For VS CPU, CPU is already ready (I handled it in Create Game / setupNewRound).
+    if (faceUpCount.count >= 2) {
+      if (game.is_vs_cpu) {
+         db.prepare("UPDATE games SET status = 'active' WHERE id = ?").run(gameId);
+      } else {
+         // check if both players have 2+ cards face up
+         const p1Count: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, game.player1_id);
+         const p2Count: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, game.player2_id);
+         if (p1Count.count >= 2 && p2Count.count >= 2) {
+           db.prepare("UPDATE games SET status = 'active' WHERE id = ?").run(gameId);
+         }
+      }
+    }
+
+    res.json({ success: true });
+  });
+
+  app.post("/api/games/:id/next-round", authenticate, (req: any, res) => {
+    const gameId = req.params.id;
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+    if (game.status !== 'round_end') return res.status(400).json({ error: "Not in round_end status" });
+
+    setupNewRound(gameId, game.player1_id, game.player2_id);
+    res.json({ success: true });
+  });
+
+  // --- Admin Middleware ---
+  const isAdmin = (req: any, res: any, next: any) => {
+    try {
+      const user: any = db.prepare("SELECT is_admin, username FROM users WHERE id = ?").get(req.user.id);
+      
+      // Hardcoded super admins boostrap check
+      const superAdmins = ["fatzo757@gmail.com", "admin", "system"];
+      
+      if (user && (user.is_admin === 1 || superAdmins.includes(user.username))) {
+        next();
+      } else {
+        res.status(403).json({ error: "Access denied. Admin only." });
+      }
+    } catch (err) {
+      res.status(500).json({ error: "Server error during auth check" });
+    }
+  };
+
+  // Sync hardcoded admins on startup
+  const bootstrapAdmins = ["fatzo757@gmail.com", "admin", "system"];
+  bootstrapAdmins.forEach(name => {
+    db.prepare("UPDATE users SET is_admin = 1 WHERE username = ?").run(name);
+  });
+
+  // --- Admin Routes ---
+  app.get("/api/admin/summary", authenticate, isAdmin, (req, res) => {
+    const userCount = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
+    const gameCount = db.prepare("SELECT COUNT(*) as count FROM games").get() as { count: number };
+    const activeGames = db.prepare("SELECT COUNT(*) as count FROM games WHERE status != 'finished'").get() as { count: number };
+    const messagesCount = db.prepare("SELECT COUNT(*) as count FROM messages").get() as { count: number };
+    
+    res.json({
+      users: userCount.count,
+      games: gameCount.count,
+      activeGames: activeGames.count,
+      messages: messagesCount.count,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.get("/api/admin/users", authenticate, isAdmin, (req, res) => {
+    const users = db.prepare("SELECT id, username, avatar, last_active_at, created_at, is_admin FROM users ORDER BY created_at DESC").all();
+    res.json({ users });
+  });
+  
+  app.post("/api/admin/users/:userId/reset-password", authenticate, isAdmin, (req, res) => {
+    const { userId } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: "Valid password required (min 6 chars)" });
+    
+    const password_hash = bcrypt.hashSync(newPassword, 10);
+    db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(password_hash, userId);
+    res.json({ success: true });
+  });
+
+  app.post("/api/admin/users/:userId/toggle-admin", authenticate, isAdmin, (req: any, res) => {
+    const { userId } = req.params;
+    if (userId === req.user.id) return res.status(400).json({ error: "Cannot toggle yourself" });
+    
+    const user: any = db.prepare("SELECT is_admin FROM users WHERE id = ?").get(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    
+    const newState = user.is_admin === 1 ? 0 : 1;
+    db.prepare("UPDATE users SET is_admin = ? WHERE id = ?").run(newState, userId);
+    res.json({ success: true, is_admin: newState });
+  });
+
+  app.delete("/api/admin/users/:userId", authenticate, isAdmin, (req: any, res) => {
+    const { userId } = req.params;
+    if (userId === req.user.id) return res.status(400).json({ error: "Cannot delete yourself" });
+    
+    db.transaction(() => {
+      // Cascade delete manually since we might not have FKs set up with CASCADE
+      const games = db.prepare("SELECT id FROM games WHERE player1_id = ? OR player2_id = ?").all(userId, userId) as { id: string }[];
+      games.forEach(g => {
+        db.prepare("DELETE FROM game_cards WHERE game_id = ?").run(g.id);
+        db.prepare("DELETE FROM moves WHERE game_id = ?").run(g.id);
+        db.prepare("DELETE FROM messages WHERE game_id = ?").run(g.id);
+        db.prepare("DELETE FROM games WHERE id = ?").run(g.id);
+      });
+      db.prepare("DELETE FROM messages WHERE sender_id = ?").run(userId);
+      db.prepare("DELETE FROM users WHERE id = ?").run(userId);
+    })();
+    
+    res.json({ success: true });
+  });
+
+  app.get("/api/admin/games", authenticate, isAdmin, (req, res) => {
+    const games = db.prepare(`
+      SELECT g.*, 
+             u1.username as player1_name, 
+             u2.username as player2_name
+      FROM games g
+      LEFT JOIN users u1 ON g.player1_id = u1.id
+      LEFT JOIN users u2 ON g.player2_id = u2.id
+      ORDER BY g.updated_at DESC
+      LIMIT 100
+    `).all();
+    res.json({ games });
+  });
+
+  app.delete("/api/admin/games/:gameId", authenticate, isAdmin, (req, res) => {
+    const { gameId } = req.params;
+    db.transaction(() => {
+      db.prepare("DELETE FROM game_cards WHERE game_id = ?").run(gameId);
+      db.prepare("DELETE FROM moves WHERE game_id = ?").run(gameId);
+      db.prepare("DELETE FROM messages WHERE game_id = ?").run(gameId);
+      db.prepare("DELETE FROM games WHERE id = ?").run(gameId);
+    })();
+    res.json({ success: true });
+  });
+
+  app.post("/api/admin/kick/:userId", authenticate, isAdmin, (req, res) => {
+    const { userId } = req.params;
+    // Effectively log them out by setting last active to long ago
+    db.prepare("UPDATE users SET last_active_at = datetime('now', '-1 day') WHERE id = ?").run(userId);
+    res.json({ success: true });
+  });
+
+  // --- Vite Middleware ---
+  if (process.env.NODE_ENV !== "production") {
+    console.log("SERVER: Starting Vite in middleware mode...");
+    try {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+      console.log("SERVER: Vite middleware attached.");
+    } catch (e) {
+      console.error("SERVER: Failed to start Vite server:", e);
+    }
+  } else {
+    console.log("SERVER: Running in production mode.");
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
+
+}
+
+console.log("SERVER: Calling startServer()...");
+startServer().catch(err => {
+  console.error("SERVER: Fatal error during startServer():", err);
+});

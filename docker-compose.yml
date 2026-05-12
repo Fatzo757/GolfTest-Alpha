@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: retro-golf-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production-12345}
+      - DB_PATH=/app/data/golf.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - golf_data:/app/data
+    restart: always
+
+volumes:
+  golf_data:
+    driver: local
+
+# Note: The database is stored in the 'golf_data' volume for persistence across container restarts.
+# To start the app, run: docker-compose up -d --build

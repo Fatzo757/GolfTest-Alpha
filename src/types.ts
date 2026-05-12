@@ -1,0 +1,55 @@
+export interface User {
+  id: string;
+  username: string;
+  theme?: string;
+  card_style?: string;
+  avatar?: string;
+  mute_sounds?: number;
+  time_zone?: string;
+  time_format?: '12h' | '24h';
+  show_date?: number;
+  show_move_date?: number;
+}
+
+export interface Card {
+  suit: string;
+  value: string;
+  is_face_up?: boolean;
+  player_id?: string;
+  card_index?: number;
+}
+
+export interface Move {
+  id: string;
+  game_id: string;
+  player_id: string;
+  move_type: string;
+  card_affected_index: number;
+  card_suit: string;
+  card_value: string;
+  replaced_card_suit?: string;
+  replaced_card_value?: string;
+  timestamp: string;
+}
+
+export interface GameState {
+  game: {
+    id: string;
+    room_code: string;
+    player1_id: string;
+    player2_id: string | null;
+    is_vs_cpu: boolean;
+    current_turn_player_id: string;
+    status: string;
+    deck_count: number;
+    discard: Card[];
+    player1_total_score: number;
+    player2_total_score: number;
+    cpu_difficulty: 'easy' | 'normal' | 'hard';
+    winner_player_id: string | null;
+    player1_name?: string;
+    player2_name?: string;
+  };
+  cards: Card[];
+  moves: Move[];
+}

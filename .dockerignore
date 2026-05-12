@@ -1,0 +1,7 @@
+# .dockerignore
+node_modules
+dist
+golf.db
+.env
+.git
+README.md

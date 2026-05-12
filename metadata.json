@@ -1,0 +1,6 @@
+{
+  "name": "Golf Card Game",
+  "description": "A 16-bit 3x3 Golf card game with room codes for async multiplayer, CPU mode, and persistent move history.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
