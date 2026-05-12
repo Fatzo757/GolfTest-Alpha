@@ -115,7 +115,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
     // Initial fetch
     fetchState();
     
-    pollInterval.current = setInterval(() => fetchState(true), 3000);
+    pollInterval.current = setInterval(() => fetchState(true), 1500);
 
     // Heartbeat & Online Status check
     const heartbeatId = setInterval(async () => {

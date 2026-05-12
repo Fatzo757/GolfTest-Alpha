@@ -571,7 +571,10 @@ async function startServer() {
     if (!game) return res.status(404).json({ error: "Game not found or already full" });
     if (game.player1_id === req.user.id) return res.status(400).json({ error: "You are already in this game" });
 
-    db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, game.id);
+    db.transaction(() => {
+      db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, game.id);
+      db.prepare("UPDATE game_cards SET player_id = ? WHERE game_id = ? AND player_id = 'cpu'").run(req.user.id, game.id);
+    })();
     res.json({ gameId: game.id });
   });
 
@@ -674,7 +677,7 @@ async function startServer() {
         let status = game.status;
         let firstRevealerId = game.first_revealer_id;
 
-        if (faceDownCount.count === 0 && game.status === 'active') {
+        if (faceDownCount.count === 0 && game.status === 'playing') {
           status = 'last_turns';
           firstRevealerId = req.user.id;
         } else if (game.status === 'last_turns' && nextPlayer === firstRevealerId) {
@@ -871,7 +874,7 @@ async function startServer() {
       let status = game.status;
       let firstRevealerId = game.first_revealer_id;
 
-      if (faceDownCount.count === 0 && game.status === 'active') {
+      if (faceDownCount.count === 0 && game.status === 'playing') {
         status = 'last_turns';
         firstRevealerId = 'cpu';
       } else if (game.status === 'last_turns' && nextPlayer === firstRevealerId) {
@@ -932,13 +935,13 @@ async function startServer() {
     // For VS CPU, CPU is already ready (I handled it in Create Game / setupNewRound).
     if (faceUpCount.count >= 2) {
       if (game.is_vs_cpu) {
-         db.prepare("UPDATE games SET status = 'active' WHERE id = ?").run(gameId);
+         db.prepare("UPDATE games SET status = 'playing' WHERE id = ?").run(gameId);
       } else {
          // check if both players have 2+ cards face up
          const p1Count: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, game.player1_id);
          const p2Count: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, game.player2_id);
          if (p1Count.count >= 2 && p2Count.count >= 2) {
-           db.prepare("UPDATE games SET status = 'active' WHERE id = ?").run(gameId);
+           db.prepare("UPDATE games SET status = 'playing' WHERE id = ?").run(gameId);
          }
       }
     }
