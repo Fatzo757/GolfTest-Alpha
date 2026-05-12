@@ -130,16 +130,16 @@ async function startServer() {
       db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_suit, card_value) VALUES (?, ?, ?, ?, ?, ?)")
         .run(nanoid(), gameId, 'system', 'round_start', null, null);
 
-      const insertCard = db.prepare(`INSERT INTO game_cards (game_id, player_id, card_index, suit, value, is_face_up) VALUES (?, ?, ?, ?, ?, ?)`);
+      const insertCard = db.prepare(`INSERT INTO game_cards (game_id, player_id, card_index, suit, value, is_face_up, id) VALUES (?, ?, ?, ?, ?, ?, ?)`);
       const logInitialCard = db.prepare(`INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value) VALUES (?, ?, ?, 'initial_card', ?, ?, ?)`);
 
       p1Hand.forEach((card, idx) => {
-        insertCard.run(gameId, player1Id, idx, card.suit, card.value, 0); 
+        insertCard.run(gameId, player1Id, idx, card.suit, card.value, 0, card.id); 
         logInitialCard.run(nanoid(), gameId, player1Id, idx, card.suit, card.value);
       });
       const p2Id = player2Id || "cpu";
       p2Hand.forEach((card, idx) => {
-        insertCard.run(gameId, p2Id, idx, card.suit, card.value, 0); 
+        insertCard.run(gameId, p2Id, idx, card.suit, card.value, 0, card.id); 
         logInitialCard.run(nanoid(), gameId, p2Id, idx, card.suit, card.value);
       });
       
@@ -533,16 +533,16 @@ async function startServer() {
         `).run(gameId, roomCode, player1Id, player2Id, isVsCpu ? 1 : 0, currentTurn, status, JSON.stringify(deck), JSON.stringify(discard), cpuDifficulty);
 
         // Insert hands
-        const insertCard = db.prepare(`INSERT INTO game_cards (game_id, player_id, card_index, suit, value, is_face_up) VALUES (?, ?, ?, ?, ?, ?)`);
+        const insertCard = db.prepare(`INSERT INTO game_cards (game_id, player_id, card_index, suit, value, is_face_up, id) VALUES (?, ?, ?, ?, ?, ?, ?)`);
         const logInitialCard = db.prepare(`INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value) VALUES (?, ?, ?, 'initial_card', ?, ?, ?)`);
 
         p1Hand.forEach((card, idx) => {
-          insertCard.run(gameId, player1Id, idx, card.suit, card.value, 0); // Face down
+          insertCard.run(gameId, player1Id, idx, card.suit, card.value, 0, card.id); // Face down
           logInitialCard.run(nanoid(), gameId, player1Id, idx, card.suit, card.value);
         });
         const p2TargetId = player2Id || "cpu";
         p2Hand.forEach((card, idx) => {
-          insertCard.run(gameId, p2TargetId, idx, card.suit, card.value, 0); // Face down
+          insertCard.run(gameId, p2TargetId, idx, card.suit, card.value, 0, card.id); // Face down
           logInitialCard.run(nanoid(), gameId, p2TargetId, idx, card.suit, card.value);
         });
 
@@ -597,19 +597,37 @@ async function startServer() {
       ? db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player2_id)
       : { username: game.player2_id === 'cpu' ? 'CPU' : 'Waiting...', avatar: 'robot' };
 
+    // Security: Filter cards and drawn card
+    const obscuredCards = cards.map((c: any) => {
+      // If card is not face up AND it doesn't belong to the system (like discard initial)
+      // Wait, all game_cards belong to a player.
+      if (!c.is_face_up) {
+        return { ...c, suit: null, value: null };
+      }
+      return c;
+    });
+
+    let drawnCard = game.drawn_card_json ? JSON.parse(game.drawn_card_json) : null;
+    if (drawnCard && game.current_turn_player_id !== req.user.id) {
+      // Hide drawn card from opponent if it's not their turn
+      // Note: If they draw from discard, it's public knowledge, but hiding it keeps the implementation simple and consistent.
+      // In Golf, you usually know what they took from discard, but if they took from deck, it's secret.
+      drawnCard = { suit: 'hidden', value: 'hidden' };
+    }
+
     res.json({
       game: {
         ...game,
         deck_json: undefined,
         deck_count: JSON.parse(game.deck_json).length,
         discard: JSON.parse(game.discard_json),
-        drawn_card: game.drawn_card_json ? JSON.parse(game.drawn_card_json) : null,
+        drawn_card: drawnCard,
         player1_name: p1?.username || 'Unknown',
         player1_avatar: p1?.avatar || 'user',
         player2_name: p2?.username || (game.player2_id === 'cpu' ? 'CPU' : 'Waiting...'),
         player2_avatar: p2?.avatar || (game.player2_id === 'cpu' ? 'robot' : 'user')
       },
-      cards,
+      cards: obscuredCards,
       moves
     });
   });
@@ -664,10 +682,10 @@ async function startServer() {
         let existingCard: any = null;
         if (moveType === 'replace') {
           existingCard = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
-          db.prepare("UPDATE game_cards SET suit = ?, value = ?, is_face_up = 1 WHERE game_id = ? AND player_id = ? AND card_index = ?")
-            .run(cardToPlace.suit, cardToPlace.value, gameId, req.user.id, cardIndex);
+          db.prepare("UPDATE game_cards SET suit = ?, value = ?, is_face_up = 1, id = ? WHERE game_id = ? AND player_id = ? AND card_index = ?")
+            .run(cardToPlace.suit, cardToPlace.value, cardToPlace.id, gameId, req.user.id, cardIndex);
           
-          discard.push({ suit: existingCard.suit, value: existingCard.value });
+          discard.push({ id: existingCard.id, suit: existingCard.suit, value: existingCard.value });
         } else if (moveType === 'discard_drawn') {
           discard.push(cardToPlace);
           existingCard = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
@@ -740,7 +758,7 @@ async function startServer() {
     const deck = [];
     for (const suit of suits) {
       for (const value of values) {
-        deck.push({ suit, value });
+        deck.push({ id: nanoid(), suit, value });
       }
     }
     return deck;
@@ -868,9 +886,9 @@ async function startServer() {
 
     db.transaction(() => {
       const existingCard: any = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?").get(gameId, indexToReplace);
-      db.prepare("UPDATE game_cards SET suit = ?, value = ?, is_face_up = 1 WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?")
-        .run(cardToPlace.suit, cardToPlace.value, gameId, indexToReplace);
-      discard.push({ suit: existingCard.suit, value: existingCard.value });
+      db.prepare("UPDATE game_cards SET suit = ?, value = ?, is_face_up = 1, id = ? WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?")
+        .run(cardToPlace.suit, cardToPlace.value, cardToPlace.id, gameId, indexToReplace);
+      discard.push({ id: existingCard.id, suit: existingCard.suit, value: existingCard.value });
 
       const nextPlayer = game.player1_id;
       const faceDownCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = 'cpu' AND is_face_up = 0").get(gameId);
@@ -924,7 +942,7 @@ async function startServer() {
     const { cardIndex } = req.body;
     const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
     if (!game) return res.status(404).json({ error: "Game not found" });
-    if (game.status !== 'initializing') return res.status(400).json({ error: "Not in initializing status" });
+    if (game.status !== 'initializing' && game.status !== 'waiting') return res.status(400).json({ error: "Not in a status that allows revealing cards" });
 
     const card: any = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
     if (!card) return res.status(404).json({ error: "Card not found" });

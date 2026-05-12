@@ -45,6 +45,14 @@ Ensure your VM's firewall allows incoming traffic on the application port (defau
 - **View Logs:** `pm2 logs golf-game`
 - **Restart App:** `pm2 restart golf-game`
 - **Update Code:** 
+  You can use the provided update script to pull changes and redeploy:
+  ```bash
+  cd ~/
+  chmod +x ./golf-card-game/update-vm.sh
+  ./golf-card-game/update-vm.sh
+  ```
+  
+  Alternatively, run manually:
   ```bash
   cd ~/golf-card-game
   git pull

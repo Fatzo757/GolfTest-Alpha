@@ -19,6 +19,8 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   const userId = user.id;
   const [state, setState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const loadingStateRef = useRef(false);
   const [isOpponentOnline, setIsOpponentOnline] = useState(true);
   const [notification, setNotification] = useState<{title: string, subtitle?: string} | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -34,45 +36,62 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   const pollInterval = useRef<NodeJS.Timeout | null>(null);
 
   const fetchState = useCallback(async (silent = false) => {
-    // Only show loading screen if we have no data yet and it's not a silent fetch
-    if (!prevStateRef.current && !silent && !state) setLoading(true);
-    
+    if (loadingStateRef.current && !silent) return;
+    if (!token) return;
+
     try {
+      if (!silent && !state) setLoading(true);
+      loadingStateRef.current = true;
+
       const res = await fetch(`/api/games/${gameId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (!res.ok) {
-        console.error(`Fetch failed with status: ${res.status}`);
+      if (res.status === 404) {
+        setError("Match not found or has been archived.");
+        setLoading(false);
         return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Sync Error: ${res.status}`);
       }
 
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.error("Fetch returned non-JSON response");
-        return;
+        throw new Error("Invalid response format");
       }
 
       const data = await res.json();
-      if (res.ok) {
-        // Check for turn change for notification using the ref
+      
+      if (data && data.game) {
         const prevState = prevStateRef.current;
+        
+        // Turn notification
         if (prevState && prevState.game.current_turn_player_id !== userId && data.game.current_turn_player_id === userId) {
           setNotification({ title: "IT'S YOUR TURN!", subtitle: "Choose your next move" });
-          soundService.playTurn();
+          if (user.mute_sounds === 0) {
+            soundService.playTurn();
+          }
           setTimeout(() => setNotification(null), 5000);
         }
 
-        // Check for initialization on first load
+        // Initialization notification
         if (!prevState && data.game.status === 'initializing') {
           setNotification({ title: "GAME SETUP", subtitle: "Reveal 2 cards to start" });
-          setTimeout(() => setNotification(null), 2000);
+          setTimeout(() => setNotification(null), 3000);
+        }
+        
+        // Game start notification
+        if (prevState && prevState.game.status === 'initializing' && data.game.status === 'playing') {
+          setNotification({ title: "GAME STARTED!", subtitle: "Select a card from the deck or discard pile" });
+          setTimeout(() => setNotification(null), 4000);
         }
 
-        // Detect CPU move change using functional update to avoid dependency
+        // Detect CPU move change
         const cpuMoves = data.moves.filter((m: Move) => m.player_id === 'cpu');
         if (cpuMoves.length > 0) {
-          const latestCpuMove = cpuMoves[0]; // moves are ORDER BY timestamp DESC
+          const latestCpuMove = cpuMoves[0];
           setLastCpuMove(current => {
             if (!current || current.id !== latestCpuMove.id) {
               return latestCpuMove;
@@ -81,7 +100,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
           });
         }
 
-        // Sound triggers for state changes
+        // Sound triggers
         if (prevState && prevState.game.status !== data.game.status) {
           if (data.game.status === 'round_end') {
             soundService.playRoundEnd();
@@ -94,15 +113,20 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
           }
         }
         
-        prevStateRef.current = data;
         setState(data);
+        prevStateRef.current = data;
+        setError(null);
+      } else {
+        throw new Error("Empty game data received");
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('Fetch State Error:', err);
+      if (!state) setError(err.message || 'Unknown sync error');
     } finally {
       setLoading(false);
+      loadingStateRef.current = false;
     }
-  }, [gameId, token, userId]);
+  }, [gameId, token, userId, user.mute_sounds, state]);
 
   useEffect(() => {
     if (lastCpuMove) {
@@ -189,7 +213,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   };
 
   const handleReveal = async (cardIndex: number) => {
-    if (state?.game.status !== 'initializing') return;
+    if (state?.game.status !== 'initializing' && state?.game.status !== 'waiting') return;
     try {
       const res = await fetch(`/api/games/${gameId}/reveal`, {
         method: 'POST',
@@ -279,7 +303,10 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   const opponentName = (state?.game.player1_id === userId ? state?.game.player2_name : state?.game.player1_name) || (state?.game.is_vs_cpu ? 'CPU' : 'Opponent');
 
   const myCards = state?.cards.filter(c => c.player_id === userId).sort((a,b) => (a.card_index || 0) - (b.card_index || 0)) || [];
-  const opponentCards = state?.cards.filter(c => c.player_id === (opponentId || 'cpu')).sort((a,b) => (a.card_index || 0) - (b.card_index || 0)) || [];
+  const opponentCards = state?.cards.filter(c => {
+    if (state?.game?.is_vs_cpu) return c.player_id === 'cpu';
+    return c.player_id === opponentId;
+  }).sort((a,b) => (a.card_index || 0) - (b.card_index || 0)) || [];
 
   const turnIndicator = (colorClass: string) => (
     <motion.div
@@ -452,7 +479,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
 
   return (
     <AnimatePresence mode="wait">
-      {loading || !state ? (
+      {loading && !state && !error ? (
         <motion.div 
           key="loading"
           initial={{ opacity: 0 }}
@@ -471,7 +498,32 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
           </div>
           <span className="text-[6px] text-ui-gray uppercase font-mono">Verifying Session ID: {gameId}</span>
         </motion.div>
-      ) : (
+      ) : error && !state ? (
+        <motion.div 
+          key="error"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="min-h-[80vh] flex flex-col items-center justify-center p-8 bg-bg-dark border-4 border-ui-red shadow-[8px_8px_0px_0px_rgba(239,68,68,0.2)]"
+        >
+          <div className="text-ui-red font-mono text-xs mb-4 uppercase tracking-widest font-bold">Sync Failure</div>
+          <div className="text-[10px] text-ui-gray mb-8 uppercase text-center leading-loose max-w-xs">{error}</div>
+          <div className="flex flex-col gap-4 w-full max-w-xs">
+            <button 
+              onClick={() => fetchState(false)}
+              className="geometric-button text-[10px] w-full border-ui-yellow text-ui-yellow"
+            >
+              RETRY CONNECTION
+            </button>
+            <button 
+              onClick={onExit}
+              className="geometric-button text-[10px] w-full"
+            >
+              ABANDON MISSION
+            </button>
+          </div>
+        </motion.div>
+      ) : state && (
         <motion.div 
           key="game-content"
           initial={{ opacity: 0, y: 10 }}

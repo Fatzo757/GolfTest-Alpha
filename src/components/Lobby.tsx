@@ -525,13 +525,13 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                         <div className="text-[7px] flex items-center gap-2 uppercase">
                            <span className={`px-1 py-0.5 font-bold ${
                              game.status === 'playing' ? 'bg-ui-green/20 text-ui-green' : 
-                             game.status === 'initializing' ? 'bg-ui-yellow/20 text-ui-yellow' :
+                             game.status === 'initializing' ? 'bg-ui-yellow/20 text-ui-yellow animate-pulse' :
                              'bg-ui-purple/20 text-ui-purple'
                            }`}>
                              {game.status.replace('_', ' ')}
                            </span>
                            {game.status === 'playing' && (
-                             <span className={`font-bold ${game.current_turn_player_id === user.id ? 'text-ui-yellow' : 'text-ui-red'}`}>
+                             <span className={`font-bold ${game.current_turn_player_id === user.id ? 'text-ui-yellow animate-pulse' : 'text-ui-red'}`}>
                                • {game.current_turn_player_id === user.id ? 'YOUR TURN' : "OPPONENT'S TURN"}
                              </span>
                            )}

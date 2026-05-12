@@ -12,6 +12,7 @@ export interface User {
 }
 
 export interface Card {
+  id?: string;
   suit: string;
   value: string;
   is_face_up?: boolean;

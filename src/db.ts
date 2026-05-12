@@ -68,6 +68,7 @@ db.exec(`
     suit TEXT,
     value TEXT,
     is_face_up BOOLEAN DEFAULT 0,
+    id TEXT,
     PRIMARY KEY(game_id, player_id, card_index)
   );
 
@@ -107,6 +108,7 @@ try {
   addColumn('games', 'cpu_difficulty', "TEXT DEFAULT 'normal'");
   addColumn('games', 'first_revealer_id', 'TEXT');
   addColumn('games', 'is_hidden_from_history', 'BOOLEAN DEFAULT 0');
+  addColumn('game_cards', 'id', 'TEXT');
   addColumn('users', 'mute_sounds', 'INTEGER DEFAULT 0');
   addColumn('users', 'time_zone', "TEXT DEFAULT 'UTC'");
   addColumn('users', 'time_format', "TEXT DEFAULT '12h'");
