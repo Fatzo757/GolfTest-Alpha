@@ -475,6 +475,9 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // --- Rate limiting for chat ---
+  const lastMessageTime = new Map<string, number>();
+
   // Get game messages
   app.get("/api/games/:gameId/messages", authenticate, (req: any, res) => {
     const { gameId } = req.params;
@@ -494,9 +497,17 @@ async function startServer() {
     const { content } = req.body;
     if (!content) return res.status(400).json({ error: "Content required" });
     
+    const userId = req.user.id;
+    const now = Date.now();
+    const lastTime = lastMessageTime.get(userId) || 0;
+    if (now - lastTime < 2000) {
+      return res.status(429).json({ error: "Calm down! 2 seconds between messages." });
+    }
+    lastMessageTime.set(userId, now);
+
     const messageId = nanoid();
     db.prepare("INSERT INTO messages (id, game_id, sender_id, content) VALUES (?, ?, ?, ?)")
-      .run(messageId, gameId, req.user.id, content);
+      .run(messageId, gameId, userId, content);
     
     res.json({ success: true });
   });
@@ -962,21 +973,33 @@ async function startServer() {
     if (!card) return res.status(404).json({ error: "Card not found" });
     if (card.is_face_up) return res.status(400).json({ error: "Card already face up" });
 
+    // Limit to 2 cards during initialization
+    if (game.status === 'initializing') {
+      const currentFaceUp: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, req.user.id);
+      if (currentFaceUp.count >= 2) {
+        return res.status(400).json({ error: "You can only reveal 2 cards to start." });
+      }
+    }
+
     db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ? AND player_id = ? AND card_index = ?").run(gameId, req.user.id, cardIndex);
 
     // Check if player has 2 cards face up
     const faceUpCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, req.user.id);
     
-    // If it's a 2 player game, we need both players to be ready. 
-    // For VS CPU, CPU is already ready (I handled it in Create Game / setupNewRound).
-    if (faceUpCount.count >= 2) {
+    if (faceUpCount.count > 2) {
+      // This shouldn't happen if we strictly allow only 2, but let's be safe.
+      // Already handled by the check below which would prevent the reveal if it's already 2.
+    }
+
+    if (faceUpCount.count >= 2 && game.status === 'initializing') {
+       // If this player just reached 2 cards, check if we can start the game
       if (game.is_vs_cpu) {
          db.prepare("UPDATE games SET status = 'playing' WHERE id = ?").run(gameId);
       } else {
          // check if both players have 2+ cards face up
-         const p1Count: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, game.player1_id);
-         const p2Count: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, game.player2_id);
-         if (p1Count.count >= 2 && p2Count.count >= 2) {
+         const opponentId = game.player1_id === req.user.id ? game.player2_id : game.player1_id;
+         const opponentCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, opponentId);
+         if (opponentCount.count >= 2) {
            db.prepare("UPDATE games SET status = 'playing' WHERE id = ?").run(gameId);
          }
       }

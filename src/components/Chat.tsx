@@ -26,7 +26,16 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldown > 0) {
+      timer = setTimeout(() => setCooldown(c => Math.max(0, c - 1)), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const fetchMessages = async () => {
     if (!gameId || !token) return;
@@ -70,11 +79,11 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || loading || !token) return;
+    if (!newMessage.trim() || loading || !token || cooldown > 0) return;
 
     setLoading(true);
     try {
-      await fetch(`/api/games/${gameId}/messages`, {
+      const res = await fetch(`/api/games/${gameId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +91,12 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
         },
         body: JSON.stringify({ content: newMessage })
       });
+      if (res.status === 429) {
+        setCooldown(2);
+        return;
+      }
       setNewMessage('');
+      setCooldown(2);
       fetchMessages();
     } catch (err) {
       console.error('Failed to send message', err);
@@ -184,10 +198,19 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
                 />
                 <button
                   type="submit"
-                  disabled={loading || !newMessage.trim()}
-                  className="bg-ui-yellow text-bg-dark p-2 border-2 border-black disabled:opacity-50"
+                  disabled={loading || !newMessage.trim() || cooldown > 0}
+                  className="bg-ui-yellow text-bg-dark p-2 border-2 border-black disabled:opacity-50 relative group"
                 >
-                  <Send size={16} />
+                  {cooldown > 0 ? (
+                    <span className="text-[10px] font-bold">{cooldown}s</span>
+                  ) : (
+                    <Send size={16} />
+                  )}
+                  {cooldown > 0 && (
+                    <div className="absolute -top-8 right-0 bg-ui-red text-white text-[7px] px-1.5 py-0.5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold">
+                      Wait {cooldown}s
+                    </div>
+                  )}
                 </button>
               </div>
             </form>

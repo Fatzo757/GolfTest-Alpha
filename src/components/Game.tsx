@@ -82,8 +82,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
             try {
               new Notification("GOLF CARD GAME", {
                 body: "IT'S YOUR TURN! Choose your next move.",
-                tag: 'golf-turn',
-                renotify: true
+                tag: 'golf-turn'
               });
             } catch (err) {
               console.error("Notification failed:", err);
@@ -234,6 +233,16 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
 
   const handleReveal = async (cardIndex: number) => {
     if (state?.game.status !== 'initializing' && state?.game.status !== 'waiting') return;
+    
+    // Client side check for initialization
+    if (state.game.status === 'initializing') {
+      const faceUpCount = myCards.filter(c => c.is_face_up).length;
+      if (faceUpCount >= 2) {
+        setNotification({ title: "READY", subtitle: "Game starts when all players are ready" });
+        return;
+      }
+    }
+
     try {
       const res = await fetch(`/api/games/${gameId}/reveal`, {
         method: 'POST',
@@ -573,7 +582,9 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                   <div className="flex items-center justify-center gap-4">
                      <Info className="text-ui-yellow" size={16} />
                      <span className="text-[10px] text-ui-yellow font-bold uppercase tracking-widest">
-                       Game Setup: Select 2 cards to reveal and start the game
+                       {myCards.filter(c => c.is_face_up).length < 2 
+                         ? "Game Setup: Select 2 cards to reveal and start the game" 
+                         : "Ready: Waiting for opponent..."}
                      </span>
                   </div>
                 </motion.div>
