@@ -7,11 +7,35 @@ import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 import db from "./src/db.ts";
 import dotenv from "dotenv";
+import webpush from "web-push";
+import fs from "fs";
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const VAPID_FILE = path.resolve(__dirname, 'vapid.json');
+let vapidKeys: { publicKey: string, privateKey: string };
+
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  vapidKeys = {
+    publicKey: process.env.VAPID_PUBLIC_KEY,
+    privateKey: process.env.VAPID_PRIVATE_KEY
+  };
+} else if (fs.existsSync(VAPID_FILE)) {
+  vapidKeys = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf-8'));
+} else {
+  vapidKeys = webpush.generateVAPIDKeys();
+  fs.writeFileSync(VAPID_FILE, JSON.stringify(vapidKeys));
+  console.log("SERVER: Generated new VAPID keys and saved to vapid.json");
+}
+
+webpush.setVapidDetails(
+  'mailto:fatzo757@gmail.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
 
 const JWT_SECRET = process.env.JWT_SECRET || "default-secret-key-123";
 
@@ -126,6 +150,32 @@ async function startServer() {
     });
 
     return total;
+  }
+
+  async function sendPushNotification(userId: string, title: string, body: string, url: string = '/') {
+    try {
+      const subscriptions = db.prepare("SELECT subscription FROM push_subscriptions WHERE user_id = ?").all(userId) as any[];
+      
+      for (const row of subscriptions) {
+        try {
+          const subscription = JSON.parse(row.subscription);
+          await webpush.sendNotification(subscription, JSON.stringify({
+            title,
+            body,
+            url
+          }));
+        } catch (err: any) {
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            // Subscription expired or invalid
+            db.prepare("DELETE FROM push_subscriptions WHERE user_id = ? AND subscription = ?").run(userId, row.subscription);
+          } else {
+            console.error(`SERVER: Push error to user ${userId}:`, err);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("SERVER: Failed to fetch subscriptions:", err);
+    }
   }
 
   function setupNewRound(gameId: string, player1Id: string, player2Id: string | null, startingPlayerId?: string) {
@@ -267,6 +317,22 @@ async function startServer() {
     res.json({ users });
   });
 
+  // Search Users (including offline)
+  app.get("/api/users/search", authenticate, (req: any, res) => {
+    const userId = req.user.id;
+    const { query } = req.query;
+    if (!query || typeof query !== 'string') return res.json({ users: [] });
+
+    const users = db.prepare(`
+      SELECT id, username, avatar, last_active_at 
+      FROM users 
+      WHERE id != ? AND username LIKE ?
+      ORDER BY last_active_at DESC
+      LIMIT 20
+    `).all(userId, `%${query}%`);
+    res.json({ users });
+  });
+
   // Get Active Games for user (resumable)
   app.get("/api/games/active", authenticate, (req: any, res) => {
     const userId = req.user.id;
@@ -339,6 +405,9 @@ async function startServer() {
 
       setupNewRound(gameId, userId, targetUserId);
       
+      // Notify target user
+      sendPushNotification(targetUserId, "New Game Started", `${req.user.username} started a new game with you!`, `/game/${gameId}`);
+
       res.json({ success: true, gameId });
     } catch (err) {
       console.error("Invite error:", err);
@@ -487,6 +556,25 @@ async function startServer() {
   // --- Rate limiting for chat ---
   const lastMessageTime = new Map<string, number>();
 
+  // --- Push Notification Routes ---
+  app.get("/api/push/public-key", authenticate, (req, res) => {
+    res.json({ publicKey: vapidKeys.publicKey });
+  });
+
+  app.post("/api/push/subscribe", authenticate, (req: any, res) => {
+    const { subscription } = req.body;
+    if (!subscription) return res.status(400).json({ error: "Subscription required" });
+    
+    try {
+      const subStr = JSON.stringify(subscription);
+      db.prepare("INSERT OR IGNORE INTO push_subscriptions (user_id, subscription) VALUES (?, ?)")
+        .run(req.user.id, subStr);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to store subscription" });
+    }
+  });
+
   // Get game messages
   app.get("/api/games/:gameId/messages", authenticate, (req: any, res) => {
     const { gameId } = req.params;
@@ -614,6 +702,9 @@ async function startServer() {
       const currentTurn = Math.random() < 0.5 ? game.player1_id : req.user.id;
       db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', current_turn_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, currentTurn, game.id);
       db.prepare("UPDATE game_cards SET player_id = ? WHERE game_id = ? AND player_id = 'cpu'").run(req.user.id, game.id);
+      
+      // Notify player1
+      sendPushNotification(game.player1_id, "Opponent Joined!", `${req.user.username} joined your game. Select your 2 cards to start!`, `/game/${game.id}`);
     })();
     res.json({ gameId: game.id });
   });
@@ -760,17 +851,24 @@ async function startServer() {
             const winner = p1Total < p2Total ? game.player1_id : (game.player2_id || 'cpu');
             db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'finished', winner_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
               .run(p1Total, p2Total, winner, gameId);
+              
+            if (winner !== 'cpu') {
+              sendPushNotification(winner, "Grand Victory!", "You won the game of Golf!", `/game/${gameId}`);
+              const loser = winner === game.player1_id ? game.player2_id : game.player1_id;
+              if (loser && loser !== 'cpu') {
+                sendPushNotification(loser, "Game Over", "Better luck next time!", `/game/${gameId}`);
+              }
+            }
           } else {
             db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'round_end' WHERE id = ?").run(p1Total, p2Total, gameId);
-            // We'll keep status as round_end so the client can show the summary.
-            // Requirement said "show a update screen showing hands and point totals".
-            // After the user clicks "Next Round", we call setupNewRound.
-            // So I need a new API endpoint or just handle it in the next "fetch".
-            // Actually, I'll just change status to 'round_end' and let the client trigger the next round.
           }
         } else {
           db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
             .run(JSON.stringify(deck), JSON.stringify(discard), nextPlayer, status, firstRevealerId, gameId);
+            
+          if (nextPlayer && nextPlayer !== 'cpu') {
+            sendPushNotification(nextPlayer, "Your Turn!", "It's your turn to move in Golf.", `/game/${gameId}`);
+          }
         }
 
         db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value, replaced_card_suit, replaced_card_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")

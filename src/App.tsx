@@ -128,15 +128,15 @@ export default function App() {
     <div className={`min-h-screen bg-bg-dark text-text-main font-press-start ${user?.theme === 'retro' ? 'brightness-90 contrast-110 saturate-50' : user?.theme === 'slate' ? 'hue-rotate-180' : user?.theme === 'voltage' ? 'brightness-110 contrast-125' : ''}`}>
       {/* Header Container */}
       {!currentGameId && !replayGameId && (
-        <div className="sticky top-0 z-[100] p-4 bg-bg-dark/80 backdrop-blur-md">
-          <header className="p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center">
-                <CreditCard className="text-ui-orange" size={20} />
+        <div className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/80 backdrop-blur-md">
+          <header className="p-3 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center">
+                <CreditCard className="text-ui-orange" size={16} />
               </div>
               <div>
-                <h1 className="text-[10px] md:text-sm tracking-tighter text-ui-yellow mb-1 font-bold">GOLF CARD GAME</h1>
-                <div className="text-[8px] text-ui-gray uppercase tracking-widest">V0.1-Alpha</div>
+                <h1 className="text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic">GOLF</h1>
+                <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest">V0.1-Alpha</div>
               </div>
             </div>
             

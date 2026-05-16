@@ -30,6 +30,13 @@ db.exec(`
     is_admin INTEGER DEFAULT 0
   );
 
+  CREATE TABLE IF NOT EXISTS push_subscriptions (
+    user_id TEXT,
+    subscription TEXT, -- JSON string
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(user_id, subscription)
+  );
+
   CREATE TABLE IF NOT EXISTS games (
     id TEXT PRIMARY KEY,
     room_code TEXT UNIQUE,

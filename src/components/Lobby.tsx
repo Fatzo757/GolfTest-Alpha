@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { User, GameState } from '../types.ts';
-import { Users, Monitor, Play, Hash, History, Award, Trash2, Settings, Eye, Trophy } from 'lucide-react';
+import { Users, Monitor, Play, Hash, History, Award, Trash2, Settings, Eye, Trophy, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import UserAvatar from './UserAvatar.tsx';
 import { formatMatchTime } from '../lib/timeUtils';
+import { registerServiceWorker, subscribeUserToPush } from '../lib/push.ts';
 
 interface LobbyProps {
   token: string;
@@ -22,12 +23,18 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
   const [activeMatches, setActiveMatches] = useState<any[]>([]);
   const [joinableGames, setJoinableGames] = useState<any[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [inviteLoading, setInviteLoading] = useState<string | null>(null);
   const [view, setView] = useState<'lobby' | 'history'>('lobby');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmClearAction, setConfirmClearAction] = useState<'all' | 'old' | null>(null);
 
   useEffect(() => {
+    registerServiceWorker().then(() => {
+      subscribeUserToPush(token);
+    });
+    
     fetchStats();
     fetchHistory();
     fetchOnlineUsers();
@@ -90,6 +97,23 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
       if (res.ok) {
         const data = await res.json();
         setOnlineUsers(data.users || []);
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/search?query=${encodeURIComponent(query)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.users || []);
       }
     } catch (err) { console.error(err); }
   };
@@ -450,49 +474,63 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               </motion.div>
             )}
 
-            {/* Online Players Section */}
+            {/* Online & Search Section */}
             <motion.div 
               className="md:col-span-2 p-8 geometric-border space-y-6 bg-ui-purple/5"
             >
-              <div className="flex items-center justify-between border-b-2 border-ui-border pb-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-2 border-ui-border pb-4">
                 <div className="flex items-center gap-3">
                   <Users className="text-ui-purple" size={20} />
-                  <h3 className="text-[10px] text-ui-purple tracking-widest uppercase font-bold">Online Combatants</h3>
+                  <h3 className="text-[10px] text-ui-purple tracking-widest uppercase font-bold">Invite Players</h3>
                 </div>
+                
+                <div className="relative flex-1 max-w-md">
+                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                     <Search size={14} className="text-ui-gray" />
+                   </div>
+                   <input 
+                     type="text"
+                     value={searchQuery}
+                     onChange={(e) => handleSearch(e.target.value)}
+                     placeholder="SEARCH BY USERNAME..."
+                     className="w-full bg-bg-dark border-2 border-ui-border py-2 pl-10 pr-4 text-[8px] uppercase font-bold text-ui-purple focus:border-ui-purple outline-none transition-all placeholder:opacity-30"
+                   />
+                </div>
+
                 <div className="flex items-center gap-2">
-                   <div className="w-2 h-2 rounded-full bg-ui-green animate-pulse" />
-                   <span className="text-[7px] text-ui-gray uppercase font-bold">{onlineUsers.length} active players</span>
+                   <div className={`w-2 h-2 rounded-full ${onlineUsers.length > 0 ? 'bg-ui-green animate-pulse' : 'bg-ui-gray'}`} />
+                   <span className="text-[7px] text-ui-gray uppercase font-bold">{onlineUsers.length} online</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {onlineUsers.length === 0 ? (
+                {searchQuery.length >= 2 ? (
+                  searchResults.length === 0 ? (
+                    <div className="col-span-full py-8 text-center text-[10px] uppercase text-ui-gray opacity-40 italic tracking-widest">
+                      No users found matching "{searchQuery}"
+                    </div>
+                  ) : (
+                    searchResults.map((u) => (
+                      <PlayerCard 
+                        key={u.id} 
+                        u={u} 
+                        onInvite={inviteUser} 
+                        isLoading={inviteLoading === u.id} 
+                      />
+                    ))
+                  )
+                ) : onlineUsers.length === 0 ? (
                   <div className="col-span-full py-8 text-center text-[10px] uppercase text-ui-gray opacity-40 italic tracking-widest">
-                    No other players currently active...
+                    No other players currently online. Use search to find friends.
                   </div>
                 ) : (
                   onlineUsers.map((u) => (
-                    <motion.div 
-                      key={u.id}
-                      whileHover={{ scale: 1.02 }}
-                      className="p-3 border-2 border-ui-border bg-bg-dark flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 flex items-center justify-center border border-ui-purple/30 bg-ui-purple/10 text-ui-purple">
-                          <UserAvatar type={u.avatar} size={16} />
-                        </div>
-                        <div className="text-[10px] uppercase font-bold text-ui-purple truncate max-w-[80px]">
-                          {u.username}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => inviteUser(u.id)}
-                        disabled={inviteLoading === u.id}
-                        className="px-3 py-1 border border-ui-yellow text-[8px] font-black text-ui-yellow hover:bg-ui-yellow hover:text-bg-dark transition-all disabled:opacity-30"
-                      >
-                        {inviteLoading === u.id ? 'INVITING...' : 'INVITE'}
-                      </button>
-                    </motion.div>
+                    <PlayerCard 
+                      key={u.id} 
+                      u={u} 
+                      onInvite={inviteUser} 
+                      isLoading={inviteLoading === u.id} 
+                    />
                   ))
                 )}
               </div>
@@ -750,6 +788,36 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
           </div>
         </div>
       )}
+    </motion.div>
+  );
+}
+
+const PlayerCard: React.FC<{ u: any, onInvite: (id: string) => any, isLoading: boolean }> = ({ u, onInvite, isLoading }) => {
+  const isOnline = u.last_active_at && (new Date().getTime() - new Date(u.last_active_at).getTime() < 5 * 60 * 1000);
+
+  return (
+    <motion.div 
+      whileHover={{ scale: 1.02 }}
+      className="p-3 border-2 border-ui-border bg-bg-dark flex items-center justify-between"
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-8 h-8 flex items-center justify-center border ${isOnline ? 'border-ui-green/30 bg-ui-green/10 text-ui-green' : 'border-ui-gray/30 bg-ui-gray/10 text-ui-gray opacity-50'}`}>
+          <UserAvatar type={u.avatar} size={16} />
+        </div>
+        <div className={`text-[10px] uppercase font-bold truncate max-w-[80px] ${isOnline ? 'text-ui-purple' : 'text-ui-gray'}`}>
+          {u.username}
+          <div className="text-[5px] opacity-40 lowercase">
+            {isOnline ? 'online' : 'offline'}
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={() => onInvite(u.id)}
+        disabled={isLoading}
+        className="px-3 py-1 border border-ui-yellow text-[8px] font-black text-ui-yellow hover:bg-ui-yellow hover:text-bg-dark transition-all disabled:opacity-30"
+      >
+        {isLoading ? 'INVITING...' : 'INVITE'}
+      </button>
     </motion.div>
   );
 }
