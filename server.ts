@@ -231,6 +231,11 @@ async function startServer() {
           db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ? AND player_id = 'cpu' AND card_index = ?").run(gameId, idx);
         });
       }
+      
+      // Notify the starting player
+      if (actualStarter && actualStarter !== 'cpu') {
+        sendPushNotification(actualStarter, "Your Turn!", "A new round of Golf has started. It's your turn!", `/game/${gameId}`);
+      }
     })();
   }
 
@@ -1109,6 +1114,10 @@ async function startServer() {
          const opponentCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 1").get(gameId, opponentId);
          if (opponentCount.count >= 2) {
            db.prepare("UPDATE games SET status = 'playing' WHERE id = ?").run(gameId);
+           const currentTurnPlayer = game.current_turn_player_id;
+           if (currentTurnPlayer && currentTurnPlayer !== 'cpu') {
+             sendPushNotification(currentTurnPlayer, "Game Started!", "Both players are ready. It's time to play Golf!", `/game/${gameId}`);
+           }
          }
       }
     }

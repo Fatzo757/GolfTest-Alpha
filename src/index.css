@@ -21,7 +21,6 @@ body {
   background-color: var(--color-bg-dark);
   color: var(--color-text-main);
   image-rendering: pixelated;
-  user-select: none;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
 }

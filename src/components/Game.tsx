@@ -569,7 +569,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
           transition={{ duration: 0.4 }}
         >
           <LayoutGroup>
-            <div className="flex flex-col gap-8 select-none animate-in fade-in zoom-in duration-500 perspective-1000">
+            <div className="flex flex-col gap-8 animate-in fade-in zoom-in duration-500">
             {/* Initialization Banner (Desktop Only) */}
             <AnimatePresence>
               {state.game.status === 'initializing' && (
