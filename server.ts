@@ -128,13 +128,23 @@ async function startServer() {
     return total;
   }
 
-  function setupNewRound(gameId: string, player1Id: string, player2Id: string | null) {
+  function setupNewRound(gameId: string, player1Id: string, player2Id: string | null, startingPlayerId?: string) {
     const deck = createDeck();
     shuffle(deck);
 
     const p1Hand = deck.splice(0, 9);
     const p2Hand = deck.splice(0, 9);
     const discard = [deck.pop()];
+
+    const p2ActualId = player2Id || "cpu";
+    let actualStarter = startingPlayerId;
+    if (!actualStarter) {
+      if (player2Id || p2ActualId === "cpu") {
+        actualStarter = Math.random() < 0.5 ? player1Id : p2ActualId;
+      } else {
+        actualStarter = player1Id;
+      }
+    }
 
     db.transaction(() => {
       // Clear move records for the new round
@@ -152,19 +162,18 @@ async function startServer() {
         insertCard.run(gameId, player1Id, idx, card.suit, card.value, 0, card.id); 
         logInitialCard.run(nanoid(), gameId, player1Id, idx, card.suit, card.value);
       });
-      const p2Id = player2Id || "cpu";
       p2Hand.forEach((card, idx) => {
-        insertCard.run(gameId, p2Id, idx, card.suit, card.value, 0, card.id); 
-        logInitialCard.run(nanoid(), gameId, p2Id, idx, card.suit, card.value);
+        insertCard.run(gameId, p2ActualId, idx, card.suit, card.value, 0, card.id); 
+        logInitialCard.run(nanoid(), gameId, p2ActualId, idx, card.suit, card.value);
       });
       
       db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_suit, card_value) VALUES (?, ?, ?, 'initial_discard', ?, ?)")
         .run(nanoid(), gameId, 'system', discard[0].suit, discard[0].value);
 
       db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, status = 'initializing', current_turn_player_id = ?, first_revealer_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-        .run(JSON.stringify(deck), JSON.stringify(discard), player1Id, gameId);
+        .run(JSON.stringify(deck), JSON.stringify(discard), actualStarter, gameId);
       
-      if (p2Id === "cpu") {
+      if (p2ActualId === "cpu") {
         const cpuIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         shuffle(cpuIndices);
         const toReveal = cpuIndices.slice(0, 2);
@@ -538,7 +547,7 @@ async function startServer() {
     const roomCode = nanoid(6).toUpperCase();
     const player1Id = req.user.id;
     const player2Id = isVsCpu ? "cpu" : null;
-    const currentTurn = player1Id;
+    const currentTurn = (isVsCpu || player2Id) && Math.random() < 0.5 ? (player2Id || player1Id) : player1Id;
     const status = isVsCpu ? "initializing" : "waiting";
     const cpuDifficulty = difficulty || 'normal';
 
@@ -602,7 +611,8 @@ async function startServer() {
     if (game.player1_id === req.user.id) return res.status(400).json({ error: "You are already in this game" });
 
     db.transaction(() => {
-      db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, game.id);
+      const currentTurn = Math.random() < 0.5 ? game.player1_id : req.user.id;
+      db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', current_turn_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, currentTurn, game.id);
       db.prepare("UPDATE game_cards SET player_id = ? WHERE game_id = ? AND player_id = 'cpu'").run(req.user.id, game.id);
     })();
     res.json({ gameId: game.id });
@@ -714,8 +724,8 @@ async function startServer() {
           discard.push({ id: existingCard.id, suit: existingCard.suit, value: existingCard.value });
         } else if (moveType === 'discard_drawn') {
           discard.push(cardToPlace);
+          // Removed manual flip of cardIndex here as per user request ("it should not flip a card on your board")
           existingCard = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
-          db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ? AND player_id = ? AND card_index = ?").run(gameId, req.user.id, cardIndex);
         }
 
         const faceDownCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 0").get(gameId, req.user.id);
@@ -1014,7 +1024,24 @@ async function startServer() {
     if (!game) return res.status(404).json({ error: "Game not found" });
     if (game.status !== 'round_end') return res.status(400).json({ error: "Not in round_end status" });
 
-    setupNewRound(gameId, game.player1_id, game.player2_id);
+    // Determine who had the lowest score this round to start next
+    const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
+    const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
+    const p2Id = game.player2_id || 'cpu';
+    const p2Cards = cards.filter((c: any) => c.player_id === p2Id);
+    
+    const p1Score = calculateHandScore(p1Cards);
+    const p2Score = calculateHandScore(p2Cards);
+
+    let nextStarter = game.player1_id;
+    if (p2Score < p1Score) {
+      nextStarter = p2Id;
+    } else if (p1Score === p2Score) {
+      // If tie, maybe stay same or random, let's keep previous starter for stability
+      nextStarter = game.current_turn_player_id;
+    }
+
+    setupNewRound(gameId, game.player1_id, game.player2_id, nextStarter);
     res.json({ success: true });
   });
 
