@@ -127,66 +127,54 @@ export default function App() {
   return (
     <div className={`min-h-screen bg-bg-dark text-text-main font-press-start ${user?.theme === 'retro' ? 'brightness-90 contrast-110 saturate-50' : user?.theme === 'slate' ? 'hue-rotate-180' : user?.theme === 'voltage' ? 'brightness-110 contrast-125' : ''}`}>
       {/* Header Container */}
-      {!currentGameId && !replayGameId && (
-        <div className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/80 backdrop-blur-md">
-          <header className="p-3 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center">
+      <div className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30">
+        <header className={`p-2 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:py-2 opacity-90 scale-95' : ''}`}>
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className={`w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}>
+              <CreditCard className="text-ui-orange" size={currentGameId || replayGameId ? 12 : 16} />
+            </div>
+            <div>
+              <h1 className={`text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic ${currentGameId || replayGameId ? 'md:text-xs' : ''}`}>GOLF</h1>
+              <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest hidden sm:block">V0.1-Alpha</div>
+            </div>
+          </div>
+          
+          {user && (
             <div className="flex items-center gap-2 md:gap-4">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center">
-                <CreditCard className="text-ui-orange" size={16} />
-              </div>
-              <div>
-                <h1 className="text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic">GOLF</h1>
-                <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest">V0.1-Alpha</div>
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="flex items-center gap-2 md:gap-4 hover:opacity-80 transition-all p-1 md:p-2 bg-black/40 border-2 border-ui-border rounded-sm group cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
+              >
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-black/60 border-2 border-ui-green flex items-center justify-center group-hover:bg-ui-green group-hover:text-black transition-all">
+                  <UserAvatar type={user.avatar} size={14} />
+                </div>
+                <div className="hidden md:flex flex-col items-start text-left bg-black/20 px-2 py-1 rounded">
+                  <span className="text-[10px] text-ui-green font-bold truncate max-w-[80px]">{user.username}</span>
+                </div>
+              </button>
+              
+              <div className="flex gap-1 md:gap-2">
+                {isAdmin && (
+                  <button 
+                    onClick={() => setShowAdmin(true)}
+                    className="p-2 md:p-3 bg-red-900 border-b-4 border-ui-red text-xs hover:bg-opacity-80 transition-all flex items-center gap-2"
+                  >
+                    <ShieldAlert size={16} className="text-white" />
+                  </button>
+                )}
+                <button 
+                  onClick={handleLogout}
+                  className="p-2 md:p-3 bg-ui-red border-b-4 border-ui-purple text-xs hover:bg-red-600 transition-all"
+                >
+                  <LogOut size={16} />
+                </button>
               </div>
             </div>
-            
-            {user && (
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setShowSettings(true)}
-                  className="flex items-center gap-4 hover:opacity-80 transition-all p-2 bg-black/40 border-2 border-ui-border rounded-sm group cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]"
-                >
-                  <div className="w-8 h-8 bg-black/60 border-2 border-ui-green flex items-center justify-center group-hover:bg-ui-green group-hover:text-black transition-all">
-                    <UserAvatar type={user.avatar} size={16} />
-                  </div>
-                  <div className="hidden md:flex flex-col items-start text-left bg-black/20 px-2 py-1 rounded">
-                    <span className="text-[6px] text-ui-gray uppercase tracking-widest leading-none mb-1">Authenticated As</span>
-                    <span className="text-[10px] text-ui-green font-bold truncate max-w-[120px]">{user.username}</span>
-                  </div>
-                </button>
-                <div className="flex gap-2">
-                  {isAdmin && (
-                    <button 
-                      onClick={() => setShowAdmin(true)}
-                      className="p-3 bg-red-900 border-b-4 border-ui-red text-xs hover:bg-opacity-80 transition-all flex items-center gap-2"
-                      title="Admin Dashboard"
-                    >
-                      <ShieldAlert size={18} className="text-white" />
-                      <span className="hidden lg:inline text-white text-[8px] uppercase font-bold tracking-tighter">Admin</span>
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => setShowSettings(true)}
-                    className="p-3 bg-ui-blue border-b-4 border-ui-yellow text-xs hover:bg-opacity-80 transition-all"
-                    title="Settings"
-                  >
-                    <SettingsIcon size={18} className="text-ui-yellow" />
-                  </button>
-                  <button 
-                    onClick={handleLogout}
-                    className="p-3 bg-ui-red border-b-4 border-ui-purple text-xs hover:bg-red-600 transition-all"
-                    title="Logout"
-                  >
-                    <LogOut size={18} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </header>
-        </div>
-      )}
+          )}
+        </header>
+      </div>
 
-      <main className="max-w-5xl mx-auto p-4 md:p-8">
+      <main className="max-w-5xl mx-auto p-4 md:p-8 pb-32">
         {!user ? (
           <Auth onLogin={handleLogin} />
         ) : currentGameId ? (

@@ -22,7 +22,6 @@ body {
   color: var(--color-text-main);
   image-rendering: pixelated;
   -webkit-tap-highlight-color: transparent;
-  overflow-x: hidden;
 }
 
 .geometric-border {
