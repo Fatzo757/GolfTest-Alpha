@@ -9,6 +9,7 @@ export interface User {
   time_format?: '12h' | '24h';
   show_date?: number;
   show_move_date?: number;
+  is_admin?: number;
 }
 
 export interface Card {

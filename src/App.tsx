@@ -28,7 +28,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = user && (user.username === 'fatzo757@gmail.com' || user.username === 'admin' || user.username === 'system');
+  const isAdmin = user && (user.is_admin === 1 || user.username === 'fatzo757@gmail.com' || user.username === 'admin' || user.username === 'system');
 
   useEffect(() => {
     if (user) {

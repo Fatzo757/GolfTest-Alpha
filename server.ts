@@ -70,6 +70,17 @@ async function startServer() {
   });
 
   app.use(express.json());
+
+  // SEED ADMINS
+  try {
+    const admins = ['fatzo757@gmail.com', 'admin', 'system'];
+    admins.forEach(username => {
+      db.prepare("UPDATE users SET is_admin = 1 WHERE username = ?").run(username);
+    });
+    console.log("SERVER: Admin users seeded.");
+  } catch (e) {
+    console.error("SERVER: Failed to seed admins:", e);
+  }
   
   // 3. Early API routes
   app.get("/api/health", (req, res) => {
@@ -249,7 +260,7 @@ async function startServer() {
       const password_hash = bcrypt.hashSync(password, 10);
       db.prepare("INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)").run(id, username, password_hash);
       const token = jwt.sign({ id, username }, JWT_SECRET);
-      res.json({ token, user: { id, username } });
+      res.json({ token, user: { id, username, is_admin: 0 } });
     } catch (err: any) {
       if (err.message.includes("UNIQUE constraint failed")) {
         res.status(400).json({ error: "Username already exists" });
@@ -267,12 +278,12 @@ async function startServer() {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
-    res.json({ token, user: { id: user.id, username: user.username } });
+    res.json({ token, user: { id: user.id, username: user.username, is_admin: user.is_admin } });
   });
 
   // Get Current User
   app.get("/api/auth/me", authenticate, (req: any, res) => {
-    const user: any = db.prepare("SELECT id, username, theme, card_style, avatar, mute_sounds, time_zone, time_format, show_date, show_move_date FROM users WHERE id = ?").get(req.user.id);
+    const user: any = db.prepare("SELECT id, username, theme, card_style, avatar, mute_sounds, time_zone, time_format, show_date, show_move_date, is_admin FROM users WHERE id = ?").get(req.user.id);
     res.json({ user });
   });
 
