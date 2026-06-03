@@ -11,6 +11,12 @@ const db = new Database(dbPath);
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
 
+try {
+  db.exec("ALTER TABLE games ADD COLUMN round_number INTEGER DEFAULT 1");
+} catch (e) {
+  // Column might already exist
+}
+
 // Initialize schema
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -54,6 +60,7 @@ db.exec(`
     cpu_difficulty TEXT DEFAULT 'normal',
     winner_player_id TEXT,
     is_hidden_from_history BOOLEAN DEFAULT 0,
+    round_number INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -89,8 +96,26 @@ db.exec(`
     card_value TEXT,
     replaced_card_suit TEXT,
     replaced_card_value TEXT,
+    round_number INTEGER DEFAULT 1,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TRIGGER IF NOT EXISTS trigger_assign_move_round
+  AFTER INSERT ON moves
+  FOR EACH ROW
+  BEGIN
+    UPDATE moves
+    SET round_number = (SELECT round_number FROM games WHERE id = NEW.game_id)
+    WHERE id = NEW.id;
+  END;
+
+
+  CREATE TABLE IF NOT EXISTS system_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  INSERT OR IGNORE INTO system_settings (key, value) VALUES ('app_version', 'V0.1-Alpha');
 `);
 
 // Simple migration: check if columns exist in existing tables
@@ -116,6 +141,7 @@ try {
   addColumn('games', 'first_revealer_id', 'TEXT');
   addColumn('games', 'is_hidden_from_history', 'BOOLEAN DEFAULT 0');
   addColumn('game_cards', 'id', 'TEXT');
+  addColumn('moves', 'round_number', 'INTEGER DEFAULT 1');
   addColumn('users', 'mute_sounds', 'INTEGER DEFAULT 0');
   addColumn('users', 'time_zone', "TEXT DEFAULT 'UTC'");
   addColumn('users', 'time_format', "TEXT DEFAULT '12h'");

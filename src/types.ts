@@ -31,6 +31,7 @@ export interface Move {
   card_value: string;
   replaced_card_suit?: string;
   replaced_card_value?: string;
+  round_number?: number;
   timestamp: string;
 }
 

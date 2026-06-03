@@ -26,7 +26,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteLoading, setInviteLoading] = useState<string | null>(null);
-  const [view, setView] = useState<'lobby' | 'history'>('lobby');
+  const [view, setView] = useState<'lobby' | 'online' | 'history' | 'rules'>('lobby');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmClearAction, setConfirmClearAction] = useState<'all' | 'old' | null>(null);
 
@@ -256,6 +256,110 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
     }
   };
 
+  const activeMatchesSection = activeMatches.length > 0 && (
+    <motion.div 
+      className="md:col-span-2 p-8 geometric-border space-y-6 bg-ui-green/5 relative mt-8"
+    >
+      <div className="flex items-center gap-3 border-b-2 border-ui-border pb-4">
+        <Play className="text-ui-green" size={20} />
+        <h3 className="text-[10px] text-ui-green tracking-widest uppercase font-bold">Resumable Sessions</h3>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {activeMatches.map((game) => (
+          <motion.div 
+            key={game.id}
+            whileHover={{ scale: 1.01 }}
+            className="p-4 border-2 border-ui-green bg-bg-dark flex items-center justify-between h-full"
+          >
+            <div className="flex flex-col gap-2">
+              <div className="text-[9px] uppercase font-bold flex items-center gap-2">
+                <span className="text-ui-gray">VS</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-ui-green">
+                    {game.player1_id === user.id ? (game.player2_name || (game.is_vs_cpu ? 'CPU' : 'WAITING ROOM')) : (game.player1_name || 'OPPONENT')}
+                  </span>
+                  {game.is_vs_cpu && (
+                    <span className={`px-1 py-0.5 text-[6px] font-black uppercase tracking-widest border ${
+                      game.cpu_difficulty === 'hard' ? 'bg-ui-red/20 text-ui-red border-ui-red/30' :
+                      game.cpu_difficulty === 'normal' ? 'bg-ui-yellow/20 text-ui-yellow border-ui-yellow/30' :
+                      'bg-ui-green/20 text-ui-green border-ui-green/30'
+                    }`}>
+                      {game.cpu_difficulty || 'normal'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-[7px] flex items-center gap-2 uppercase">
+                  <span className={`px-1 py-0.5 font-bold ${
+                    game.status === 'playing' ? 'bg-ui-green/20 text-ui-green' : 
+                    game.status === 'initializing' ? 'bg-ui-yellow/20 text-ui-yellow animate-pulse' :
+                    'bg-ui-purple/20 text-ui-purple'
+                  }`}>
+                    {game.status.replace('_', ' ')}
+                  </span>
+                  {game.status === 'playing' && (
+                    <span className={`font-bold ${game.current_turn_player_id === user.id ? 'text-ui-yellow animate-pulse' : 'text-ui-red'}`}>
+                      • {game.current_turn_player_id === user.id ? 'YOUR TURN' : "OPPONENT'S TURN"}
+                    </span>
+                  )}
+              </div>
+              <div className="text-[7px] text-ui-gray uppercase flex font-mono bg-transparent">
+                  ID: {game.id.substring(0, 8)}... • Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <AnimatePresence mode="wait">
+                {confirmDeleteId === game.id ? (
+                  <motion.div 
+                    key="confirm"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-2"
+                  >
+                    <button
+                      onClick={() => abandonGame(game.id)}
+                      className="px-3 py-2 bg-ui-red text-white text-[8px] font-black uppercase hover:bg-white hover:text-ui-red transition-all"
+                    >
+                      CONFIRM DELETE
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="p-2 border-2 border-ui-border text-ui-gray hover:text-white transition-all"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="actions"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2"
+                  >
+                    <button
+                      onClick={() => setConfirmDeleteId(game.id)}
+                      className="p-2 border-2 border-ui-border text-ui-gray hover:text-ui-red hover:border-ui-red transition-all"
+                      title="Abandon Match"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => onJoinGame(game.id)}
+                      className="px-4 py-2 bg-ui-green text-bg-dark text-[10px] font-black hover:bg-white transition-all"
+                    >
+                      {game.status === 'playing' ? 'RESUME' : 'VIEW'}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -283,20 +387,34 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap">
         <button 
           onClick={() => setView('lobby')}
-          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'lobby' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50'}`}
+          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'lobby' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
         >
           Lobby
         </button>
         <button 
+          onClick={() => setView('online')}
+          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'online' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
+        >
+          Online
+        </button>
+        <button 
           onClick={() => setView('history')}
-          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'history' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50'}`}
+          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'history' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
         >
           Match History
         </button>
+        <button 
+          onClick={() => setView('rules')}
+          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'rules' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
+        >
+          Rules
+        </button>
       </div>
+
+      {activeMatches.length > 0 && activeMatchesSection}
 
       <AnimatePresence mode="wait">
         {confirmClearAction && (
@@ -344,7 +462,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
             {/* Create Game Section */}
             <motion.div 
               whileHover={{ y: -5 }}
-              className="p-8 geometric-border space-y-8 bg-ui-blue/5"
+              className="p-8 geometric-border space-y-8 bg-ui-blue/5 md:col-span-2"
             >
               <div className="flex items-center gap-3 border-b-2 border-ui-border pb-4">
                 <Play className="text-ui-yellow" size={20} />
@@ -384,20 +502,28 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
 
                 <motion.button
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => createGame(false)}
+                  onClick={() => setView('online')}
                   disabled={loading}
                   className="w-full geometric-button py-4 text-xs border-ui-green flex items-center justify-center gap-3"
                 >
                    <Users size={16} />
-                   <span>Host Online Room</span>
+                   <span>Online</span>
                 </motion.button>
               </div>
             </motion.div>
-
+          </motion.div>
+        ) : view === 'online' ? (
+          <motion.div 
+            key="online"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="grid md:grid-cols-2 gap-8"
+          >
             {/* Join Game Section */}
             <motion.div 
               whileHover={{ y: -5 }}
-              className="p-8 geometric-border space-y-8 bg-ui-green/5"
+              className="h-full p-8 geometric-border space-y-8 bg-ui-green/5"
             >
               <div className="flex items-center gap-3 border-b-2 border-ui-border pb-4">
                 <Hash className="text-ui-green" size={20} />
@@ -422,11 +548,36 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                   whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={loading || !roomCode}
-                  className="w-full geometric-button text-xs py-4"
+                  className="w-full geometric-button py-4 text-xs flex items-center justify-center gap-3"
                 >
-                  Join Now
+                   <span>Join Now</span>
                 </motion.button>
               </form>
+            </motion.div>
+
+            {/* Host Online Game Section */}
+            <motion.div 
+               whileHover={{ y: -5 }}
+               className="h-full p-8 geometric-border space-y-8 bg-ui-orange/5"
+            >
+               <div className="flex items-center gap-3 border-b-2 border-ui-border pb-4">
+                 <Users className="text-ui-orange" size={20} />
+                 <h3 className="text-[10px] text-ui-orange tracking-widest uppercase font-bold">Host Online Room</h3>
+               </div>
+               <div className="space-y-6 h-full flex flex-col justify-center pb-8">
+                 <p className="text-[10px] text-ui-gray uppercase leading-relaxed">
+                   Create a private room to invite friends using a 6-digit code.
+                 </p>
+                 <motion.button
+                   whileTap={{ scale: 0.98 }}
+                   onClick={() => createGame(false)}
+                   disabled={loading}
+                   className="w-full geometric-button py-4 text-xs border-ui-orange flex items-center justify-center gap-3"
+                 >
+                    <Users size={16} />
+                    <span>Create Room</span>
+                 </motion.button>
+               </div>
             </motion.div>
 
             {/* Public Games Section */}
@@ -447,7 +598,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                     <motion.div 
                       key={game.id}
                       whileHover={{ scale: 1.02 }}
-                      className="p-4 border-2 border-ui-yellow bg-bg-dark flex items-center justify-between group"
+                      className="p-4 border-2 border-ui-yellow bg-bg-dark flex items-center justify-between group h-full"
                     >
                       <div className="flex items-center gap-3">
                          <div className="w-10 h-10 border border-ui-yellow/30 bg-ui-yellow/5 flex items-center justify-center">
@@ -535,102 +686,8 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                 )}
               </div>
             </motion.div>
-
-            {/* Active Matches Section */}
-            {activeMatches.length > 0 && (
-              <motion.div 
-                className="md:col-span-2 p-8 geometric-border space-y-6 bg-ui-green/5"
-              >
-                <div className="flex items-center gap-3 border-b-2 border-ui-border pb-4">
-                  <Play className="text-ui-green" size={20} />
-                  <h3 className="text-[10px] text-ui-green tracking-widest uppercase font-bold">Resumable Sessions</h3>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {activeMatches.map((game) => (
-                    <motion.div 
-                      key={game.id}
-                      whileHover={{ scale: 1.01 }}
-                      className="p-4 border-2 border-ui-green bg-bg-dark flex items-center justify-between"
-                    >
-                      <div className="flex flex-col gap-2">
-                        <div className="text-[9px] uppercase font-bold flex items-center gap-2">
-                          <span className="text-ui-gray">VS</span>
-                          <span className="text-ui-green">
-                            {game.player1_id === user.id ? (game.player2_name || 'WAITING ROOM') : (game.player1_name || 'OPPONENT')}
-                          </span>
-                        </div>
-                        <div className="text-[7px] flex items-center gap-2 uppercase">
-                           <span className={`px-1 py-0.5 font-bold ${
-                             game.status === 'playing' ? 'bg-ui-green/20 text-ui-green' : 
-                             game.status === 'initializing' ? 'bg-ui-yellow/20 text-ui-yellow animate-pulse' :
-                             'bg-ui-purple/20 text-ui-purple'
-                           }`}>
-                             {game.status.replace('_', ' ')}
-                           </span>
-                           {game.status === 'playing' && (
-                             <span className={`font-bold ${game.current_turn_player_id === user.id ? 'text-ui-yellow animate-pulse' : 'text-ui-red'}`}>
-                               • {game.current_turn_player_id === user.id ? 'YOUR TURN' : "OPPONENT'S TURN"}
-                             </span>
-                           )}
-                        </div>
-                        <div className="text-[7px] text-ui-gray uppercase flex font-mono">
-                           ID: {game.id.substring(0, 8)}... • Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <AnimatePresence mode="wait">
-                          {confirmDeleteId === game.id ? (
-                            <motion.div 
-                              key="confirm"
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              className="flex items-center gap-2"
-                            >
-                              <button
-                                onClick={() => abandonGame(game.id)}
-                                className="px-3 py-2 bg-ui-red text-white text-[8px] font-black uppercase hover:bg-white hover:text-ui-red transition-all"
-                              >
-                                CONFIRM DELETE
-                              </button>
-                              <button
-                                onClick={() => setConfirmDeleteId(null)}
-                                className="p-2 border-2 border-ui-border text-ui-gray hover:text-white transition-all"
-                              >
-                                NO
-                              </button>
-                            </motion.div>
-                          ) : (
-                            <motion.div 
-                              key="actions"
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              className="flex items-center gap-2"
-                            >
-                              <button
-                                onClick={() => setConfirmDeleteId(game.id)}
-                                className="p-2 border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                                title="Abandon Session"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                              <button
-                                onClick={() => onJoinGame(game.id)}
-                                className="px-4 py-2 bg-ui-green text-bg-dark text-[10px] font-black uppercase hover:bg-white transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                              >
-                                REJOIN
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
           </motion.div>
-        ) : (
+        ) : view === 'history' ? (
           <motion.div 
             key="history"
             initial={{ opacity: 0, x: 20 }}
@@ -668,7 +725,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                   <motion.div 
                     key={game.id}
                     whileHover={{ scale: 1.01 }}
-                    className="p-6 geometric-border bg-ui-blue/5 flex items-center justify-between group"
+                    className="p-6 geometric-border bg-ui-blue/5 flex items-center justify-between group h-full"
                   >
                     <div className="flex items-center gap-6">
                       <div className={`p-3 border-2 ${game.winner_player_id === 'cpu' || game.winner_player_id ? 'border-ui-green text-ui-green' : 'border-ui-red text-ui-red'}`}>
@@ -716,20 +773,17 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               </div>
             )}
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {error && (
-        <div className="p-4 bg-ui-red/20 border-l-8 border-ui-red text-[8px] tracking-widest">
-          Error: {error}
-        </div>
-      )}
-
-      {/* Rules Summary (Only on lobby view) */}
-      {view === 'lobby' && (
-        <div className="bg-ui-blue p-8 border-4 border-ui-border relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-ui-purple/20 rotate-45 translate-x-16 -translate-y-16"></div>
-          <h4 className="text-[10px] text-ui-orange mb-6 tracking-widest uppercase border-b-2 border-ui-orange w-fit pb-1">Rules & Scoring</h4>
+        ) : view === 'rules' ? (
+          <motion.div 
+            key="rules"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-4"
+          >
+            <div className="bg-ui-blue p-8 border-4 border-ui-border relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-ui-purple/20 rotate-45 translate-x-16 -translate-y-16"></div>
+              <h4 className="text-[10px] text-ui-orange mb-6 tracking-widest uppercase border-b-2 border-ui-orange w-fit pb-1">Rules & Scoring</h4>
           <div className="grid md:grid-cols-2 gap-12 relative z-10">
             <div className="space-y-6">
               <div className="space-y-2">
@@ -786,6 +840,14 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               </div>
             </div>
           </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {error && (
+        <div className="p-4 bg-ui-red/20 border-l-8 border-ui-red text-[8px] tracking-widest">
+          Error: {error}
         </div>
       )}
     </motion.div>
@@ -798,7 +860,7 @@ const PlayerCard: React.FC<{ u: any, onInvite: (id: string) => any, isLoading: b
   return (
     <motion.div 
       whileHover={{ scale: 1.02 }}
-      className="p-3 border-2 border-ui-border bg-bg-dark flex items-center justify-between"
+      className="p-3 border-2 border-ui-border bg-bg-dark flex items-center justify-between h-full"
     >
       <div className="flex items-center gap-3">
         <div className={`w-8 h-8 flex items-center justify-center border ${isOnline ? 'border-ui-green/30 bg-ui-green/10 text-ui-green' : 'border-ui-gray/30 bg-ui-gray/10 text-ui-gray opacity-50'}`}>

@@ -87,6 +87,19 @@ async function startServer() {
     res.json({ status: "ok", time: new Date().toISOString() });
   });
 
+  app.get("/api/settings", (req, res) => {
+    try {
+      const settings = db.prepare("SELECT key, value FROM system_settings").all() as {key: string, value: string}[];
+      const settingsMap = settings.reduce((acc, s) => {
+        acc[s.key] = s.value;
+        return acc;
+      }, {} as Record<string, string>);
+      res.json(settingsMap);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to load settings" });
+    }
+  });
+
   // DEBUG: verify DB schema
   try {
      console.log("SERVER: Verifying database schema...");
@@ -208,8 +221,7 @@ async function startServer() {
     }
 
     db.transaction(() => {
-      // Clear move records for the new round
-      db.prepare("DELETE FROM moves WHERE game_id = ?").run(gameId);
+      // Clear game cards for the new round, but keep moves for history
       db.prepare("DELETE FROM game_cards WHERE game_id = ?").run(gameId);
       
       // Record round start for replay (or just log)
@@ -651,7 +663,7 @@ async function startServer() {
     const roomCode = nanoid(6).toUpperCase();
     const player1Id = req.user.id;
     const player2Id = isVsCpu ? "cpu" : null;
-    const currentTurn = (isVsCpu || player2Id) && Math.random() < 0.5 ? (player2Id || player1Id) : player1Id;
+    const currentTurn = player1Id; // Round 1 always starts with player 1 for round-robin
     const status = isVsCpu ? "initializing" : "waiting";
     const cpuDifficulty = difficulty || 'normal';
 
@@ -715,7 +727,7 @@ async function startServer() {
     if (game.player1_id === req.user.id) return res.status(400).json({ error: "You are already in this game" });
 
     db.transaction(() => {
-      const currentTurn = Math.random() < 0.5 ? game.player1_id : req.user.id;
+      const currentTurn = game.player1_id;
       db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', current_turn_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, currentTurn, game.id);
       db.prepare("UPDATE game_cards SET player_id = ? WHERE game_id = ? AND player_id = 'cpu'").run(req.user.id, game.id);
       
@@ -732,7 +744,7 @@ async function startServer() {
     if (!game) return res.status(404).json({ error: "Game not found" });
 
     const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
-    const moves = db.prepare("SELECT * FROM moves WHERE game_id = ? ORDER BY timestamp DESC LIMIT 50").all(gameId);
+    const moves = db.prepare("SELECT * FROM moves WHERE game_id = ? ORDER BY timestamp DESC LIMIT 500").all(gameId);
 
     // Fetch player info
     const p1: any = db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player1_id);
@@ -1119,6 +1131,10 @@ async function startServer() {
        // If this player just reached 2 cards, check if we can start the game
       if (game.is_vs_cpu) {
          db.prepare("UPDATE games SET status = 'playing' WHERE id = ?").run(gameId);
+         // If it's already CPU's turn, trigger it
+         if (game.current_turn_player_id === 'cpu') {
+           setTimeout(() => executeCpuMove(gameId), 1000);
+         }
       } else {
          // check if both players have 2+ cards face up
          const opponentId = game.player1_id === req.user.id ? game.player2_id : game.player1_id;
@@ -1142,21 +1158,19 @@ async function startServer() {
     if (!game) return res.status(404).json({ error: "Game not found" });
     if (game.status !== 'round_end') return res.status(400).json({ error: "Not in round_end status" });
 
-    // Determine who had the lowest score this round to start next
-    const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
-    const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
-    const p2Id = game.player2_id || 'cpu';
-    const p2Cards = cards.filter((c: any) => c.player_id === p2Id);
-    
-    const p1Score = calculateHandScore(p1Cards);
-    const p2Score = calculateHandScore(p2Cards);
+    // Increment round number
+    db.prepare("UPDATE games SET round_number = round_number + 1 WHERE id = ?").run(gameId);
+    const updatedGame: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
 
+    // Determine who starts next (round robin) using round_number
     let nextStarter = game.player1_id;
-    if (p2Score < p1Score) {
+    const p2Id = game.player2_id || 'cpu';
+
+    // If round count is even, player2 starts, if odd, player1 starts
+    if (updatedGame.round_number % 2 === 0) {
       nextStarter = p2Id;
-    } else if (p1Score === p2Score) {
-      // If tie, maybe stay same or random, let's keep previous starter for stability
-      nextStarter = game.current_turn_player_id;
+    } else {
+      nextStarter = game.player1_id;
     }
 
     setupNewRound(gameId, game.player1_id, game.player2_id, nextStarter);
@@ -1188,6 +1202,23 @@ async function startServer() {
   });
 
   // --- Admin Routes ---
+  app.put("/api/admin/settings", authenticate, isAdmin, (req, res) => {
+    const { key, value } = req.body;
+    if (!key || typeof value !== 'string') {
+      return res.status(400).json({ error: "Invalid key or value" });
+    }
+    try {
+      db.prepare(`
+        INSERT INTO system_settings (key, value, updated_at) 
+        VALUES (?, ?, CURRENT_TIMESTAMP) 
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+      `).run(key, value);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get("/api/admin/summary", authenticate, isAdmin, (req, res) => {
     const userCount = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
     const gameCount = db.prepare("SELECT COUNT(*) as count FROM games").get() as { count: number };

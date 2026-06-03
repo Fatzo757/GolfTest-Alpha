@@ -12,6 +12,13 @@ export async function registerServiceWorker() {
 
 export async function subscribeUserToPush(token: string) {
   try {
+    if (!('Notification' in window)) return;
+    
+    if (Notification.permission === 'denied') {
+      console.log('Push notifications permission denied.');
+      return;
+    }
+
     const registration = await navigator.serviceWorker.ready;
     
     // Get public key from server
@@ -22,24 +29,32 @@ export async function subscribeUserToPush(token: string) {
     
     if (!publicKey) return;
 
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey)
-    });
+    try {
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
 
-    // Send subscription to server
-    await fetch('/api/push/subscribe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ subscription })
-    });
+      // Send subscription to server
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ subscription })
+      });
 
-    console.log('User is subscribed to push notifications');
+      console.log('User is subscribed to push notifications');
+    } catch (subError: any) {
+      if (subError.message && subError.message.includes('permission denied')) {
+        console.log('Push notifications permission denied.');
+      } else {
+        console.error('Failed to subscribe user:', subError);
+      }
+    }
   } catch (error) {
-    console.error('Failed to subscribe user:', error);
+    console.error('Failed to prepare push subscription:', error);
   }
 }
 

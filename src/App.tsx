@@ -27,8 +27,55 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [appVersion, setAppVersion] = useState<string>('V0.1-Alpha');
 
   const isAdmin = user && (user.is_admin === 1 || user.username === 'fatzo757@gmail.com' || user.username === 'admin' || user.username === 'system');
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.app_version) {
+          setAppVersion(data.app_version);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const interval = setInterval(async () => {
+      if (navigator.onLine) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const res = await fetch('/api/auth/me', {
+            method: 'HEAD',
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          setIsOnline(res.ok || res.status === 401);
+        } catch (e) {
+          setIsOnline(false);
+        }
+      } else {
+        setIsOnline(false);
+      }
+    }, 10000);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(interval);
+    };
+  }, [token]);
 
   useEffect(() => {
     if (user) {
@@ -128,14 +175,21 @@ export default function App() {
     <div className={`min-h-screen bg-bg-dark text-text-main font-press-start ${user?.theme === 'retro' ? 'brightness-90 contrast-110 saturate-50' : user?.theme === 'slate' ? 'hue-rotate-180' : user?.theme === 'voltage' ? 'brightness-110 contrast-125' : ''}`}>
       {/* Header Container */}
       <div className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30">
-        <header className={`p-2 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:py-2 opacity-90 scale-95' : ''}`}>
+        <header className={`p-2 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:py-2 opacity-90' : ''}`}>
           <div className="flex items-center gap-2 md:gap-4">
             <div className={`w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}>
               <CreditCard className="text-ui-orange" size={currentGameId || replayGameId ? 12 : 16} />
             </div>
             <div>
-              <h1 className={`text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic ${currentGameId || replayGameId ? 'md:text-xs' : ''}`}>GOLF</h1>
-              <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest hidden sm:block">V0.1-Alpha</div>
+              <h1 className={`text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out ${currentGameId || replayGameId ? 'md:text-xs hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF</h1>
+              <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest hidden sm:block">{appVersion}</div>
+            </div>
+            {/* Online Status Indicator */}
+            <div className="hidden sm:flex items-center gap-1.5 ml-2 md:ml-4 border border-ui-border bg-black/40 px-2 py-1 rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
+              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-ui-green shadow-[0_0_3px_rgba(50,255,100,0.8)] animate-[pulse_2s_ease-in-out_infinite]' : 'bg-ui-red shadow-[0_0_3px_rgba(255,50,50,0.8)]'}`}></div>
+              <span className={`text-[6px] md:text-[8px] uppercase tracking-widest ${isOnline ? 'text-ui-green' : 'text-ui-red'}`}>
+                {isOnline ? 'ONLINE' : 'OFFLINE'}
+              </span>
             </div>
           </div>
           
@@ -174,7 +228,7 @@ export default function App() {
         </header>
       </div>
 
-      <main className="max-w-5xl mx-auto p-4 md:p-8 pb-32">
+      <main className={`${currentGameId || replayGameId ? 'max-w-7xl' : 'max-w-5xl'} mx-auto p-4 md:p-8 pb-32 transition-all duration-500`}>
         {!user ? (
           <Auth onLogin={handleLogin} />
         ) : currentGameId ? (
@@ -219,7 +273,7 @@ export default function App() {
 
       {/* Retro Footer */}
       <footer className="p-4 text-[10px] text-center text-neutral-500">
-        © 2026 GOLF CARD GAME - V0.1-Alpha
+        © 2026 GOLF CARD GAME - {appVersion}
       </footer>
     </div>
   );

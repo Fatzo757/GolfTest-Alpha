@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Send, X, Clock } from 'lucide-react';
 import UserAvatar from './UserAvatar.tsx';
+import { soundService } from '../services/soundService';
 import { formatMatchTime } from '../lib/timeUtils';
 import { User } from '../types';
 
@@ -27,7 +29,29 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const previousMessagesLengthRef = useRef(0);
+
+  useEffect(() => {
+    if (messages.length > previousMessagesLengthRef.current) {
+      if (previousMessagesLengthRef.current > 0) {
+        const newMessages = messages.slice(previousMessagesLengthRef.current);
+        const hasOthersNew = newMessages.some(m => m.sender_id !== userId);
+        if (hasOthersNew && !isOpen) {
+          setUnreadCount(c => c + newMessages.filter(m => m.sender_id !== userId).length);
+          soundService.playMessage();
+        }
+      }
+      previousMessagesLengthRef.current = messages.length;
+    }
+  }, [messages, isOpen, userId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setUnreadCount(0);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -105,14 +129,19 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
     }
   };
 
-  return (
+  const chatContent = (
     <>
       {/* Chat Toggle Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-ui-yellow text-bg-dark rounded-none border-t-4 border-l-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all z-40"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-ui-yellow text-bg-dark rounded-none border-t-4 border-l-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all z-[150]"
       >
         <MessageSquare size={24} />
+        {unreadCount > 0 && (
+          <div className="absolute -top-2 -right-2 bg-ui-red text-white text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-black animate-bounce shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </div>
+        )}
       </button>
 
       {/* Slide-out Chat Panel */}
@@ -123,7 +152,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-80 bg-bg-dark border-l-4 border-ui-border z-50 flex flex-col shadow-2xl"
+            className="fixed top-0 right-0 h-full w-full sm:w-80 bg-bg-dark border-l-4 border-ui-border z-[200] flex flex-col shadow-2xl"
           >
             {/* Chat Header */}
             <div className="p-4 border-b-2 border-ui-border flex justify-between items-center bg-ui-blue/10">
@@ -133,7 +162,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-ui-gray hover:text-ui-red transition-colors"
+                className="text-ui-gray hover:text-ui-red transition-colors p-2"
               >
                 <X size={20} />
               </button>
@@ -194,12 +223,12 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 bg-bg-dark border-2 border-ui-border p-2 text-xs focus:border-ui-yellow outline-none"
+                  className="flex-1 min-w-0 bg-bg-dark border-2 border-ui-border p-2 text-xs focus:border-ui-yellow outline-none"
                 />
                 <button
                   type="submit"
                   disabled={loading || !newMessage.trim() || cooldown > 0}
-                  className="bg-ui-yellow text-bg-dark p-2 border-2 border-black disabled:opacity-50 relative group"
+                  className="bg-ui-yellow text-bg-dark p-2 border-2 border-black shrink-0 disabled:opacity-50 relative group"
                 >
                   {cooldown > 0 ? (
                     <span className="text-[10px] font-bold">{cooldown}s</span>
@@ -219,4 +248,6 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
       </AnimatePresence>
     </>
   );
+
+  return createPortal(chatContent, document.body);
 }

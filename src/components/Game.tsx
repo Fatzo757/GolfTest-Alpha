@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GameState, Card, Move, User } from '../types.ts';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
-import { RefreshCw, ArrowLeft, History, Info, ChevronRight, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, ArrowLeft, History, Info, ChevronRight, X, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import { Chat } from './Chat';
 import { soundService } from '../services/soundService';
 import UserAvatar from './UserAvatar.tsx';
@@ -25,10 +25,10 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   const [notification, setNotification] = useState<{title: string, subtitle?: string} | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [draggingOver, setDraggingOver] = useState<{ type: 'grid' | 'discard'; index?: number } | null>(null);
-  const [lastCpuMove, setLastCpuMove] = useState<Move | null>(null);
   
   const [mobileTab, setMobileTab] = useState<'me' | 'opponent'>('me');
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
+  const [moveFilter, setMoveFilter] = useState<'ALL' | 'ME' | 'OPPONENT'>('ALL');
   const prevTurnRef = useRef<string | null>(null);
   const discardPileRef = useRef<HTMLDivElement>(null);
   const gridRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -111,12 +111,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
         const cpuMoves = data.moves.filter((m: Move) => m.player_id === 'cpu');
         if (cpuMoves.length > 0) {
           const latestCpuMove = cpuMoves[0];
-          setLastCpuMove(current => {
-            if (!current || current.id !== latestCpuMove.id) {
-              return latestCpuMove;
-            }
-            return current;
-          });
+          
         }
 
         // Sound triggers
@@ -139,20 +134,17 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
         throw new Error("Empty game data received");
       }
     } catch (err: any) {
-      console.error('Fetch State Error:', err);
-      if (!state) setError(err.message || 'Unknown sync error');
+      if (err.message !== 'Failed to fetch') {
+        console.error('Fetch State Error:', err);
+      }
+      if (!state) setError(err.message === 'Failed to fetch' ? 'Connecting to server...' : (err.message || 'Unknown sync error'));
     } finally {
       setLoading(false);
       loadingStateRef.current = false;
     }
   }, [gameId, token, userId, user.mute_sounds, state]);
 
-  useEffect(() => {
-    if (lastCpuMove) {
-      const timer = setTimeout(() => setLastCpuMove(null), 6000);
-      return () => clearTimeout(timer);
-    }
-  }, [lastCpuMove]);
+  
 
   useEffect(() => {
     // Initial fetch
@@ -286,6 +278,42 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input or textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const isMyTurnNow = state?.game?.current_turn_player_id === userId;
+      if (!state?.game || !isMyTurnNow) return;
+
+      const num = parseInt(e.key);
+      if (!isNaN(num) && num >= 1 && num <= 6) {
+        if (state.game.status === 'initializing') {
+          handleReveal(num - 1);
+        } else if (state.game.status === 'playing' && state.game.drawn_card) {
+          handleMove(num - 1, 'replace');
+        }
+      } else if (state.game.status === 'playing') {
+        if (e.key.toLowerCase() === 'd') {
+          if (!state.game.drawn_card) {
+            handleDraw('deck');
+          }
+        } else if (e.key.toLowerCase() === 's') {
+          if (!state.game.drawn_card) {
+            handleDraw('discard');
+          } else {
+            handleMove(0, 'discard_drawn');
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state, userId, handleDraw, handleReveal, handleMove]);
+
   const getPoints = (value: string) => {
     if (value === 'J') return -2;
     if (value === 'K') return 0;
@@ -337,6 +365,16 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   const opponentId = state?.game.player1_id === userId ? state?.game.player2_id : state?.game.player1_id;
   const canDraw = isMyTurn && !state?.game.drawn_card && state?.game.status !== 'initializing';
   
+  const latestGridMove = useMemo(() => {
+    if (!state?.moves) return null;
+    return state.moves.find(m => m.card_affected_index !== null && !['initial_card', 'initial_discard', 'round_start'].includes(m.move_type));
+  }, [state?.moves]);
+
+  const latestMove = useMemo(() => {
+    if (!state?.moves) return null;
+    return state.moves.find(m => !['initial_card', 'initial_discard', 'round_start'].includes(m.move_type));
+  }, [state?.moves]);
+
   const myName = (state?.game.player1_id === userId ? state?.game.player1_name : state?.game.player2_name) || 'Player';
   const opponentName = (state?.game.player1_id === userId ? state?.game.player2_name : state?.game.player1_name) || (state?.game.is_vs_cpu ? 'CPU' : 'Opponent');
 
@@ -404,35 +442,35 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   };
 
     const DeckAndDiscard = (
-      <div className="p-4 md:p-6 geometric-border bg-black/20 flex flex-row xl:flex-col items-center justify-center gap-2 md:gap-4 lg:gap-8">
+      <div className="p-2 md:p-6 geometric-border bg-black/10 flex flex-row lg:flex-col items-center justify-center gap-1 md:gap-4 lg:gap-8 min-w-fit">
          {/* Deck Slot */}
          <motion.div 
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
-           className="flex flex-col items-center gap-2 w-20 md:w-28"
+           className="flex flex-col items-center gap-1 w-16 md:w-28"
          >
           <motion.div 
              onClick={() => canDraw && handleDraw('deck')}
              whileHover={canDraw ? { scale: 1.1, rotate: 5, boxShadow: '8px 8px 0px 0px rgba(255,123,82,0.4)' } : {}}
              whileTap={canDraw ? { scale: 0.9 } : {}}
-             className={`geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${canDraw ? 'border-ui-yellow' : 'opacity-40 grayscale'} ${lastCpuMove?.move_type.includes('deck') ? 'ring-4 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(255,123,82,0.5)]' : ''}`}
+             className={`geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${canDraw ? 'border-ui-yellow' : 'opacity-40 grayscale'} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') ? 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]' : ''}`}
            >
-             {lastCpuMove?.move_type.includes('deck') && (
-               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-ui-orange text-white text-[6px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50 shadow-lg">
-                 CPU DREW
+             {latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') && (
+               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-orange text-white text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
+                 {latestMove.player_id === "cpu" ? "CPU" : "OPPONENT"}
                </div>
              )}
              <div className="card-pattern flex items-center justify-center">
-               <div className={`text-[8px] md:text-[10px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
-                 DECK<br/>{state?.game?.deck_count}
+               <div className={`text-[7px] md:text-[10px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
+                 {state?.game?.deck_count}
                </div>
              </div>
            </motion.div>
-           <span className="text-[6px] md:text-[8px] text-ui-orange tracking-widest font-bold uppercase">Deck</span>
+           <span className="text-[5px] md:text-[8px] text-ui-orange tracking-widest font-bold uppercase">Deck</span>
         </motion.div>
 
         {/* Integrated Active Card Area - Fixed Width Slot */}
-        <div className="w-24 md:w-32 flex flex-col items-center justify-center min-h-[100px] md:min-h-[140px]">
+        <div className="w-20 md:w-32 lg:w-full flex flex-col items-center justify-center min-h-[80px] md:min-h-[140px]">
           <AnimatePresence mode="wait" initial={false}>
             {state?.game?.drawn_card ? (
               <motion.div 
@@ -440,31 +478,31 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                className="flex flex-col items-center gap-2"
+                className="flex flex-col items-center gap-1"
               >
-                <span className="text-[6px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
-                <div className="flex items-center gap-2">
+                <span className="text-[5px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
+                <div className="flex items-center gap-1">
                   <CardComponent
                     key={state.game.drawn_card.id}
                     card={state.game.drawn_card}
                     index={-1}
                     style={user.card_style || 'classic'}
-                    className="small md:normal border-ui-yellow ring-4 ring-ui-yellow/20"
+                    className="small md:normal border-ui-yellow ring-2 ring-ui-yellow/20"
                     forceFaceUp={true}
                   />
                   <button 
                     onClick={() => handleMove(0, 'discard_drawn')} 
-                    className="p-2 md:p-3 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all shadow-[2px_2px_0px_0px_rgba(220,38,38,0.2)]"
+                    className="p-1.5 md:p-3 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all shadow-[1px_1px_0px_0px_rgba(220,38,38,0.2)]"
                     title="Discard Active Card"
                   >
-                    <X size={12} />
+                    <X size={10} />
                   </button>
                 </div>
               </motion.div>
             ) : (
               <div key="placeholder" className="h-full flex flex-col items-center justify-center opacity-10">
-                <div className="w-[56px] h-[76px] md:w-[80px] md:h-[110px] border border-dashed border-ui-border rounded-sm flex items-center justify-center">
-                   <div className="text-[8px] font-bold">READY</div>
+                <div className="w-[40px] h-[58px] md:w-[80px] md:h-[110px] border border-dashed border-ui-border rounded-sm flex items-center justify-center">
+                   <div className="text-[6px] font-bold">READY</div>
                 </div>
               </div>
             )}
@@ -475,7 +513,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
            transition={{ delay: 0.1 }}
-           className="flex flex-col items-center gap-2 w-20 md:w-28"
+           className="flex flex-col items-center gap-1 w-16 md:w-28"
          >
            <div 
              ref={discardPileRef}
@@ -486,11 +524,11 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                  handleDraw('discard');
                }
              }}
-             className={`relative cursor-pointer transition-all small md:normal ${isMyTurn && state?.game?.status !== 'initializing' ? 'border-ui-green' : 'opacity-40'} ${draggingOver?.type === 'discard' ? 'scale-110 ring-4 ring-ui-green ring-offset-4 ring-offset-bg-dark shadow-[0_0_30px_rgba(56,217,115,0.6)]' : ''} ${lastCpuMove?.move_type.includes('discard') ? 'ring-4 ring-ui-green ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(56,217,115,0.5)]' : ''}`}
+             className={`relative cursor-pointer transition-all small md:normal ${isMyTurn && state?.game?.status !== 'initializing' ? 'border-ui-green' : 'opacity-40'} ${draggingOver?.type === 'discard' ? 'scale-110 ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(56,217,115,0.6)]' : ''} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') ? 'ring-2 ring-ui-green ring-offset-1 ring-offset-bg-dark shadow-[0_0_10px_rgba(56,217,115,0.5)]' : ''}`}
            >
-             {lastCpuMove?.move_type.includes('discard') && (
-               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-ui-green text-bg-dark text-[6px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50 shadow-lg">
-                 CPU RECLAIMED
+             {latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') && (
+               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-green text-bg-dark text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
+                 {latestMove.player_id === "cpu" ? "CPU" : "OPPONENT"}
                </div>
              )}
              <AnimatePresence mode="popLayout">
@@ -505,12 +543,12 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                 />
               ) : (
                 <div className="geometric-card small md:normal border-2 border-dashed border-ui-border flex items-center justify-center opacity-20">
-                  <X size={16} />
+                  <X size={12} />
                 </div>
               )}
              </AnimatePresence>
            </div>
-           <span className="text-[6px] md:text-[8px] text-ui-green tracking-widest font-bold uppercase">Discard</span>
+           <span className="text-[5px] md:text-[8px] text-ui-green tracking-widest font-bold uppercase">Discard</span>
         </motion.div>
       </div>
     );
@@ -569,355 +607,382 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
           transition={{ duration: 0.4 }}
         >
           <LayoutGroup>
-            <div className="flex flex-col gap-8 animate-in fade-in zoom-in duration-500">
-            {/* Initialization Banner (Desktop Only) */}
-            <AnimatePresence>
-              {state.game.status === 'initializing' && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="hidden md:block bg-ui-yellow/10 border-4 border-ui-yellow p-4 text-center overflow-hidden"
-                >
-                  <div className="flex items-center justify-center gap-4">
-                     <Info className="text-ui-yellow" size={16} />
-                     <span className="text-[10px] text-ui-yellow font-bold uppercase tracking-widest">
-                       {myCards.filter(c => c.is_face_up).length < 2 
-                         ? "Game Setup: Select 2 cards to reveal and start the game" 
-                         : "Ready: Waiting for opponent..."}
-                     </span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-    
-            {/* Simplified Game Header */}
-            <div className="flex items-center justify-between px-4 py-2 pointer-events-none relative z-[100]">
-              <button 
-                onClick={onExit} 
-                className="pointer-events-auto p-2 bg-bg-dark/60 border border-ui-border hover:border-ui-orange text-ui-gray hover:text-ui-orange transition-all group shadow-lg"
-                title="Exit Game"
-              >
-                <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-              </button>
-
-              <div className="flex items-center gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-1.5 border border-ui-border rounded-full shadow-lg">
-                <div className="flex flex-col items-center">
-                  <span className="text-[5px] text-ui-gray uppercase leading-none mb-0.5">Room</span>
-                  <span className="text-[10px] text-ui-yellow font-bold leading-none tracking-tighter">#{state.game.room_code}</span>
-                </div>
-                
-                <div className="w-[1px] h-4 bg-ui-border mx-1" />
-                
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-green/30">
-                      <UserAvatar type={user.avatar} size={8} />
+            <div className="flex flex-col gap-6 animate-in fade-in zoom-in duration-500">
+              {/* Initialization Banner (Desktop Only) */}
+              <AnimatePresence>
+                {state.game.status === 'initializing' && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="hidden md:block bg-ui-yellow/10 border-4 border-ui-yellow p-4 text-center overflow-hidden"
+                  >
+                    <div className="flex items-center justify-center gap-4">
+                       <Info className="text-ui-yellow" size={16} />
+                       <span className="text-[10px] text-ui-yellow font-bold uppercase tracking-widest">
+                         {myCards.filter(c => c.is_face_up).length < 2 
+                           ? "Game Setup: Select 2 cards to reveal and start the game" 
+                           : "Ready: Waiting for opponent..."}
+                       </span>
                     </div>
-                    <span className="text-[9px] text-ui-green font-black">{userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+      
+              {/* Simplified Game Header */}
+              <div className="flex items-center justify-between px-4 py-2 pointer-events-none relative z-[100]">
+                <button 
+                  onClick={onExit} 
+                  className="pointer-events-auto p-2 bg-bg-dark/60 border border-ui-border hover:border-ui-orange text-ui-gray hover:text-ui-orange transition-all group shadow-lg"
+                  title="Exit Game"
+                >
+                  <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                </button>
+
+                <div className="flex items-center gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-1.5 border border-ui-border rounded-full shadow-lg">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[5px] text-ui-gray uppercase leading-none mb-0.5">Room</span>
+                    <span className="text-[10px] text-ui-yellow font-bold leading-none tracking-tighter">#{state.game.room_code}</span>
                   </div>
                   
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-red/30">
-                      <UserAvatar type={(state.game as any).player2_avatar} size={8} />
+                  <div className="w-[1px] h-4 bg-ui-border mx-1" />
+
+                  <div className="flex flex-col items-center group relative cursor-help">
+                    <span className="text-[5px] text-ui-gray uppercase leading-none mb-0.5 flex items-center gap-1">
+                      <Layers size={6} />
+                      Deck
+                    </span>
+                    <span className="text-[10px] text-ui-purple font-bold leading-none tracking-tighter">
+                      {state.game.deck_count} LEFT
+                    </span>
+                  </div>
+
+                  <div className="w-[1px] h-4 bg-ui-border mx-1" />
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-green/30">
+                        <UserAvatar type={user.avatar} size={8} />
+                      </div>
+                      <span className="text-[9px] text-ui-green font-black">{userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score}</span>
                     </div>
-                    <span className="text-[9px] text-ui-red font-black">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}</span>
+                    
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-red/30">
+                        <UserAvatar type={(state.game as any).player2_avatar} size={8} />
+                      </div>
+                      <span className="text-[9px] text-ui-red font-black">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}</span>
+                    </div>
+                  </div>
+
+                  <div className="w-[1px] h-4 bg-ui-border mx-1" />
+
+                  <div className="flex flex-col items-end">
+                     <div className="flex items-center gap-1">
+                        <div className={`w-1 h-1 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
+                        <span className="text-[7px] text-white/40 uppercase font-black tracking-widest">{state.game.status === 'playing' ? (isMyTurn ? 'Your Turn' : 'Opponent') : state.game.status}</span>
+                     </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="w-[1px] h-4 bg-ui-border mx-1" />
+              {/* Game Layout: 3-column on Desktop, Active tab on Mobile */}
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col lg:flex-row gap-4 md:gap-6 items-start justify-center px-4">
+                   {/* Center Column: Deck & Discard (Desktop Middle, Mobile Top) */}
+                   <div className="w-full lg:w-48 xl:w-64 order-1 lg:order-2">
+                     {DeckAndDiscard}
+                   </div>
 
-                <div className="flex flex-col items-end">
-                   <div className="flex items-center gap-1">
-                      <div className={`w-1 h-1 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
-                      <span className="text-[7px] text-white/40 uppercase font-black tracking-widest">{state.game.status === 'playing' ? (isMyTurn ? 'Your Turn' : 'Opponent') : state.game.status}</span>
+                   {/* Mobile Tab Switcher */}
+                   <div className="lg:hidden flex border-2 border-ui-border p-1 bg-bg-dark/40 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] w-full order-2">
+                     <button 
+                       onClick={() => setMobileTab('me')}
+                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'me' ? 'bg-ui-green text-bg-dark' : 'text-ui-gray hover:text-white'}`}
+                     >
+                       YOU ({calculateScore(userId)})
+                     </button>
+                     <button 
+                       onClick={() => setMobileTab('opponent')}
+                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'opponent' ? 'bg-ui-red text-white' : 'text-ui-gray hover:text-white'}`}
+                     >
+                       {opponentName} ({calculateScore(opponentId || 'cpu')})
+                     </button>
+                   </div>
+
+                   {/* Opponent Area (Left Column on Desktop) */}
+                   <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
+                     <div className={`relative p-4 md:p-6 bg-ui-red/5 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
+                       <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
+                          <div className="px-3 flex items-center gap-2 border-r border-white/10">
+                           <div className={`w-1.5 h-1.5 rounded-full ${isOpponentOnline ? 'bg-ui-green' : 'bg-ui-red'} animate-pulse`} />
+                           <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
+                              <UserAvatar type={(state.game as any).player2_avatar} size={10} />
+                           </div>
+                           <span className="text-ui-red">{opponentName}</span>
+                           <span className="opacity-50">::</span>
+                           <span>{calculateScore(opponentId || 'cpu')} Pts</span>
+                         </div>
+                         {!isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-orange')}
+                       </div>
+                       <motion.div 
+                         variants={boardVariants}
+                         initial="hidden"
+                         animate="visible"
+                         className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center opacity-80"
+                       >
+                         {opponentCards.map((card, idx) => (
+                           <div key={card.id || idx} className="relative w-full">
+                             {latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx && (
+                               <motion.div 
+                                 initial={{ opacity: 0, y: -10 }}
+                                 animate={{ opacity: 1, y: 0 }}
+                                 className="absolute -top-6 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap pointer-events-none"
+                               >
+                                 <div className="bg-ui-yellow text-bg-dark text-[7px] font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 bg-bg-dark/50 animate-pulse rounded-full inline-block" />
+                                    Last Move
+                                 </div>
+                               </motion.div>
+                             )}
+                             <CardComponent 
+                               card={card}
+                               index={idx}
+                               style={user.card_style || 'classic'}
+                               className={`fluid ${latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]' : ''}`}
+                             />
+                           </div>
+                         ))}
+                       </motion.div>
+                     </div>
+                   </div>
+
+                   <div className={`flex-1 w-full max-w-2xl order-4 lg:order-3 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
+                     <div className={`relative p-4 md:p-6 bg-ui-green/5 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
+                       <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
+                         <div className="px-3 flex items-center gap-2 border-r border-white/10">
+                           <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
+                              <UserAvatar type={user.avatar} size={10} />
+                           </div>
+                           <span className="text-ui-green font-bold">{myName}</span>
+                           <span className="opacity-50">::</span>
+                           <span>{calculateScore(userId)} Pts</span>
+                         </div>
+                         {isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-yellow')}
+                       </div>
+                       
+                       <AnimatePresence>
+                         {state.game.drawn_card && isMyTurn && (
+                           <div className="absolute -right-4 lg:-right-20 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-4">
+                             <span className="hidden xl:block text-[7px] text-ui-yellow bg-bg-dark px-2 py-1 border border-ui-yellow animate-pulse mb-2 whitespace-nowrap uppercase tracking-[0.2em]">Drawn Card</span>
+                             
+                             <motion.div 
+                               layoutId={state.game.drawn_card.id}
+                               drag
+                               dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+                               dragSnapToOrigin
+                               onDragStart={() => soundService.playDraw()}
+                               onDrag={(e, info) => {
+                                 const x = info.point.x;
+                                 const y = info.point.y;
+                                 
+                                 const discardRect = discardPileRef.current?.getBoundingClientRect();
+                                 if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
+                                   setDraggingOver({ type: 'discard' });
+                                   return;
+                                 }
+   
+                                 for (let i = 0; i < gridRefs.current.length; i++) {
+                                   const rect = gridRefs.current[i]?.getBoundingClientRect();
+                                   if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                                     setDraggingOver({ type: 'grid', index: i });
+                                     return;
+                                   }
+                                 }
+                                 setDraggingOver(null);
+                               }}
+                               onDragEnd={(e, info) => {
+                                 const x = info.point.x;
+                                 const y = info.point.y;
+                                 setDraggingOver(null);
+                                 const discardRect = discardPileRef.current?.getBoundingClientRect();
+                                 if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
+                                   handleMove(0, 'discard_drawn');
+                                   return;
+                                 }
+                                 for (let i = 0; i < gridRefs.current.length; i++) {
+                                   const rect = gridRefs.current[i]?.getBoundingClientRect();
+                                   if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                                     handleMove(i, 'replace');
+                                     return;
+                                   }
+                                 }
+                               }}
+                               whileHover={{ scale: 1.05 }}
+                               whileDrag={{ scale: 1.15, zIndex: 100 }}
+                               className="cursor-grab active:cursor-grabbing w-16 h-24 md:w-24 md:h-32"
+                             >
+                               <CardComponent
+                                 card={state.game.drawn_card}
+                                 index={-1}
+                                 style={user.card_style || 'classic'}
+                                 className="fluid border-ui-yellow ring-4 ring-ui-yellow/20 shadow-[0_0_20px_rgba(255,205,117,0.3)]"
+                                 forceFaceUp={true}
+                               />
+                             </motion.div>
+                           </div>
+                         )}
+                       </AnimatePresence>
+   
+                       <motion.div 
+                         variants={boardVariants}
+                         initial="hidden"
+                         animate="visible"
+                         className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center"
+                       >
+                         {myCards.map((card, idx) => (
+                           <div 
+                             key={card.id || idx}
+                             ref={el => gridRefs.current[idx] = el}
+                             className="relative group w-full"
+                           >
+                             {latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx && (
+                               <motion.div 
+                                 initial={{ opacity: 0, y: -10 }}
+                                 animate={{ opacity: 1, y: 0 }}
+                                 className="absolute -top-6 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap pointer-events-none"
+                               >
+                                 <div className="bg-ui-yellow text-bg-dark text-[7px] font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
+                                   <span className="w-1.5 h-1.5 bg-bg-dark/50 animate-pulse rounded-full inline-block" />
+                                   Last Move
+                                 </div>
+                               </motion.div>
+                             )}
+                             <CardComponent
+                               card={card}
+                               index={idx}
+                               style={user.card_style || 'classic'}
+                               onClick={() => {
+                                 if (state.game.status === 'initializing') {
+                                   handleReveal(idx);
+                                 } else if (state.game.drawn_card) {
+                                   handleMove(idx, 'replace');
+                                 }
+                               }}
+                               className={`fluid cursor-pointer ${latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]' : ''} ${state.game.drawn_card ? 'ring-4 ring-ui-yellow ring-offset-4 ring-offset-bg-dark border-ui-yellow scale-105 z-10 shadow-[0_0_20px_rgba(255,205,117,0.4)]' : ''} ${draggingOver?.type === 'grid' && draggingOver.index === idx ? 'scale-110 -translate-y-4 ring-ui-yellow ring-4' : ''} hover:y-[-10px] hover:scale-110 hover:shadow-[0_0_20px_rgba(56,217,115,0.4),8px_8px_0px_0px_rgba(0,0,0,0.4)]`}
+                             />
+                             
+                             {state.game.status === 'initializing' && !card.is_face_up && (
+                               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                 <span className="text-[6px] text-ui-yellow font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest bg-bg-dark/80 px-2 py-1 border border-ui-yellow transition-opacity">Reveal</span>
+                               </div>
+                             )}
+   
+                             {state.game.drawn_card && !card.is_face_up && (
+                               <motion.div 
+                                 initial={{ opacity: 0 }}
+                                 animate={{ opacity: 1 }}
+                                 className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none"
+                               >
+                                 <div className="text-[8px] text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
+                               </motion.div>
+                             )}
+                           </div>
+                         ))}
+                       </motion.div>
+                     </div>
                    </div>
                 </div>
               </div>
-            </div>
-    
-            <div className="flex flex-col xl:flex-row gap-4 md:gap-8">
-              {/* Mobile Deck/Discard & Logic */}
-              <div className="xl:hidden space-y-4">
-                 {DeckAndDiscard}
-                 
-                 <div className="flex border-2 border-ui-border p-1 bg-bg-dark/40 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
-                   <button 
-                     onClick={() => setMobileTab('me')}
-                     className={`flex-1 py-3 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'me' ? 'bg-ui-green text-bg-dark' : 'text-ui-gray hover:text-white'}`}
-                   >
-                     {myName} ({calculateScore(userId)})
-                   </button>
-                   <button 
-                     onClick={() => setMobileTab('opponent')}
-                     className={`flex-1 py-3 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'opponent' ? 'bg-ui-red text-white' : 'text-ui-gray hover:text-white'}`}
-                   >
-                     {opponentName} ({calculateScore(opponentId || 'cpu')})
-                   </button>
-                 </div>
 
-                 {/* Mobile Drawn Card Slot REMOVED - now integrated in DeckAndDiscard */}
-              </div>
-
-              {/* Left Column: Player Boards */}
-              <div className="flex-1 space-y-8 md:space-y-12">
-          {/* Opponent Area */}
-          <div className={`relative p-4 md:p-6 bg-ui-red/5 border-4 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden xl:block'} ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
-            <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
-               <div className="px-3 flex items-center gap-2 border-r border-white/10">
-                <div className={`w-1.5 h-1.5 rounded-full ${isOpponentOnline ? 'bg-ui-green' : 'bg-ui-red'} animate-pulse`} />
-                <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
-                   <UserAvatar type={(state.game as any).player2_avatar} size={10} />
-                </div>
-                <span className="text-ui-red">{opponentName}</span>
-                <span className="opacity-50">::</span>
-                <span>{calculateScore(opponentId || 'cpu')} Round Points</span>
-              </div>
-              {!isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-orange')}
-            </div>
-            <motion.div 
-              variants={boardVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-3 gap-4 w-fit mx-auto opacity-80 scale-90 md:scale-100"
-            >
-              {opponentCards.map((card, idx) => (
-                <div key={card.id || idx} className="relative">
-                  {lastCpuMove?.card_affected_index === idx && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute -top-8 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap"
+              {/* Bottom Section: History & Moves */}
+              <div className="w-full max-w-7xl mx-auto px-4">
+                <div className="geometric-border p-5 flex flex-col bg-bg-dark/20 min-h-[48px]">
+                  <div className="flex items-center justify-between border-b border-ui-border pb-3 mb-4 w-full">
+                    <button 
+                      onClick={() => setHistoryCollapsed(!historyCollapsed)}
+                      className="text-[8px] text-ui-gray uppercase tracking-widest flex items-center gap-2 hover:text-ui-yellow transition-colors"
                     >
-                      <div className="bg-ui-yellow text-bg-dark text-[7px] font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase">
-                        CPU Replaced #{idx}
+                      <History size={12} /> Recent Moves {historyCollapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+                    </button>
+                    {!historyCollapsed && (
+                      <div className="flex items-center gap-2">
+                        {['ALL', 'ME', 'OPPONENT'].map(f => (
+                          <button
+                            key={f}
+                            onClick={() => setMoveFilter(f as any)}
+                            className={`text-[8px] uppercase tracking-widest px-2 py-1 rounded-sm border ${moveFilter === f ? 'bg-ui-yellow text-bg-dark border-transparent font-bold' : 'bg-transparent text-ui-gray border-ui-border hover:border-ui-yellow'}`}
+                          >
+                            {f}
+                          </button>
+                        ))}
                       </div>
-                    </motion.div>
-                  )}
-                  <CardComponent 
-                    card={card}
-                    index={idx}
-                    style={user.card_style || 'classic'}
-                    className={`small ${lastCpuMove?.card_affected_index === idx ? 'ring-4 ring-ui-yellow animate-pulse shadow-[0_0_20px_rgba(255,205,117,0.5)]' : ''}`}
-                  />
-                </div>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* Player Area */}
-          <div className={`relative p-4 md:p-6 bg-ui-green/5 border-4 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden xl:block'} ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
-            <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
-              <div className="px-3 flex items-center gap-2 border-r border-white/10">
-                <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
-                   <UserAvatar type={user.avatar} size={10} />
-                </div>
-                <span className="text-ui-green">{myName}</span>
-                <span className="opacity-50">::</span>
-                <span>{calculateScore(userId)} Round Points</span>
-              </div>
-              {isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-yellow')}
-            </div>
-            
-            <AnimatePresence>
-              {state.game.drawn_card && (
-                <div className="absolute -left-20 top-1/2 -translate-y-1/2 z-30 hidden xl:flex flex-col items-center gap-4">
-                  <span className="text-[7px] text-ui-yellow bg-bg-dark px-2 py-1 border border-ui-yellow animate-pulse mb-2 whitespace-nowrap uppercase tracking-[0.2em]">Active Drawn Card</span>
-                  
-                  <motion.div 
-                    layoutId={state.game.drawn_card.id}
-                    drag
-                    dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-                    dragSnapToOrigin
-                    onDragStart={() => {
-                      soundService.playDraw();
-                    }}
-                    onDrag={(e, info) => {
-                      // Using viewport-relative coordinates from info.point
-                      const x = info.point.x;
-                      const y = info.point.y;
-                      
-                      // Check discard
-                      const discardRect = discardPileRef.current?.getBoundingClientRect();
-                      if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
-                        setDraggingOver({ type: 'discard' });
-                        return;
-                      }
-
-                      // Check grid
-                      for (let i = 0; i < gridRefs.current.length; i++) {
-                        const rect = gridRefs.current[i]?.getBoundingClientRect();
-                        if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                          setDraggingOver({ type: 'grid', index: i });
-                          return;
-                        }
-                      }
-                      setDraggingOver(null);
-                    }}
-                    onDragEnd={(e, info) => {
-                      const x = info.point.x;
-                      const y = info.point.y;
-                      setDraggingOver(null);
-
-                      // Check discard
-                      const discardRect = discardPileRef.current?.getBoundingClientRect();
-                      if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
-                        handleMove(0, 'discard_drawn');
-                        return;
-                      }
-
-                      // Check grid
-                      for (let i = 0; i < gridRefs.current.length; i++) {
-                        const rect = gridRefs.current[i]?.getBoundingClientRect();
-                        if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                          handleMove(i, 'replace');
-                          return;
-                        }
-                      }
-                    }}
-                    whileHover={{ 
-                      scale: 1.05,
-                      boxShadow: '0 0 25px rgba(255, 205, 117, 0.6)',
-                      transition: { type: 'spring', damping: 10 }
-                    }}
-                    whileDrag={{ 
-                      scale: 1.15, 
-                      zIndex: 100,
-                      boxShadow: '0 0 40px rgba(255, 205, 117, 0.8)'
-                    }}
-                    className="cursor-grab active:cursor-grabbing w-24 h-32"
-                  >
-                    <CardComponent
-                      card={state.game.drawn_card}
-                      index={-1}
-                      style={user.card_style || 'classic'}
-                      className="large border-ui-yellow ring-4 ring-ui-yellow/20 shadow-[0_0_20px_rgba(255,205,117,0.3)]"
-                      forceFaceUp={true}
-                    />
-                  </motion.div>
-
-                  <button 
-                    onClick={() => handleMove(0, 'discard_drawn')} 
-                    className="geometric-button text-[8px] py-2 px-4 border-b-2 border-r-2 whitespace-nowrap bg-bg-dark text-ui-red border-ui-red hover:bg-ui-red hover:text-white transition-all shadow-[4px_4px_0px_0px_rgba(220,38,38,0.2)]"
-                  >
-                    Discard Drawing
-                  </button>
-                </div>
-              )}
-            </AnimatePresence>
-
-            <motion.div 
-              variants={boardVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-3 gap-4 w-fit mx-auto"
-            >
-              {myCards.map((card, idx) => (
-                <div 
-                  key={card.id || idx}
-                  ref={el => gridRefs.current[idx] = el}
-                  className="relative group"
-                >
-                  <CardComponent
-                    card={card}
-                    index={idx}
-                    style={user.card_style || 'classic'}
-                    onClick={() => {
-                      if (state.game.status === 'initializing') {
-                        handleReveal(idx);
-                      } else if (state.game.drawn_card) {
-                        handleMove(idx, 'replace');
-                      }
-                    }}
-                    className={`small md:large cursor-pointer ${state.game.drawn_card ? 'ring-4 ring-ui-yellow ring-offset-4 ring-offset-bg-dark border-ui-yellow scale-105 z-10 shadow-[0_0_20px_rgba(255,205,117,0.4)]' : ''} ${draggingOver?.type === 'grid' && draggingOver.index === idx ? 'scale-110 -translate-y-4 ring-ui-yellow ring-4' : ''} hover:y-[-10px] hover:scale-110 hover:shadow-[0_0_20px_rgba(56,217,115,0.4),8px_8px_0px_0px_rgba(0,0,0,0.4)]`}
-                  />
-                  
-                  {state.game.status === 'initializing' && !card.is_face_up && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-[6px] text-ui-yellow font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest bg-bg-dark/80 px-2 py-1 border border-ui-yellow transition-opacity">Reveal</span>
-                    </div>
-                  )}
-
-                  {state.game.drawn_card && !card.is_face_up && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none"
-                    >
-                      <div className="text-[8px] text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
-                    </motion.div>
-                  )}
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Right Column: Deck & Actions (Desktop only for Deck/Discard) */}
-        <div className="w-full xl:w-72 space-y-6">
-          <div className="hidden xl:block">
-            {DeckAndDiscard}
-          </div>
-
-          {/* History / Moves List */}
-          <div className="geometric-border p-5 flex flex-col bg-bg-dark/20 min-h-[48px]">
-            <button 
-              onClick={() => setHistoryCollapsed(!historyCollapsed)}
-              className="text-[8px] text-ui-gray uppercase tracking-widest border-b border-ui-border pb-3 mb-4 flex items-center justify-between w-full hover:text-ui-yellow transition-colors"
-            >
-              <div className="flex items-center gap-2 pointer-events-none">
-                <History size={12} /> Move History
-              </div>
-              {historyCollapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
-            </button>
-            <motion.div 
-               animate={{ height: historyCollapsed ? 0 : 'auto', opacity: historyCollapsed ? 0 : 1 }}
-               className="overflow-hidden"
-            >
-              <div className="h-96 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
-                {state.moves
-                  .filter(m => m.move_type !== 'initial_card' && m.move_type !== 'initial_discard' && m.move_type !== 'round_start')
-                  .map((move, i) => (
-                  <div key={i} className="flex flex-col gap-3 border-l border-ui-border pl-3 pb-3">
-                    <div className="flex justify-between items-center text-[7px] uppercase tracking-widest">
-                      <span className={move.player_id === userId ? 'text-ui-green font-bold' : 'text-ui-red font-bold'}>
-                        {move.player_id === userId ? ':: YOU' : move.player_id === 'cpu' ? ':: CPU' : ':: OPNT'}
-                      </span>
-                      <span className="text-ui-gray">{formatMatchTime(move.timestamp, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_move_date })}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      {move.replaced_card_value && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-9 h-12 border border-ui-border bg-bg-dark/50 flex flex-col items-center justify-center text-[9px] opacity-40">
-                             <span className={move.replaced_card_suit === 'hearts' || move.replaced_card_suit === 'diamonds' ? 'text-ui-red' : ''}>
-                              {move.replaced_card_value}
-                             </span>
-                             <span className="text-xs">{move.replaced_card_suit === 'hearts' ? '♥' : move.replaced_card_suit === 'diamonds' ? '♦' : move.replaced_card_suit === 'clubs' ? '♣' : '♠'}</span>
-                          </div>
-                          <ArrowLeft size={10} className="rotate-180 opacity-30" />
-                        </div>
-                      )}
-                      <div className="w-12 h-16 border-2 border-ui-border bg-ui-blue flex flex-col items-center justify-center text-[12px] shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
-                         <span className={move.card_suit === 'hearts' || move.card_suit === 'diamonds' ? 'text-ui-red' : ''}>
-                          {move.card_value}
-                         </span>
-                         <span className="text-base">{move.card_suit === 'hearts' ? '♥' : move.card_suit === 'diamonds' ? '♦' : move.card_suit === 'clubs' ? '♣' : '♠'}</span>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[7px] text-ui-yellow font-bold uppercase tracking-tighter">
-                          {move.move_type === 'replace' ? 'Swapped Card' : move.move_type === 'discard_drawn' ? 'Discarded' : move.move_type}
-                        </span>
-                        <span className="text-[6px] text-ui-gray italic uppercase">Index: #{move.card_affected_index}</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                ))}
+                  <motion.div 
+                     animate={{ height: historyCollapsed ? 0 : 'auto', opacity: historyCollapsed ? 0 : 1 }}
+                     className="overflow-hidden"
+                  >
+                    <div className="max-h-[300px] overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+                      {(() => {
+                        const filteredMoves = state.moves.filter(m => {
+                          if (m.move_type === 'initial_card' || m.move_type === 'initial_discard' || m.move_type === 'round_start') return false;
+                          if (moveFilter === 'ME' && m.player_id !== userId) return false;
+                          if (moveFilter === 'OPPONENT' && m.player_id === userId) return false;
+                          return true;
+                        });
+                        
+                        const grouped = filteredMoves.reduce((acc, move) => {
+                          const round = move.round_number || state.game.round_number;
+                          if (!acc[round]) acc[round] = [];
+                          acc[round].push(move);
+                          return acc;
+                        }, {} as Record<number, Move[]>);
+
+                        const sortedRounds = Object.entries(grouped).sort((a, b) => Number(b[0]) - Number(a[0]));
+                        
+                        if (sortedRounds.length === 0) {
+                          return <div className="text-[10px] text-ui-gray uppercase text-center py-4">No moves found.</div>;
+                        }
+
+                        return sortedRounds.map(([round, movesInRound]) => (
+                          <div key={round} className="space-y-4">
+                            <h4 className="text-[10px] text-ui-yellow uppercase font-bold tracking-widest flex items-center before:content-[''] before:h-[1px] before:flex-1 before:bg-ui-border/50 before:mr-4 after:content-[''] after:h-[1px] after:flex-1 after:bg-ui-border/50 after:ml-4">
+                              Round {round}
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {movesInRound.map((move, i) => (
+                                <div key={i} className="flex flex-col gap-2 border border-ui-border/30 bg-black/20 p-3 rounded-sm hover:border-ui-border/70 transition-colors h-full">
+                                  <div className="flex justify-between items-center text-[6px] uppercase tracking-widest w-full">
+                                    <span className={move.player_id === userId ? 'text-ui-green font-bold' : 'text-ui-red font-bold'}>
+                                      {move.player_id === userId ? 'YOU' : move.player_id === 'cpu' ? 'CPU' : 'OPPONENT'}
+                                    </span>
+                                    <span className="text-ui-gray opacity-50 text-right">{formatMatchTime(move.timestamp, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_move_date })}</span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-3 mt-1">
+                                    <div className="w-8 h-11 border border-ui-border bg-ui-blue flex flex-col items-center justify-center text-[10px] shadow-sm shrink-0">
+                                      <span className={move.card_suit === 'hearts' || move.card_suit === 'diamonds' ? 'text-ui-red' : ''}>
+                                        {move.card_value}
+                                      </span>
+                                      <span className="text-xs">{move.card_suit === 'hearts' ? '♥' : move.card_suit === 'diamonds' ? '♦' : move.card_suit === 'clubs' ? '♣' : '♠'}</span>
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                      <span className="text-[7px] text-ui-yellow font-bold uppercase truncate">{move.move_type === 'replace' ? 'Swapped' : move.move_type === 'discard_drawn' ? 'Discarded' : move.move_type}</span>
+                                      <span className="text-[5px] text-ui-gray uppercase truncate">Pos: {move.card_affected_index}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </motion.div>
+                </div>
               </div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
+            </div>
 
       {/* Round End Overlay */}
       <AnimatePresence>
@@ -969,18 +1034,18 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                   initial={{ x: -30, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="p-6 border-4 border-ui-green/30 bg-ui-green/5"
+                  className="h-full flex flex-col p-6 border-4 border-ui-green/30 bg-ui-green/5"
                  >
                     <h3 className="text-xs text-ui-green mb-6 border-b border-ui-green/50 pb-2">:: YOUR SCORE ::</h3>
                     <div className="grid grid-cols-3 gap-2 mb-6">
                        {myCards.map((c, i) => (
-                         <div key={i} className="w-12 h-16 border-2 border-ui-green/50 flex flex-col items-center justify-center text-[10px] bg-bg-dark/50">
+                         <div key={i} className="w-12 h-16 border-2 border-ui-green/50 flex flex-col items-center justify-center text-[10px] bg-bg-dark/50 mx-auto">
                             <span className={c.suit === 'hearts' || c.suit === 'diamonds' ? 'text-ui-red' : ''}>{c.value}</span>
                             <span className="text-lg">{c.suit === 'hearts' ? '♥' : c.suit === 'diamonds' ? '♦' : c.suit === 'clubs' ? '♣' : '♠'}</span>
                          </div>
                        ))}
                     </div>
-                    <div className="flex justify-between items-end">
+                    <div className="flex justify-between items-end mt-auto">
                       <span className="text-[8px] text-ui-gray uppercase">Round Total</span>
                       <motion.span 
                         initial={{ scale: 1 }}
@@ -998,18 +1063,18 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                   initial={{ x: 30, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.7 }}
-                  className="p-6 border-4 border-ui-red/30 bg-ui-red/5"
+                  className="h-full flex flex-col p-6 border-4 border-ui-red/30 bg-ui-red/5"
                  >
                     <h3 className="text-xs text-ui-red mb-6 border-b border-ui-red/50 pb-2">:: OPPONENT SCORE ::</h3>
                     <div className="grid grid-cols-3 gap-2 mb-6">
                        {opponentCards.map((c, i) => (
-                         <div key={i} className="w-12 h-16 border-2 border-ui-red/50 flex flex-col items-center justify-center text-[10px] bg-bg-dark/50">
+                         <div key={i} className="w-12 h-16 border-2 border-ui-red/50 flex flex-col items-center justify-center text-[10px] bg-bg-dark/50 mx-auto">
                              <span className={c.suit === 'hearts' || c.suit === 'diamonds' ? 'text-ui-red' : ''}>{c.value}</span>
                              <span className="text-lg">{c.suit === 'hearts' ? '♥' : c.suit === 'diamonds' ? '♦' : c.suit === 'clubs' ? '♣' : '♠'}</span>
                          </div>
                        ))}
                     </div>
-                    <div className="flex justify-between items-end">
+                    <div className="flex justify-between items-end mt-auto">
                       <span className="text-[8px] text-ui-gray uppercase">Round Total</span>
                       <span className="text-2xl text-ui-red font-bold">{calculateScore(opponentId || 'cpu')} pts</span>
                     </div>
@@ -1124,7 +1189,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                   initial={{ opacity: 0, x: -40 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5, type: 'spring' }}
-                  className={`relative p-8 border-4 flex flex-col gap-4 overflow-hidden transition-all duration-700 ${state.game.winner_player_id === state.game.player1_id ? 'border-ui-yellow bg-ui-yellow/10 shadow-[0_0_30px_rgba(255,205,117,0.2)]' : 'border-ui-border bg-black/40'}`}
+                  className={`h-full relative p-8 border-4 flex flex-col gap-4 overflow-hidden transition-all duration-700 ${state.game.winner_player_id === state.game.player1_id ? 'border-ui-yellow bg-ui-yellow/10 shadow-[0_0_30px_rgba(255,205,117,0.2)]' : 'border-ui-border bg-black/40'}`}
                 >
                   {state.game.winner_player_id === state.game.player1_id && (
                     <motion.div 
@@ -1159,7 +1224,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                   initial={{ opacity: 0, x: 40 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.7, type: 'spring' }}
-                  className={`relative p-8 border-4 flex flex-col gap-4 overflow-hidden transition-all duration-700 ${state.game.winner_player_id === state.game.player2_id || (state.game.player2_id === 'cpu' && state.game.winner_player_id === 'cpu') ? 'border-ui-yellow bg-ui-yellow/10 shadow-[0_0_30px_rgba(255,205,117,0.2)]' : 'border-ui-border bg-black/40'}`}
+                  className={`h-full relative p-8 border-4 flex flex-col gap-4 overflow-hidden transition-all duration-700 ${state.game.winner_player_id === state.game.player2_id || (state.game.player2_id === 'cpu' && state.game.winner_player_id === 'cpu') ? 'border-ui-yellow bg-ui-yellow/10 shadow-[0_0_30px_rgba(255,205,117,0.2)]' : 'border-ui-border bg-black/40'}`}
                 >
                    { (state.game.winner_player_id === state.game.player2_id || (state.game.player2_id === 'cpu' && state.game.winner_player_id === 'cpu')) && (
                     <motion.div 
@@ -1238,7 +1303,6 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
       </AnimatePresence>
       
       <Chat gameId={gameId} userId={userId || ''} user={user} token={token} />
-    </div>
     </LayoutGroup>
     </motion.div>
     )}

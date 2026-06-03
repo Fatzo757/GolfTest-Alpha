@@ -55,8 +55,8 @@ body {
 }
 
 .geometric-card {
-  width: 80px;
-  height: 110px;
+  width: 100%;
+  aspect-ratio: 3/4;
   background-color: #f4f4f4;
   border: 4px solid #000;
   box-shadow: 4px 4px 0px 0px var(--color-ui-border);
@@ -85,17 +85,18 @@ body {
 }
 
 .geometric-card.small {
-  width: 56px;
-  height: 76px;
+  max-width: 80px;
   padding: 4px;
 }
 
 .geometric-card.normal {
-  width: 80px;
-  height: 110px;
+  max-width: 100px;
 }
 
 .geometric-card.large {
-  width: 96px;
-  height: 128px;
+  max-width: 150px;
+}
+
+.geometric-card.fluid {
+  max-width: none;
 }

@@ -77,6 +77,11 @@ class SoundService {
     // Defeat slide down
     this.playTone(392.00, 'sawtooth', 0.5, 0.05, 130.81);
   }
+
+  playMessage() {
+    // Soft high beep for chat message
+    this.playTone(880, 'sine', 0.1, 0.05, 1000);
+  }
 }
 
 export const soundService = new SoundService();

@@ -22,6 +22,9 @@ const CARD_STYLES = [
   { id: 'classic', name: 'Classic Pixel', description: 'Clean retro geometric shapes' },
   { id: 'modern', name: 'Modern Flat', description: 'Bold colors and symbols' },
   { id: 'sketch', name: 'Sketchy Hand-drawn', description: 'Hand-inked rough aesthetic' },
+  { id: 'retro_grid', name: 'Synthwave Grid', description: '80s retro sunset grid' },
+  { id: 'minimal', name: 'Minimalist', description: 'Clean, simple outlines' },
+  { id: 'cyber', name: 'Cyber Circuit', description: 'Matrix circuit board lines' },
 ];
 
 const TIMEZONES = [
@@ -268,7 +271,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
-                  className={`p-4 border-4 text-left transition-all relative ${
+                  className={`h-full p-4 border-4 text-left transition-all relative ${
                     theme === t.id ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border hover:border-ui-gray'
                   }`}
                 >
@@ -293,12 +296,12 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Card Graphics</h3>
             </div>
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {CARD_STYLES.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setCardStyle(s.id)}
-                  className={`p-6 border-4 text-left transition-all flex items-center justify-between ${
+                  className={`h-full p-6 border-4 text-left transition-all flex items-center justify-between ${
                     cardStyle === s.id ? 'border-ui-green bg-ui-green/5' : 'border-ui-border hover:border-ui-gray'
                   }`}
                 >

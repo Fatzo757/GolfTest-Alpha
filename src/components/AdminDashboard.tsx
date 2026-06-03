@@ -46,6 +46,19 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
   const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; message: string } | null>(null);
   const [resetPassUser, setResetPassUser] = useState<string | null>(null);
   const [newPass, setNewPass] = useState('');
+  const [appVersionInput, setAppVersionInput] = useState('');
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (data.app_version) {
+        setAppVersionInput(data.app_version);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
 
   const fetchSummary = async () => {
     try {
@@ -86,6 +99,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   useEffect(() => {
     fetchSummary();
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -196,6 +210,24 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
   const handleRestartBackend = () => {
     setSuccess('Backend restart triggered (simulated for environment safety). All temporary caches cleared.');
     fetchSummary();
+  };
+
+  const handleUpdateAppVersion = async () => {
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ key: 'app_version', value: appVersionInput })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setSuccess('App version updated successfully. Restart client or refresh to see changes.');
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -341,7 +373,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                     { label: 'ACTIVE_GAMES', value: summary.activeGames, color: 'text-ui-yellow' },
                     { label: 'MSG_TRAFFIC', value: summary.messages, color: 'text-ui-purple' }
                   ].map(stat => (
-                    <div key={stat.label} className="bg-white/5 border-2 border-white/10 p-4">
+                    <div key={stat.label} className="bg-white/5 border-2 border-white/10 p-4 h-full">
                       <div className="text-ui-gray text-[8px] mb-2">{stat.label}</div>
                       <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
                     </div>
@@ -364,6 +396,26 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                       Vacuum Database
                     </button>
                   </div>
+                  
+                  <div className="pt-4 border-t border-white/10">
+                    <div className="text-ui-gray text-[8px] mb-2 uppercase">System Status Label (Version)</div>
+                    <div className="flex max-w-sm gap-2">
+                      <input 
+                        type="text" 
+                        value={appVersionInput} 
+                        onChange={(e) => setAppVersionInput(e.target.value)}
+                        className="bg-bg-dark border border-white/20 p-2 text-white font-mono text-xs flex-1 outline-none focus:border-ui-yellow"
+                        placeholder="e.g. V1.0-Release"
+                      />
+                      <button 
+                        onClick={handleUpdateAppVersion}
+                        className="bg-white text-black px-4 py-2 text-[10px] font-bold uppercase hover:bg-ui-yellow transition-colors"
+                      >
+                        Update
+                      </button>
+                    </div>
+                  </div>
+
                   <p className="text-ui-gray text-[8px] italic">* Actions logged to system monitoring.</p>
                 </div>
               </motion.div>
