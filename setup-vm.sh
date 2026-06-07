@@ -63,7 +63,7 @@ npm run build
 
 # 9. Start with PM2
 echo "Starting application with PM2..."
-pm2 start server.ts --name golf-game --interpreter=node --node-args="--enable-source-maps" || pm2 restart golf-game
+pm2 start server.ts --name golf-game --interpreter=node --node-args="--experimental-strip-types --enable-source-maps" || pm2 restart golf-game
 
 # 10. Save PM2 list
 pm2 save

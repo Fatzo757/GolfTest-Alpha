@@ -30,7 +30,8 @@ npm run build
 
 # 4. Restart with PM2
 echo "Restarting application..."
-pm2 restart golf-game
+pm2 restart golf-game || pm2 start server.ts --name golf-game --interpreter=node --node-args="--experimental-strip-types --enable-source-maps"
+pm2 save
 
 echo "--- UPDATE COMPLETE ---"
 pm2 status
