@@ -805,9 +805,11 @@ async function startServer() {
     if (source === 'deck') {
       if (deck.length === 0) return res.status(400).json({ error: "Deck is empty" });
       drawn = deck.pop();
+      drawn.source = 'deck';
     } else {
       if (discard.length === 0) return res.status(400).json({ error: "Discard is empty" });
       drawn = discard.pop();
+      drawn.source = 'discard';
     }
 
     db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = ? WHERE id = ?")
@@ -841,10 +843,22 @@ async function startServer() {
             .run(cardToPlace.suit, cardToPlace.value, cardToPlace.id, gameId, req.user.id, cardIndex);
           
           discard.push({ id: existingCard.id, suit: existingCard.suit, value: existingCard.value });
+          
+          db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value, replaced_card_suit, replaced_card_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            .run(nanoid(), gameId, req.user.id, moveType, cardIndex, cardToPlace.suit, cardToPlace.value, existingCard?.suit, existingCard?.value);
+
         } else if (moveType === 'discard_drawn') {
-          discard.push(cardToPlace);
-          // Removed manual flip of cardIndex here as per user request ("it should not flip a card on your board")
-          existingCard = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = ? AND card_index = ?").get(gameId, req.user.id, cardIndex);
+          discard.push({ id: cardToPlace.id, suit: cardToPlace.suit, value: cardToPlace.value });
+
+          if (cardToPlace.source === 'discard') {
+            // Cancel draw from discard
+            db.prepare("UPDATE games SET discard_json = ?, drawn_card_json = NULL WHERE id = ?")
+              .run(JSON.stringify(discard), gameId);
+            return; // End transaction early, DO NOT advance turn!
+          } else {
+            db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value) VALUES (?, ?, ?, ?, ?, ?, ?)")
+              .run(nanoid(), gameId, req.user.id, moveType, null, cardToPlace.suit, cardToPlace.value);
+          }
         }
 
         const faceDownCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 0").get(gameId, req.user.id);
@@ -859,6 +873,11 @@ async function startServer() {
           firstRevealerId = req.user.id;
         } else if (game.status === 'last_turns' && nextPlayer === firstRevealerId) {
           status = 'round_end';
+        }
+
+        // DECK COMPRESSION CHECK: If deck is empty and we advanced turn
+        if (deck.length === 0 && status !== 'round_end' && status !== 'finished') {
+           status = 'round_end';
         }
 
         if (status === 'round_end') {
@@ -898,9 +917,6 @@ async function startServer() {
             sendPushNotification(nextPlayer, "Your Turn!", "It's your turn to move in Golf.", `/game/${gameId}`);
           }
         }
-
-        db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value, replaced_card_suit, replaced_card_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .run(nanoid(), gameId, req.user.id, moveType, cardIndex, cardToPlace.suit, cardToPlace.value, existingCard?.suit, existingCard?.value);
 
         if (nextPlayer === "cpu" && status !== "finished" && status !== "round_end") {
           setTimeout(() => executeCpuMove(gameId), 1000);
@@ -1061,6 +1077,10 @@ async function startServer() {
         status = 'last_turns';
         firstRevealerId = 'cpu';
       } else if (game.status === 'last_turns' && nextPlayer === firstRevealerId) {
+        status = 'round_end';
+      }
+
+      if (deck.length === 0 && status !== 'round_end' && status !== 'finished') {
         status = 'round_end';
       }
 

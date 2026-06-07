@@ -237,6 +237,7 @@ export default function App() {
             token={token!} 
             user={user} 
             onExit={() => setCurrentGameId(null)} 
+            onRematch={setCurrentGameId}
           />
         ) : replayGameId ? (
           <Replay 

@@ -13,9 +13,10 @@ interface GameProps {
   token: string;
   user: User;
   onExit: () => void;
+  onRematch?: (newGameId: string) => void;
 }
 
-export default function Game({ gameId, token, user, onExit }: GameProps) {
+export default function Game({ gameId, token, user, onExit, onRematch }: GameProps) {
   const userId = user.id;
   const [state, setState] = useState<GameState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -198,6 +199,35 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
     }
   }, [state?.game?.current_turn_player_id, state?.game?.status, userId]);
 
+  const handleNewMatch = async () => {
+    if (!state || !onRematch) {
+      onExit();
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await fetch('/api/games/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isVsCpu: state.game.is_vs_cpu, difficulty: state.game.cpu_difficulty })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        onRematch(data.gameId);
+      } else {
+        setError(data.error);
+        onExit(); // Fallback
+      }
+    } catch (err) {
+      console.error(err);
+      onExit(); // Fallback
+    }
+  };
+
   const handleDraw = async (source: 'deck' | 'discard') => {
     if (state?.game.current_turn_player_id !== userId) return;
     if (state.game.drawn_card) return; // Already drawn
@@ -364,7 +394,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
   const isMyTurn = state?.game.current_turn_player_id === userId;
   const opponentId = state?.game.player1_id === userId ? state?.game.player2_id : state?.game.player1_id;
   const canDraw = isMyTurn && !state?.game.drawn_card && state?.game.status !== 'initializing';
-  
+
   const latestGridMove = useMemo(() => {
     if (!state?.moves) return null;
     return state.moves.find(m => m.card_affected_index !== null && !['initial_card', 'initial_discard', 'round_start'].includes(m.move_type));
@@ -518,7 +548,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
            <div 
              ref={discardPileRef}
              onClick={() => {
-               if (state?.game?.drawn_card) {
+               if (state.game.drawn_card) {
                  handleMove(0, 'discard_drawn');
                } else if (canDraw) {
                  handleDraw('discard');
@@ -887,6 +917,8 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                                  <div className="text-[8px] text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
                                </motion.div>
                              )}
+
+                             {state.game.drawn_card && !card.is_face_up && null}
                            </div>
                          ))}
                        </motion.div>
@@ -951,7 +983,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                               Round {round}
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {movesInRound.map((move, i) => (
+                              {(movesInRound as Move[]).map((move, i) => (
                                 <div key={i} className="flex flex-col gap-2 border border-ui-border/30 bg-black/20 p-3 rounded-sm hover:border-ui-border/70 transition-colors h-full">
                                   <div className="flex justify-between items-center text-[6px] uppercase tracking-widest w-full">
                                     <span className={move.player_id === userId ? 'text-ui-green font-bold' : 'text-ui-red font-bold'}>
@@ -1291,7 +1323,7 @@ export default function Game({ gameId, token, user, onExit }: GameProps) {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 1.7 }}
-                  onClick={onExit} // In this app, onExit typically takes you back where you can start a new game
+                  onClick={handleNewMatch}
                   className="geometric-button py-5 text-[10px] font-black uppercase tracking-widest border-white/20 hover:border-white opacity-50 hover:opacity-100 transition-all"
                 >
                   New Match
