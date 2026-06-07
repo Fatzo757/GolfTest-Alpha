@@ -497,6 +497,33 @@ async function startServer() {
     }
   });
 
+  // Remind Opponent (Nudge)
+  app.post("/api/games/:gameId/remind", authenticate, (req: any, res) => {
+    const { gameId } = req.params;
+    const userId = req.user.id;
+    try {
+      const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+      if (!game) return res.status(404).json({ error: "Game not found" });
+      if (game.status !== 'playing' && game.status !== 'initializing') return res.status(400).json({ error: "Game is not active" });
+      if (game.current_turn_player_id === userId) return res.status(400).json({ error: "It is your turn" });
+      if (game.current_turn_player_id === 'cpu') return res.status(400).json({ error: "Cannot nudge CPU" });
+      
+      const playerName = game.player1_id === userId ? game.player1_name : game.player2_name;
+
+      sendPushNotification(
+        game.current_turn_player_id, 
+        "It's your turn!", 
+        `${playerName} is waiting for you to make a move in Skyjo.`, 
+        `/play/${gameId}`
+      );
+      
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Remind error:", err);
+      res.status(500).json({ error: "Failed to remind opponent" });
+    }
+  });
+
   // Archive Single Match
   app.post("/api/games/:gameId/archive", authenticate, (req: any, res) => {
     const { gameId } = req.params;

@@ -77,6 +77,16 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
     } catch (err) { console.error(err); }
   };
 
+  const remindOpponent = async (gameId: string) => {
+    try {
+      await fetch(`/api/games/${gameId}/remind`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      // Optionally show a "reminded" toast, but silent is okay
+    } catch (err) { console.error(err); }
+  };
+
   const fetchJoinableGames = async () => {
     try {
       const res = await fetch('/api/games/joinable', {
@@ -270,7 +280,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
           <motion.div 
             key={game.id}
             whileHover={{ scale: 1.01 }}
-            className="p-4 border-2 border-ui-green bg-bg-dark flex items-center justify-between h-full"
+            className="p-4 border-2 border-ui-green bg-bg-dark flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 h-full"
           >
             <div className="flex flex-col gap-2">
               <div className="text-[9px] uppercase font-bold flex items-center gap-2">
@@ -308,7 +318,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                   ID: {game.id.substring(0, 8)}... • Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto mt-2 xl:mt-0">
               <AnimatePresence mode="wait">
                 {confirmDeleteId === game.id ? (
                   <motion.div 
@@ -344,9 +354,18 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                     >
                       <Trash2 size={14} />
                     </button>
+                    {game.status === 'playing' && game.current_turn_player_id !== user.id && !game.is_vs_cpu && (
+                      <button
+                        onClick={() => remindOpponent(game.id)}
+                        className="px-4 py-2 border-2 border-ui-purple text-ui-purple text-[10px] font-black hover:bg-ui-purple hover:text-white transition-all whitespace-nowrap"
+                        title="Send Nudge"
+                      >
+                        NUDGE
+                      </button>
+                    )}
                     <button
                       onClick={() => onJoinGame(game.id)}
-                      className="px-4 py-2 bg-ui-green text-bg-dark text-[10px] font-black hover:bg-white transition-all"
+                      className="px-4 py-2 bg-ui-green text-bg-dark text-[10px] font-black hover:bg-white transition-all whitespace-nowrap"
                     >
                       {game.status === 'playing' ? 'RESUME' : 'VIEW'}
                     </button>
@@ -598,7 +617,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                     <motion.div 
                       key={game.id}
                       whileHover={{ scale: 1.02 }}
-                      className="p-4 border-2 border-ui-yellow bg-bg-dark flex items-center justify-between group h-full"
+                      className="p-4 border-2 border-ui-yellow bg-bg-dark flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full group"
                     >
                       <div className="flex items-center gap-3">
                          <div className="w-10 h-10 border border-ui-yellow/30 bg-ui-yellow/5 flex items-center justify-center">
@@ -615,7 +634,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                       </div>
                       <button
                         onClick={() => onJoinGame(game.id)}
-                        className="px-4 py-2 border-2 border-ui-yellow text-[8px] font-black hover:bg-ui-yellow hover:text-bg-dark transition-all"
+                        className="px-4 py-2 border-2 border-ui-yellow text-[8px] font-black hover:bg-ui-yellow hover:text-bg-dark transition-all mt-4 sm:mt-0 w-full sm:w-auto"
                       >
                         JOIN
                       </button>
@@ -725,7 +744,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                   <motion.div 
                     key={game.id}
                     whileHover={{ scale: 1.01 }}
-                    className="p-6 geometric-border bg-ui-blue/5 flex items-center justify-between group h-full"
+                    className="p-6 geometric-border bg-ui-blue/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 h-full group"
                   >
                     <div className="flex items-center gap-6">
                       <div className={`p-3 border-2 ${game.winner_player_id === 'cpu' || game.winner_player_id ? 'border-ui-green text-ui-green' : 'border-ui-red text-ui-red'}`}>
@@ -752,7 +771,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center justify-start md:justify-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
                       <button 
                         onClick={() => onViewReplay(game.id)}
                         className="geometric-button px-4 py-2 text-[8px] flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all"
