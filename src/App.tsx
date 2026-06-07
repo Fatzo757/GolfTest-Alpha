@@ -80,6 +80,7 @@ export default function App() {
   useEffect(() => {
     if (user) {
       soundService.setMuted(!!user.mute_sounds);
+      soundService.setVolume(user.sound_volume ?? 1.0);
     }
   }, [user]);
 

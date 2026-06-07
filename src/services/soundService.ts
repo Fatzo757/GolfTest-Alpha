@@ -2,9 +2,14 @@
 class SoundService {
   private ctx: AudioContext | null = null;
   private muted: boolean = false;
+  private masterVolume: number = 1.0;
 
   setMuted(muted: boolean) {
     this.muted = muted;
+  }
+
+  setVolume(volume: number) {
+    this.masterVolume = volume;
   }
 
   private initCtx() {
@@ -18,7 +23,7 @@ class SoundService {
   }
 
   private playTone(freq: number, type: OscillatorType, duration: number, volume: number = 0.1, slideTo?: number) {
-    if (this.muted) return;
+    if (this.muted || this.masterVolume <= 0) return;
     this.initCtx();
     if (!this.ctx) return;
 
@@ -32,7 +37,8 @@ class SoundService {
       osc.frequency.exponentialRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
     }
 
-    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+    const actualVolume = volume * this.masterVolume;
+    gain.gain.setValueAtTime(actualVolume, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
 
     osc.connect(gain);

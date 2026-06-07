@@ -5,6 +5,7 @@ export interface User {
   card_style?: string;
   avatar?: string;
   mute_sounds?: number;
+  sound_volume?: number;
   time_zone?: string;
   time_format?: '12h' | '24h';
   show_date?: number;

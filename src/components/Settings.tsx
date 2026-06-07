@@ -36,6 +36,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [cardStyle, setCardStyle] = useState(user.card_style || 'classic');
   const [avatar, setAvatar] = useState(user.avatar || 'user');
   const [muteSounds, setMuteSounds] = useState(!!user.mute_sounds);
+  const [soundVolume, setSoundVolume] = useState(user.sound_volume ?? 1.0);
   const [timeZone, setTimeZone] = useState(user.time_zone || 'UTC');
   const [timeFormat, setTimeFormat] = useState(user.time_format || '12h');
   const [showDate, setShowDate] = useState(!!user.show_date);
@@ -103,6 +104,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           theme, 
           card_style: cardStyle,
           mute_sounds: muteSounds,
+          sound_volume: soundVolume,
           time_zone: timeZone,
           time_format: timeFormat,
           show_date: showDate,
@@ -121,12 +123,14 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
       if (res.ok && avatarRes.ok) {
         soundService.setMuted(muteSounds);
+        soundService.setVolume(soundVolume);
         onUpdate({ 
           ...user, 
           theme, 
           card_style: cardStyle, 
           avatar,
           mute_sounds: muteSounds ? 1 : 0,
+          sound_volume: soundVolume,
           time_zone: timeZone,
           time_format: timeFormat,
           show_date: showDate ? 1 : 0,
@@ -192,6 +196,29 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <div className={`absolute top-0 bottom-0 w-1/2 transition-all ${muteSounds ? 'right-0 bg-ui-red' : 'left-0 bg-ui-green'}`} />
               </div>
             </button>
+            
+            <div className={`w-full p-4 flex flex-col gap-2 transition-all ${muteSounds ? 'opacity-50 pointer-events-none' : ''}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase text-ui-gray">Volume</span>
+                <span className="text-[10px] font-bold uppercase text-ui-yellow">{Math.round(soundVolume * 100)}%</span>
+              </div>
+              <input 
+                type="range" 
+                min="0" 
+                max="1.0" 
+                step="0.1"
+                value={soundVolume}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setSoundVolume(val);
+                  soundService.setVolume(val);
+                  if (val > 0 && !muteSounds) {
+                    soundService.playPlay(); // small preview
+                  }
+                }}
+                className="w-full h-2 bg-ui-border rounded-lg appearance-none cursor-pointer accent-ui-yellow"
+              />
+            </div>
           </section>
 
           {/* Time & Locale Section */}

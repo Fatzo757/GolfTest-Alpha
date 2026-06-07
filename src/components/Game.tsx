@@ -47,7 +47,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     if (!token) return;
 
     try {
-      if (!silent && !state) setLoading(true);
+      if (!silent && !prevStateRef.current) setLoading(true);
       loadingStateRef.current = true;
 
       const res = await fetch(`/api/games/${gameId}`, {
@@ -138,12 +138,12 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       if (err.message !== 'Failed to fetch') {
         console.error('Fetch State Error:', err);
       }
-      if (!state) setError(err.message === 'Failed to fetch' ? 'Connecting to server...' : (err.message || 'Unknown sync error'));
+      if (!prevStateRef.current) setError(err.message === 'Failed to fetch' ? 'Connecting to server...' : (err.message || 'Unknown sync error'));
     } finally {
       setLoading(false);
       loadingStateRef.current = false;
     }
-  }, [gameId, token, userId, user.mute_sounds, state]);
+  }, [gameId, token, userId, user.mute_sounds]);
 
   
 

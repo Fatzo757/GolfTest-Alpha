@@ -295,7 +295,7 @@ async function startServer() {
 
   // Get Current User
   app.get("/api/auth/me", authenticate, (req: any, res) => {
-    const user: any = db.prepare("SELECT id, username, theme, card_style, avatar, mute_sounds, time_zone, time_format, show_date, show_move_date, is_admin FROM users WHERE id = ?").get(req.user.id);
+    const user: any = db.prepare("SELECT id, username, theme, card_style, avatar, mute_sounds, sound_volume, time_zone, time_format, show_date, show_move_date, is_admin FROM users WHERE id = ?").get(req.user.id);
     res.json({ user });
   });
 
@@ -325,9 +325,9 @@ async function startServer() {
 
   // Update Preferences
   app.post("/api/auth/preferences", authenticate, (req: any, res) => {
-    const { theme, card_style, mute_sounds, time_zone, time_format, show_date, show_move_date } = req.body;
-    db.prepare("UPDATE users SET theme = ?, card_style = ?, mute_sounds = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ? WHERE id = ?")
-      .run(theme, card_style, mute_sounds ? 1 : 0, time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, req.user.id);
+    const { theme, card_style, mute_sounds, sound_volume, time_zone, time_format, show_date, show_move_date } = req.body;
+    db.prepare("UPDATE users SET theme = ?, card_style = ?, mute_sounds = ?, sound_volume = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ? WHERE id = ?")
+      .run(theme, card_style, mute_sounds ? 1 : 0, sound_volume ?? 1.0, time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, req.user.id);
     res.json({ success: true });
   });
 

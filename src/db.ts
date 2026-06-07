@@ -29,6 +29,7 @@ db.exec(`
     card_style TEXT DEFAULT 'classic',
     avatar TEXT DEFAULT 'user',
     mute_sounds INTEGER DEFAULT 0,
+    sound_volume REAL DEFAULT 1.0,
     time_zone TEXT DEFAULT 'UTC',
     time_format TEXT DEFAULT '12h',
     show_date INTEGER DEFAULT 1,
@@ -143,6 +144,7 @@ try {
   addColumn('game_cards', 'id', 'TEXT');
   addColumn('moves', 'round_number', 'INTEGER DEFAULT 1');
   addColumn('users', 'mute_sounds', 'INTEGER DEFAULT 0');
+  addColumn('users', 'sound_volume', 'REAL DEFAULT 1.0');
   addColumn('users', 'time_zone', "TEXT DEFAULT 'UTC'");
   addColumn('users', 'time_format', "TEXT DEFAULT '12h'");
   addColumn('users', 'show_date', "INTEGER DEFAULT 1");
