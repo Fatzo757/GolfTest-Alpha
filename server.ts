@@ -472,6 +472,7 @@ async function startServer() {
       LEFT JOIN users u2 ON g.player2_id = u2.id
       WHERE (g.player1_id = ? OR g.player2_id = ?) AND g.status = 'finished' AND g.is_hidden_from_history = 0
       ORDER BY g.updated_at DESC
+      LIMIT 100
     `).all(userId, userId);
     
     res.json({ history });
@@ -610,6 +611,16 @@ async function startServer() {
 
   // --- Rate limiting for chat ---
   const lastMessageTime = new Map<string, number>();
+  
+  // Cleanup old timestamps every minute to prevent memory leak
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, time] of lastMessageTime.entries()) {
+      if (now - time > 10000) {
+        lastMessageTime.delete(key);
+      }
+    }
+  }, 60000);
 
   // --- Push Notification Routes ---
   app.get("/api/push/public-key", authenticate, (req, res) => {
@@ -1313,14 +1324,12 @@ async function startServer() {
     if (userId === req.user.id) return res.status(400).json({ error: "Cannot delete yourself" });
     
     db.transaction(() => {
-      // Cascade delete manually since we might not have FKs set up with CASCADE
-      const games = db.prepare("SELECT id FROM games WHERE player1_id = ? OR player2_id = ?").all(userId, userId) as { id: string }[];
-      games.forEach(g => {
-        db.prepare("DELETE FROM game_cards WHERE game_id = ?").run(g.id);
-        db.prepare("DELETE FROM moves WHERE game_id = ?").run(g.id);
-        db.prepare("DELETE FROM messages WHERE game_id = ?").run(g.id);
-        db.prepare("DELETE FROM games WHERE id = ?").run(g.id);
-      });
+      // Execute deletions directly in SQLite using subqueries instead of N+1 loops
+      db.prepare("DELETE FROM game_cards WHERE game_id IN (SELECT id FROM games WHERE player1_id = ? OR player2_id = ?)").run(userId, userId);
+      db.prepare("DELETE FROM moves WHERE game_id IN (SELECT id FROM games WHERE player1_id = ? OR player2_id = ?)").run(userId, userId);
+      db.prepare("DELETE FROM messages WHERE game_id IN (SELECT id FROM games WHERE player1_id = ? OR player2_id = ?)").run(userId, userId);
+      db.prepare("DELETE FROM games WHERE player1_id = ? OR player2_id = ?").run(userId, userId);
+      
       db.prepare("DELETE FROM messages WHERE sender_id = ?").run(userId);
       db.prepare("DELETE FROM users WHERE id = ?").run(userId);
     })();
