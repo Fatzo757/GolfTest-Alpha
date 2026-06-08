@@ -7,6 +7,7 @@ import { soundService } from '../services/soundService';
 import UserAvatar from './UserAvatar.tsx';
 import CardComponent from './Card.tsx';
 import { formatMatchTime } from '../lib/timeUtils';
+import Confetti from './Confetti';
 
 interface GameProps {
   gameId: string;
@@ -1026,6 +1027,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
             exit="hidden"
             className="fixed inset-0 z-[150] bg-bg-dark/90 backdrop-blur-md overflow-y-auto flex justify-center p-4 md:p-10 custom-scrollbar"
           >
+            {calculateScore(userId) < calculateScore(opponentId || 'cpu') && <Confetti />}
             <motion.div 
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -1180,6 +1182,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
             animate="visible"
             className="fixed inset-0 z-[200] bg-bg-dark/95 backdrop-blur-xl overflow-y-auto flex justify-center p-4 md:p-10 custom-scrollbar"
           >
+            {state.game.winner_player_id === userId && <Confetti />}
             <motion.div 
               initial={{ scale: 0.5, y: 100, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}

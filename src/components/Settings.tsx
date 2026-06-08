@@ -16,6 +16,12 @@ const THEMES = [
   { id: 'retro', name: 'Classic Gameboy', primary: 'bg-green-600', secondary: 'bg-green-900' },
   { id: 'slate', name: 'Deep Space', primary: 'bg-slate-400', secondary: 'bg-slate-800' },
   { id: 'voltage', name: 'High Voltage', primary: 'bg-ui-orange', secondary: 'bg-bg-dark' },
+  { id: 'ocean', name: 'Ocean Depth', primary: 'bg-cyan-400', secondary: 'bg-blue-900' },
+  { id: 'crimson', name: 'Blood Moon', primary: 'bg-red-500', secondary: 'bg-rose-900' },
+  { id: 'midnight', name: 'Midnight Violet', primary: 'bg-violet-400', secondary: 'bg-indigo-900' },
+  { id: 'matrix', name: 'Matrix Terminal', primary: 'bg-emerald-400', secondary: 'bg-emerald-900' },
+  { id: 'bubblegum', name: 'Bubblegum', primary: 'bg-pink-400', secondary: 'bg-fuchsia-900' },
+  { id: 'gold', name: 'Royal Gold', primary: 'bg-amber-400', secondary: 'bg-yellow-900' },
 ];
 
 const CARD_STYLES = [

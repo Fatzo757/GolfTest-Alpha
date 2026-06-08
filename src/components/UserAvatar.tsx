@@ -19,12 +19,25 @@ import {
   Eye,
   Smile,
   Gamepad2,
-  Trophy
+  Trophy,
+  Coffee,
+  Music,
+  Camera,
+  Feather,
+  Umbrella,
+  Rocket,
+  Wand,
+  Gem,
+  Cat,
+  Dog,
+  Fish,
+  Bird
 } from 'lucide-react';
 
 export const AVATAR_LIST = [
   'user', 'ghost', 'robot', 'swords', 'shield', 'flame', 'zap', 'target', 'star', 'crown',
-  'heart', 'skull', 'anchor', 'cloud', 'moon', 'sun', 'eye', 'smile', 'gamepad', 'trophy'
+  'heart', 'skull', 'anchor', 'cloud', 'moon', 'sun', 'eye', 'smile', 'gamepad', 'trophy',
+  'coffee', 'music', 'camera', 'feather', 'umbrella', 'rocket', 'wand', 'gem', 'cat', 'dog', 'fish', 'bird'
 ];
 
 interface UserAvatarProps {
@@ -54,6 +67,18 @@ export default function UserAvatar({ type, size = 16, className = "" }: UserAvat
     case 'smile': return <Smile size={size} className={className} />;
     case 'gamepad': return <Gamepad2 size={size} className={className} />;
     case 'trophy': return <Trophy size={size} className={className} />;
+    case 'coffee': return <Coffee size={size} className={className} />;
+    case 'music': return <Music size={size} className={className} />;
+    case 'camera': return <Camera size={size} className={className} />;
+    case 'feather': return <Feather size={size} className={className} />;
+    case 'umbrella': return <Umbrella size={size} className={className} />;
+    case 'rocket': return <Rocket size={size} className={className} />;
+    case 'wand': return <Wand size={size} className={className} />;
+    case 'gem': return <Gem size={size} className={className} />;
+    case 'cat': return <Cat size={size} className={className} />;
+    case 'dog': return <Dog size={size} className={className} />;
+    case 'fish': return <Fish size={size} className={className} />;
+    case 'bird': return <Bird size={size} className={className} />;
     default: return <User size={size} className={className} />;
   }
 }
