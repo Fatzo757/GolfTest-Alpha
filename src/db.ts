@@ -62,6 +62,7 @@ db.exec(`
     winner_player_id TEXT,
     is_hidden_from_history BOOLEAN DEFAULT 0,
     round_number INTEGER DEFAULT 1,
+    next_game_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -141,6 +142,7 @@ try {
   addColumn('games', 'cpu_difficulty', "TEXT DEFAULT 'normal'");
   addColumn('games', 'first_revealer_id', 'TEXT');
   addColumn('games', 'is_hidden_from_history', 'BOOLEAN DEFAULT 0');
+  addColumn('games', 'next_game_id', 'TEXT');
   addColumn('game_cards', 'id', 'TEXT');
   addColumn('moves', 'round_number', 'INTEGER DEFAULT 1');
   addColumn('users', 'mute_sounds', 'INTEGER DEFAULT 0');

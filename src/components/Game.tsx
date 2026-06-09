@@ -208,13 +208,12 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     
     setLoading(true);
     try {
-      const res = await fetch('/api/games/create', {
+      const res = await fetch(`/api/games/${gameId}/rematch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ isVsCpu: state.game.is_vs_cpu, difficulty: state.game.cpu_difficulty })
+        }
       });
       const data = await res.json();
       if (res.ok) {
@@ -1329,7 +1328,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   onClick={handleNewMatch}
                   className="geometric-button py-5 text-[10px] font-black uppercase tracking-widest border-white/20 hover:border-white opacity-50 hover:opacity-100 transition-all"
                 >
-                  New Match
+                  {state.game.next_game_id ? 'Join Rematch' : 'New Match'}
                 </motion.button>
               </div>
             </motion.div>

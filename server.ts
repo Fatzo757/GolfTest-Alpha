@@ -1235,6 +1235,51 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  app.post("/api/games/:id/rematch", authenticate, (req: any, res) => {
+    const gameId = req.params.id;
+    const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+    if (!game) return res.status(404).json({ error: "Game not found" });
+    if (game.status !== 'finished') return res.status(400).json({ error: "Game is not finished" });
+
+    // If a rematch was already created, just return it
+    if (game.next_game_id) {
+      return res.json({ gameId: game.next_game_id });
+    }
+
+    // Otherwise, create a new game with the same players
+    const newGameId = nanoid();
+    const roomCode = nanoid(6).toUpperCase();
+    const player1Id = req.user.id;
+    // The opponent is whoever the OTHER player is
+    const player2Id = game.player1_id === req.user.id ? game.player2_id : game.player1_id;
+    const isVsCpu = game.is_vs_cpu;
+    const cpuDifficulty = game.cpu_difficulty || 'normal';
+
+    try {
+      db.transaction(() => {
+        db.prepare(`
+          INSERT INTO games (id, room_code, player1_id, player2_id, is_vs_cpu, status, player1_total_score, player2_total_score, cpu_difficulty)
+          VALUES (?, ?, ?, ?, ?, 'initializing', 0, 0, ?)
+        `).run(newGameId, roomCode, player1Id, player2Id, isVsCpu ? 1 : 0, cpuDifficulty);
+
+        // Update old game with next_game_id
+        db.prepare("UPDATE games SET next_game_id = ? WHERE id = ?").run(newGameId, gameId);
+      })();
+
+      // Setup new round after creating the game
+      setupNewRound(newGameId, player1Id, player2Id, player1Id);
+
+      // send push notification to opponent
+      if (player2Id && player2Id !== 'cpu') {
+        sendPushNotification(player2Id, "Rematch Started!", `${req.user.username} wants a rematch!`, `/game/${newGameId}`);
+      }
+      res.json({ gameId: newGameId });
+    } catch (err) {
+      console.error("Rematch error:", err);
+      res.status(500).json({ error: "Failed to create rematch" });
+    }
+  });
+
   // --- Admin Middleware ---
   const isAdmin = (req: any, res: any, next: any) => {
     try {
