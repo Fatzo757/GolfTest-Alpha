@@ -102,6 +102,13 @@ body {
 }
 
 /* Theme Overrides */
+.theme-default {
+  --color-bg-dark: #1a1c2c; 
+  --color-ui-blue: #29366f; 
+  --color-ui-border: #333c57; 
+  --color-ui-yellow: #ffcd75; 
+  --color-ui-purple: #5d275d; 
+}
 .theme-retro {
   --color-bg-dark: #0f170a; 
   --color-ui-blue: #14532d; 

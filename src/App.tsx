@@ -11,8 +11,7 @@ import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard } fro
 import { soundService } from './services/soundService';
 
 const getThemeClasses = (themeId?: string) => {
-  if (!themeId || themeId === 'default') return '';
-  return `theme-${themeId}`;
+  return `theme-${themeId || 'default'}`;
 };
 
 export default function App() {
