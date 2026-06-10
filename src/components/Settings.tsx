@@ -12,7 +12,7 @@ interface SettingsProps {
 }
 
 const THEMES = [
-  { id: 'default', name: 'Cyber Neon', primary: 'bg-ui-yellow', secondary: 'bg-ui-purple' },
+  { id: 'default', name: 'Cyber Neon', primary: 'bg-[#ffcd75]', secondary: 'bg-[#5d275d]' },
   { id: 'retro', name: 'Classic Gameboy', primary: 'bg-green-600', secondary: 'bg-green-900' },
   { id: 'slate', name: 'Deep Space', primary: 'bg-slate-400', secondary: 'bg-slate-800' },
   { id: 'voltage', name: 'High Voltage', primary: 'bg-ui-orange', secondary: 'bg-bg-dark' },
