@@ -29,6 +29,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
   const [view, setView] = useState<'lobby' | 'online' | 'history' | 'rules'>('lobby');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmClearAction, setConfirmClearAction] = useState<'all' | 'old' | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     registerServiceWorker().then(() => {
@@ -79,12 +80,23 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
 
   const remindOpponent = async (gameId: string) => {
     try {
-      await fetch(`/api/games/${gameId}/remind`, {
+      const res = await fetch(`/api/games/${gameId}/remind`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      // Optionally show a "reminded" toast, but silent is okay
-    } catch (err) { console.error(err); }
+      if (res.ok) {
+        setStatusMsg({ type: 'success', text: 'Nudge sent successfully!' });
+        setTimeout(() => setStatusMsg(null), 3000);
+      } else {
+        const data = await res.json();
+        setStatusMsg({ type: 'error', text: data.error || 'Failed to send nudge' });
+        setTimeout(() => setStatusMsg(null), 3000);
+      }
+    } catch (err) { 
+      console.error(err); 
+      setStatusMsg({ type: 'error', text: 'Connection error while sending nudge' });
+      setTimeout(() => setStatusMsg(null), 3000);
+    }
   };
 
   const fetchJoinableGames = async () => {
@@ -386,6 +398,19 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
+      <AnimatePresence>
+        {statusMsg && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-24 left-1/2 -translate-x-1/2 z-[200] p-4 border-2 flex gap-4 justify-between items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${statusMsg.type === 'success' ? 'bg-bg-dark border-ui-green text-ui-green' : 'bg-bg-dark border-ui-red text-ui-red'}`}
+          >
+            <span className="text-[10px] uppercase font-bold">{statusMsg.text}</span>
+            <button onClick={() => setStatusMsg(null)} className="text-[10px] hover:opacity-70 transition-opacity">✕</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="geometric-border p-4 bg-ui-blue/5">

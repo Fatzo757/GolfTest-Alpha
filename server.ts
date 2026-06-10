@@ -514,7 +514,7 @@ async function startServer() {
       sendPushNotification(
         game.current_turn_player_id, 
         "It's your turn!", 
-        `${playerName} is waiting for you to make a move in Skyjo.`, 
+        `${playerName} is waiting for you to make a move in Golf.`, 
         `/play/${gameId}`
       );
       
