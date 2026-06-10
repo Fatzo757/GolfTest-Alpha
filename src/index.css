@@ -100,3 +100,41 @@ body {
 .geometric-card.fluid {
   max-width: none;
 }
+
+/* Theme Overrides */
+.theme-retro {
+  --color-ui-yellow: #16a34a; /* green-600 */
+  --color-ui-purple: #14532d; /* green-900 */
+}
+.theme-slate {
+  --color-ui-yellow: #94a3b8; /* slate-400 */
+  --color-ui-purple: #1e293b; /* slate-800 */
+}
+.theme-voltage {
+  --color-ui-yellow: #ff7b52; /* ui-orange */
+  --color-ui-purple: #1a1c2c; /* bg-dark */
+}
+.theme-ocean {
+  --color-ui-yellow: #22d3ee; /* cyan-400 */
+  --color-ui-purple: #1e3a8a; /* blue-900 */
+}
+.theme-crimson {
+  --color-ui-yellow: #ef4444; /* red-500 */
+  --color-ui-purple: #881337; /* rose-900 */
+}
+.theme-midnight {
+  --color-ui-yellow: #a78bfa; /* violet-400 */
+  --color-ui-purple: #312e81; /* indigo-900 */
+}
+.theme-matrix {
+  --color-ui-yellow: #34d399; /* emerald-400 */
+  --color-ui-purple: #064e3b; /* emerald-900 */
+}
+.theme-bubblegum {
+  --color-ui-yellow: #f472b6; /* pink-400 */
+  --color-ui-purple: #701a75; /* fuchsia-900 */
+}
+.theme-gold {
+  --color-ui-yellow: #fbbf24; /* amber-400 */
+  --color-ui-purple: #713f12; /* yellow-900 */
+}

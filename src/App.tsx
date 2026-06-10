@@ -11,18 +11,8 @@ import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard } fro
 import { soundService } from './services/soundService';
 
 const getThemeClasses = (themeId?: string) => {
-  switch (themeId) {
-    case 'retro': return 'brightness-90 contrast-110 saturate-50 sepia hue-rotate-[50deg]';
-    case 'slate': return 'hue-rotate-180';
-    case 'voltage': return 'brightness-110 contrast-125 saturate-150 hue-rotate-[345deg]';
-    case 'ocean': return 'hue-rotate-[160deg] saturate-150';
-    case 'crimson': return 'hue-rotate-[-45deg] saturate-150';
-    case 'midnight': return 'hue-rotate-[45deg] saturate-150';
-    case 'matrix': return 'hue-rotate-[110deg] saturate-150 contrast-110';
-    case 'bubblegum': return 'hue-rotate-[-90deg] saturate-150';
-    case 'gold': return 'hue-rotate-[15deg] saturate-150 contrast-110';
-    default: return '';
-  }
+  if (!themeId || themeId === 'default') return '';
+  return `theme-${themeId}`;
 };
 
 export default function App() {
