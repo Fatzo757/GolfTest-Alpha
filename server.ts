@@ -189,8 +189,8 @@ async function startServer() {
             url
           }));
         } catch (err: any) {
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            // Subscription expired or invalid
+          if (err.statusCode === 410 || err.statusCode === 404 || err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 400) {
+            // Subscription expired, invalid, or VAPID key mismatch
             db.prepare("DELETE FROM push_subscriptions WHERE user_id = ? AND subscription = ?").run(userId, row.subscription);
           } else {
             console.error(`SERVER: Push error to user ${userId}:`, err);
