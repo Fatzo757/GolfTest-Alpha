@@ -10,6 +10,21 @@ import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard } from 'lucide-react';
 import { soundService } from './services/soundService';
 
+const getThemeClasses = (themeId?: string) => {
+  switch (themeId) {
+    case 'retro': return 'brightness-90 contrast-110 saturate-50 sepia hue-rotate-[50deg]';
+    case 'slate': return 'hue-rotate-180';
+    case 'voltage': return 'brightness-110 contrast-125 saturate-150 hue-rotate-[345deg]';
+    case 'ocean': return 'hue-rotate-[160deg] saturate-150';
+    case 'crimson': return 'hue-rotate-[-45deg] saturate-150';
+    case 'midnight': return 'hue-rotate-[45deg] saturate-150';
+    case 'matrix': return 'hue-rotate-[110deg] saturate-150 contrast-110';
+    case 'bubblegum': return 'hue-rotate-[-90deg] saturate-150';
+    case 'gold': return 'hue-rotate-[15deg] saturate-150 contrast-110';
+    default: return '';
+  }
+};
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => {
@@ -173,7 +188,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-bg-dark text-text-main font-press-start ${user?.theme === 'retro' ? 'brightness-90 contrast-110 saturate-50' : user?.theme === 'slate' ? 'hue-rotate-180' : user?.theme === 'voltage' ? 'brightness-110 contrast-125' : ''}`}>
+    <div className={`min-h-screen bg-bg-dark text-text-main font-press-start ${getThemeClasses(user?.theme)}`}>
       {/* Header Container */}
       <div className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30">
         <header className={`p-2 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:py-2 opacity-90' : ''}`}>
