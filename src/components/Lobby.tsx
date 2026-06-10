@@ -688,7 +688,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                      value={searchQuery}
                      onChange={(e) => handleSearch(e.target.value)}
                      placeholder="SEARCH BY USERNAME..."
-                     className="w-full bg-bg-dark border-2 border-ui-border py-2 pl-10 pr-4 text-[8px] uppercase font-bold text-ui-purple focus:border-ui-purple outline-none transition-all placeholder:opacity-30"
+                     className="w-full bg-bg-dark border-2 border-ui-border py-2 pl-10 pr-4 text-[8px] uppercase font-bold text-text-main focus:border-ui-purple outline-none transition-all placeholder:opacity-30"
                    />
                 </div>
 
