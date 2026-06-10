@@ -156,7 +156,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-full max-w-2xl bg-bg-dark border-4 border-ui-border shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden flex flex-col max-h-[90vh]"
+        className={`w-full max-w-2xl bg-bg-dark border-4 border-ui-border shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden flex flex-col max-h-[90vh] ${theme !== 'default' ? 'theme-' + theme : ''}`}
       >
         <div className="p-6 border-b-4 border-ui-border flex justify-between items-center bg-ui-blue flex-shrink-0">
           <div className="flex items-center gap-3">

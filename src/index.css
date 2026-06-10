@@ -103,38 +103,65 @@ body {
 
 /* Theme Overrides */
 .theme-retro {
-  --color-ui-yellow: #16a34a; /* green-600 */
-  --color-ui-purple: #14532d; /* green-900 */
+  --color-bg-dark: #0f170a; 
+  --color-ui-blue: #14532d; 
+  --color-ui-border: #15803d; 
+  --color-ui-yellow: #16a34a; 
+  --color-ui-purple: #064e3b; 
 }
 .theme-slate {
-  --color-ui-yellow: #94a3b8; /* slate-400 */
-  --color-ui-purple: #1e293b; /* slate-800 */
+  --color-bg-dark: #0f172a; 
+  --color-ui-blue: #1e293b; 
+  --color-ui-border: #334155; 
+  --color-ui-yellow: #94a3b8; 
+  --color-ui-purple: #0f172a; 
 }
 .theme-voltage {
-  --color-ui-yellow: #ff7b52; /* ui-orange */
-  --color-ui-purple: #1a1c2c; /* bg-dark */
+  --color-bg-dark: #1a1c2c; 
+  --color-ui-blue: #431407; 
+  --color-ui-border: #9a3412; 
+  --color-ui-yellow: #ff7b52; 
+  --color-ui-purple: #1a1c2c; 
 }
 .theme-ocean {
-  --color-ui-yellow: #22d3ee; /* cyan-400 */
-  --color-ui-purple: #1e3a8a; /* blue-900 */
+  --color-bg-dark: #082f49; 
+  --color-ui-blue: #1e3a8a; 
+  --color-ui-border: #1e40af; 
+  --color-ui-yellow: #22d3ee; 
+  --color-ui-purple: #172554; 
 }
 .theme-crimson {
-  --color-ui-yellow: #ef4444; /* red-500 */
-  --color-ui-purple: #881337; /* rose-900 */
+  --color-bg-dark: #2c0b0e; 
+  --color-ui-blue: #7f1d1d; 
+  --color-ui-border: #991b1b; 
+  --color-ui-yellow: #ef4444; 
+  --color-ui-purple: #4c0519; 
 }
 .theme-midnight {
-  --color-ui-yellow: #a78bfa; /* violet-400 */
-  --color-ui-purple: #312e81; /* indigo-900 */
+  --color-bg-dark: #1e1b4b; 
+  --color-ui-blue: #312e81; 
+  --color-ui-border: #4338ca; 
+  --color-ui-yellow: #a78bfa; 
+  --color-ui-purple: #2e1065; 
 }
 .theme-matrix {
-  --color-ui-yellow: #34d399; /* emerald-400 */
-  --color-ui-purple: #064e3b; /* emerald-900 */
+  --color-bg-dark: #022c22; 
+  --color-ui-blue: #064e3b; 
+  --color-ui-border: #065f46; 
+  --color-ui-yellow: #34d399; 
+  --color-ui-purple: #022c22; 
 }
 .theme-bubblegum {
-  --color-ui-yellow: #f472b6; /* pink-400 */
-  --color-ui-purple: #701a75; /* fuchsia-900 */
+  --color-bg-dark: #4a044e; 
+  --color-ui-blue: #701a75; 
+  --color-ui-border: #86198f; 
+  --color-ui-yellow: #f472b6; 
+  --color-ui-purple: #4a044e; 
 }
 .theme-gold {
-  --color-ui-yellow: #fbbf24; /* amber-400 */
-  --color-ui-purple: #713f12; /* yellow-900 */
+  --color-bg-dark: #451a03; 
+  --color-ui-blue: #713f12; 
+  --color-ui-border: #854d0e; 
+  --color-ui-yellow: #fbbf24; 
+  --color-ui-purple: #422006; 
 }
