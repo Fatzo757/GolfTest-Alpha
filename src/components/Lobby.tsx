@@ -910,7 +910,7 @@ const PlayerCard: React.FC<{ u: any, onInvite: (id: string) => any, isLoading: b
         <div className={`w-8 h-8 flex items-center justify-center border ${isOnline ? 'border-ui-green/30 bg-ui-green/10 text-ui-green' : 'border-ui-gray/30 bg-ui-gray/10 text-ui-gray opacity-50'}`}>
           <UserAvatar type={u.avatar} size={16} />
         </div>
-        <div className={`text-[10px] uppercase font-bold truncate max-w-[80px] ${isOnline ? 'text-ui-purple' : 'text-ui-gray'}`}>
+        <div className={`text-[10px] uppercase font-bold truncate max-w-[80px] ${isOnline ? 'text-text-main' : 'text-ui-gray'}`}>
           {u.username}
           <div className="text-[5px] opacity-40 lowercase">
             {isOnline ? 'online' : 'offline'}
