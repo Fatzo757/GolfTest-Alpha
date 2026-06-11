@@ -378,7 +378,40 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <Key size={14} className="text-ui-gray" />
               <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Security</h3>
             </div>
-            
+          </section>
+
+          {/* Notifications Section */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-ui-gray text-[14px]">🔔</span>
+              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Push Notifications</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={async () => {
+                  const { resetPushSubscription } = await import('../lib/push');
+                  const success = await resetPushSubscription(token);
+                  alert(success ? "Notifications reset and re-subscribed successfully." : "Failed to reset notifications.");
+                }}
+                className="w-full py-3 border-2 border-ui-border text-[10px] uppercase font-bold text-ui-gray hover:text-white hover:border-white transition-all"
+              >
+                Reset Subscription
+              </button>
+              <button
+                onClick={async () => {
+                  const { testPushNotification } = await import('../lib/push');
+                  const success = await testPushNotification(token);
+                  if (!success) alert("Failed to send test notification. Try resetting your subscription.");
+                }}
+                className="w-full py-3 bg-ui-blue border-2 border-ui-border text-[10px] uppercase font-bold text-white hover:border-ui-yellow transition-all"
+              >
+                Test Notification
+              </button>
+            </div>
+          </section>
+          
+          {/* Password Change Section */}
+          <section className="space-y-4">
             {!showPasswordChange ? (
               <button
                 onClick={() => setShowPasswordChange(true)}

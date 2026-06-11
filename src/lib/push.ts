@@ -72,3 +72,33 @@ function urlBase64ToUint8Array(base64String: string) {
   }
   return outputArray;
 }
+
+export async function resetPushSubscription(token: string) {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) {
+      await subscription.unsubscribe();
+      console.log('Successfully unsubscribed from old push notifications.');
+    }
+    // Now subscribe again
+    await subscribeUserToPush(token);
+    return true;
+  } catch (err) {
+    console.error('Failed to reset push subscription:', err);
+    return false;
+  }
+}
+
+export async function testPushNotification(token: string) {
+  try {
+    const res = await fetch('/api/push/test', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('Failed to send test notification:', err);
+    return false;
+  }
+}

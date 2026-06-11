@@ -369,7 +369,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                     {game.status === 'playing' && game.current_turn_player_id !== user.id && !game.is_vs_cpu && (
                       <button
                         onClick={() => remindOpponent(game.id)}
-                        className="px-4 py-2 border-2 border-ui-purple text-ui-purple text-[10px] font-black hover:bg-ui-purple hover:text-white transition-all whitespace-nowrap"
+                        className="px-4 py-2 border-2 border-ui-yellow text-ui-yellow text-[10px] font-black hover:bg-ui-yellow hover:text-bg-dark transition-all whitespace-nowrap"
                         title="Send Nudge"
                       >
                         NUDGE

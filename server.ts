@@ -641,6 +641,15 @@ async function startServer() {
     }
   });
 
+  app.post("/api/push/test", authenticate, async (req: any, res) => {
+    try {
+      await sendPushNotification(req.user.id, "Test Notification", "If you see this, push notifications are working!", "/");
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "Failed to send test notification" });
+    }
+  });
+
   // Get game messages
   app.get("/api/games/:gameId/messages", authenticate, (req: any, res) => {
     const { gameId } = req.params;
