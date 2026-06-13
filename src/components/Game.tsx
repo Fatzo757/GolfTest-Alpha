@@ -480,7 +480,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   };
 
     const DeckAndDiscard = (
-      <div className="p-2 md:p-6 geometric-border bg-black/10 flex flex-row lg:flex-col items-center justify-center gap-1 md:gap-4 lg:gap-8 min-w-fit">
+      <div className="h-[145px] md:h-[200px] lg:h-auto p-2 md:p-6 geometric-border bg-black/10 flex flex-row lg:flex-col items-center justify-center gap-1 md:gap-4 lg:gap-8 min-w-fit w-full">
          {/* Deck Slot */}
          <motion.div 
            initial={{ opacity: 0, y: 20 }}
@@ -491,7 +491,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
              onClick={() => canDraw && handleDraw('deck')}
              whileHover={canDraw ? { scale: 1.1, rotate: 5, boxShadow: '8px 8px 0px 0px rgba(255,123,82,0.4)' } : {}}
              whileTap={canDraw ? { scale: 0.9 } : {}}
-             className={`geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${canDraw ? 'border-ui-yellow' : 'opacity-40 grayscale'} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') ? 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]' : ''}`}
+             className={`w-full aspect-[3/4] geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${canDraw ? 'border-ui-yellow' : 'opacity-40 grayscale'} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') ? 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]' : ''}`}
            >
              {latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') && (
                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-orange text-white text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
@@ -562,7 +562,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                  handleDraw('discard');
                }
              }}
-             className={`relative cursor-pointer transition-all small md:normal ${isMyTurn && state?.game?.status !== 'initializing' ? 'border-ui-green' : 'opacity-40'} ${draggingOver?.type === 'discard' ? 'scale-110 ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(56,217,115,0.6)]' : ''} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') ? 'ring-2 ring-ui-green ring-offset-1 ring-offset-bg-dark shadow-[0_0_10px_rgba(56,217,115,0.5)]' : ''}`}
+             className={`w-full aspect-[3/4] relative cursor-pointer transition-all small md:normal ${isMyTurn && state?.game?.status !== 'initializing' ? 'border-ui-green' : 'opacity-40'} ${draggingOver?.type === 'discard' ? 'scale-110 ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(56,217,115,0.6)]' : ''} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') ? 'ring-2 ring-ui-green ring-offset-1 ring-offset-bg-dark shadow-[0_0_10px_rgba(56,217,115,0.5)]' : ''}`}
            >
              {latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') && (
                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-green text-bg-dark text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
