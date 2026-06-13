@@ -508,7 +508,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
         </motion.div>
 
         {/* Integrated Active Card Area - Fixed Width Slot */}
-        <div className="w-20 md:w-32 lg:w-full flex flex-col items-center justify-center h-[125px] md:h-[160px] lg:h-auto lg:min-h-[140px]">
+        <div className="w-[110px] md:w-[150px] lg:w-full flex flex-col items-center justify-center h-[125px] md:h-[160px] lg:h-auto lg:min-h-[140px]">
           <AnimatePresence mode="wait" initial={false}>
             {state?.game?.drawn_card ? (
               <motion.div 
@@ -811,7 +811,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                        
                        <AnimatePresence>
                          {state.game.drawn_card && isMyTurn && (
-                           <div className="absolute -right-4 lg:-right-20 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-4">
+                           <div className="hidden lg:flex absolute -right-4 lg:-right-20 top-1/2 -translate-y-1/2 z-30 flex-col items-center gap-4">
                              <span className="hidden xl:block text-[7px] text-ui-yellow bg-bg-dark px-2 py-1 border border-ui-yellow animate-pulse mb-2 whitespace-nowrap uppercase tracking-[0.2em]">Drawn Card</span>
                              
                              <motion.div 
