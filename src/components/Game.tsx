@@ -752,14 +752,13 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-red/5 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
                        <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
-                          <div className="px-3 flex items-center gap-2 border-r border-white/10">
-                           <div className={`w-1.5 h-1.5 rounded-full ${isOpponentOnline ? 'bg-ui-green' : 'bg-ui-red'} animate-pulse`} />
-                           <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
-                              <UserAvatar type={(state.game as any).player2_avatar} size={10} />
-                           </div>
-                           <span className="text-ui-red">{opponentName}</span>
-                           <span className="opacity-50">::</span>
-                           <span>{calculateScore(opponentId || 'cpu')} Pts</span>
+                          <div className="px-3 flex items-center gap-2 border-l border-white/10 flex-row-reverse">
+                            <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
+                               <UserAvatar type={(state.game as any).player2_avatar} size={10} />
+                            </div>
+                            <span className="text-ui-red font-bold truncate max-w-[80px] md:max-w-[120px]">{opponentName}</span>
+                            <span className="opacity-50">::</span>
+                            <span>{calculateScore(opponentId || 'cpu')} Pts</span>
                          </div>
                          {!isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-orange')}
                        </div>
@@ -799,11 +798,11 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                      <div className={`relative p-4 md:p-6 bg-ui-green/5 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
                        <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
                          <div className="px-3 flex items-center gap-2 border-r border-white/10">
-                           <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
-                              <UserAvatar type={user.avatar} size={10} />
-                           </div>
-                           <span className="text-ui-green font-bold">{myName}</span>
-                           <span className="opacity-50">::</span>
+                            <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
+                               <UserAvatar type={user.avatar} size={10} />
+                            </div>
+                            <span className="text-ui-green font-bold truncate max-w-[80px] md:max-w-[120px]">{myName}</span>
+                            <span className="opacity-50">::</span>
                            <span>{calculateScore(userId)} Pts</span>
                          </div>
                          {isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-yellow')}

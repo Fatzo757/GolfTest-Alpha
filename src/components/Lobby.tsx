@@ -79,12 +79,27 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
   };
 
   const remindOpponent = async (gameId: string) => {
+    const lastNudgeStr = localStorage.getItem(`last_nudge_${gameId}`);
+    const now = Date.now();
+    if (lastNudgeStr) {
+      const lastNudge = parseInt(lastNudgeStr, 10);
+      const timeSinceNudge = now - lastNudge;
+      const tenMinutes = 10 * 60 * 1000;
+      if (timeSinceNudge < tenMinutes) {
+        const minutesLeft = Math.ceil((tenMinutes - timeSinceNudge) / 60000);
+        setStatusMsg({ type: 'error', text: `Please wait ${minutesLeft} min before nudging again` });
+        setTimeout(() => setStatusMsg(null), 3000);
+        return;
+      }
+    }
+
     try {
-      const res = await fetch(`/api/games/${gameId}/remind`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/remind`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
+        localStorage.setItem(`last_nudge_${gameId}`, now.toString());
         setStatusMsg({ type: 'success', text: 'Nudge sent successfully!' });
         setTimeout(() => setStatusMsg(null), 3000);
       } else {
@@ -298,7 +313,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               <div className="text-[9px] uppercase font-bold flex items-center gap-2">
                 <span className="text-ui-gray">VS</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-ui-green">
+                  <span className="text-ui-green truncate max-w-[150px]">
                     {game.player1_id === user.id ? (game.player2_name || (game.is_vs_cpu ? 'CPU' : 'WAITING ROOM')) : (game.player1_name || 'OPPONENT')}
                   </span>
                   {game.is_vs_cpu && (
@@ -466,7 +481,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 md:relative md:inset-auto md:z-0 md:bg-transparent md:mb-8"
+            className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80"
           >
             <div className="bg-bg-dark border-4 border-ui-red p-8 shadow-[8px_8px_0px_0px_#cc3333] max-w-md w-full">
               <h3 className="text-[10px] text-ui-red font-bold uppercase mb-4 tracking-widest">Confirm Clear Action</h3>
