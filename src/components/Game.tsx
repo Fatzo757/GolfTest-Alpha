@@ -32,6 +32,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
   const [moveFilter, setMoveFilter] = useState<'ALL' | 'ME' | 'OPPONENT'>('ALL');
   const prevTurnRef = useRef<string | null>(null);
+  const prevStatusRef = useRef<string | null>(null);
   const discardPileRef = useRef<HTMLDivElement>(null);
   const gridRefs = useRef<(HTMLDivElement | null)[]>([]);
   const prevStateRef = useRef<GameState | null>(null);
@@ -189,14 +190,21 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
   useEffect(() => {
     if (state?.game) {
-      if (prevTurnRef.current !== state.game.current_turn_player_id) {
+      const statusChanged = prevStatusRef.current !== state.game.status;
+      const turnChanged = prevTurnRef.current !== state.game.current_turn_player_id;
+
+      if (statusChanged && state.game.status === 'initializing') {
+        setMobileTab('me');
+      } else if (turnChanged && state.game.status === 'playing') {
         if (state.game.current_turn_player_id === userId) {
           setMobileTab('me');
-        } else if (state.game.status === 'playing') {
+        } else {
           setMobileTab('opponent');
         }
-        prevTurnRef.current = state.game.current_turn_player_id;
       }
+
+      prevStatusRef.current = state.game.status;
+      prevTurnRef.current = state.game.current_turn_player_id;
     }
   }, [state?.game?.current_turn_player_id, state?.game?.status, userId]);
 
@@ -500,7 +508,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
         </motion.div>
 
         {/* Integrated Active Card Area - Fixed Width Slot */}
-        <div className="w-20 md:w-32 lg:w-full flex flex-col items-center justify-center min-h-[80px] md:min-h-[140px]">
+        <div className="w-20 md:w-32 lg:w-full flex flex-col items-center justify-center h-[125px] md:h-[160px] lg:h-auto lg:min-h-[140px]">
           <AnimatePresence mode="wait" initial={false}>
             {state?.game?.drawn_card ? (
               <motion.div 
