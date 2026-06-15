@@ -342,7 +342,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                   )}
               </div>
               <div className="text-[7px] text-ui-gray uppercase flex font-mono bg-transparent">
-                  ID: {game.id.substring(0, 8)}... • Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
+                  Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-start xl:justify-end gap-2 w-full xl:w-auto mt-2 xl:mt-0">
