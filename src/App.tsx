@@ -85,7 +85,33 @@ export default function App() {
     if (user) {
       soundService.setMuted(!!user.mute_sounds);
       soundService.setVolume(user.sound_volume ?? 1.0);
+
+      // Check URL pathname for direct game link on load
+      const match = window.location.pathname.match(/^\/game\/(.+)$/);
+      if (match) {
+        setCurrentGameId(match[1]);
+        window.history.replaceState({}, document.title, '/');
+      }
     }
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'NAVIGATE_TO_GAME' && user) {
+        try {
+          const urlObj = new URL(event.data.url, window.location.origin);
+          const match = urlObj.pathname.match(/^\/game\/(.+)$/);
+          if (match) {
+             setCurrentGameId(match[1]);
+          }
+        } catch (e) {
+          console.error("Failed to parse navigation URL from service worker", e);
+        }
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handleMessage);
+    
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', handleMessage);
+    };
   }, [user]);
 
   useEffect(() => {

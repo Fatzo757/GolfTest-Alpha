@@ -26,8 +26,10 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       for (var i = 0; i < windowClients.length; i++) {
         var client = windowClients[i];
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
+        if ('focus' in client) {
+          client.focus();
+          client.postMessage({ type: 'NAVIGATE_TO_GAME', url: urlToOpen });
+          return;
         }
       }
       if (clients.openWindow) {

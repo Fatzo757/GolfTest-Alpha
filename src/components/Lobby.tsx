@@ -579,45 +579,10 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
             exit={{ opacity: 0, x: 20 }}
             className="grid md:grid-cols-2 gap-8"
           >
-            {/* Join Game Section */}
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="h-full p-8 geometric-border space-y-8 bg-ui-green/5"
-            >
-              <div className="flex items-center gap-3 border-b-2 border-ui-border pb-4">
-                <Hash className="text-ui-green" size={20} />
-                <h3 className="text-[10px] text-ui-green tracking-widest uppercase font-bold">Join Game Room</h3>
-              </div>
-
-              <form onSubmit={joinGame} className="space-y-6">
-                <div className="bg-bg-dark p-6 border-2 border-ui-border shadow-inner">
-                  <label className="block text-[8px] text-ui-gray mb-4 uppercase tracking-widest text-center">Input 6-Digit Room Code</label>
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
-                    type="text"
-                    value={roomCode}
-                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                    placeholder="XXXXXX"
-                    className="w-full bg-transparent border-b-4 border-ui-yellow pb-4 text-3xl font-bold tracking-[0.5em] text-ui-yellow focus:outline-none placeholder:opacity-10 text-center"
-                    maxLength={6}
-                  />
-                </div>
-
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={loading || !roomCode}
-                  className="w-full geometric-button py-4 text-xs flex items-center justify-center gap-3"
-                >
-                   <span>Join Now</span>
-                </motion.button>
-              </form>
-            </motion.div>
-
             {/* Host Online Game Section */}
             <motion.div 
                whileHover={{ y: -5 }}
-               className="h-full p-8 geometric-border space-y-8 bg-ui-orange/5"
+               className="md:col-span-2 h-full p-8 geometric-border space-y-8 bg-ui-orange/5"
             >
                <div className="flex items-center gap-3 border-b-2 border-ui-border pb-4">
                  <Users className="text-ui-orange" size={20} />
@@ -625,7 +590,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                </div>
                <div className="space-y-6 h-full flex flex-col justify-center pb-8">
                  <p className="text-[10px] text-ui-gray uppercase leading-relaxed">
-                   Create a private room to invite friends using a 6-digit code.
+                   Create a private room to invite friends.
                  </p>
                  <motion.button
                    whileTap={{ scale: 0.98 }}
@@ -667,9 +632,12 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                             <div className="text-[9px] font-bold text-ui-yellow uppercase leading-none mb-1">
                                {game.host_name}'s Room
                             </div>
-                            <div className="text-[7px] text-ui-gray uppercase">
-                               CODE: <span className="text-white">{game.room_code}</span>
-                            </div>
+                            <div className="flex items-center gap-4 text-[7px] font-bold tracking-widest">
+                               <div className="flex items-center gap-2">
+                                 <Users size={12} className="text-ui-gray" />
+                                 <span className="text-ui-green">{game.players_count}/2 PLAYERS</span>
+                               </div>
+                             </div>
                          </div>
                       </div>
                       <button

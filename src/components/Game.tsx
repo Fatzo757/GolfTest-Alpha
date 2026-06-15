@@ -28,7 +28,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   const [showHistory, setShowHistory] = useState(false);
   const [draggingOver, setDraggingOver] = useState<{ type: 'grid' | 'discard'; index?: number } | null>(null);
   
-  const [mobileTab, setMobileTab] = useState<'me' | 'opponent'>('me');
+  const [mobileTab, setMobileTab] = useState<'me' | 'opponent' | 'history'>('me');
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
   const [moveFilter, setMoveFilter] = useState<'ALL' | 'ME' | 'OPPONENT'>('ALL');
   const prevTurnRef = useRef<string | null>(null);
@@ -195,7 +195,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
       if (statusChanged && state.game.status === 'initializing') {
         setMobileTab('me');
-      } else if (turnChanged && state.game.status === 'playing') {
+      } else if (turnChanged) {
         if (state.game.current_turn_player_id === userId) {
           setMobileTab('me');
         } else {
@@ -415,6 +415,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
   const myName = (state?.game.player1_id === userId ? state?.game.player1_name : state?.game.player2_name) || 'Player';
   const opponentName = (state?.game.player1_id === userId ? state?.game.player2_name : state?.game.player1_name) || (state?.game.is_vs_cpu ? 'CPU' : 'Opponent');
+  const opponentAvatar = state?.game.player1_id === userId ? (state?.game as any).player2_avatar : (state?.game as any).player1_avatar;
 
   const myCards = state?.cards.filter(c => c.player_id === userId).sort((a,b) => (a.card_index || 0) - (b.card_index || 0)) || [];
   const opponentCards = state?.cards.filter(c => {
@@ -678,16 +679,6 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 </button>
 
                 <div className="flex items-center gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-1.5 border border-ui-border rounded-full shadow-lg">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[5px] text-ui-gray uppercase leading-none mb-0.5">Room</span>
-                    <span className="text-[10px] text-ui-yellow font-bold leading-none tracking-tighter">#{state.game.room_code}</span>
-                  </div>
-                  
-                  <div className="w-[1px] h-4 bg-ui-border mx-1" />
-
-                  <div className="flex flex-col items-center group relative cursor-help">
-                    <span className="text-[5px] text-ui-gray uppercase leading-none mb-0.5 flex items-center gap-1">
-                      <Layers size={6} />
                       Deck
                     </span>
                     <span className="text-[10px] text-ui-purple font-bold leading-none tracking-tighter">
@@ -707,7 +698,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-red/30">
-                        <UserAvatar type={(state.game as any).player2_avatar} size={8} />
+                        <UserAvatar type={opponentAvatar} size={8} />
                       </div>
                       <span className="text-[9px] text-ui-red font-black">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}</span>
                     </div>
@@ -717,8 +708,10 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                   <div className="flex flex-col items-end">
                      <div className="flex items-center gap-1">
-                        <div className={`w-1 h-1 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
-                        <span className="text-[7px] text-white/40 uppercase font-black tracking-widest">{state.game.status === 'playing' ? (isMyTurn ? 'Your Turn' : 'Opponent') : state.game.status}</span>
+                        <div className={`shrink-0 w-1 h-1 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
+                        <span className="text-[7px] text-white/40 uppercase font-black tracking-widest w-[50px] text-right truncate">
+                          {state.game.status === 'playing' ? (isMyTurn ? user.username : opponentName) : state.game.status}
+                        </span>
                      </div>
                   </div>
                 </div>
@@ -736,15 +729,21 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    <div className="lg:hidden flex border-2 border-ui-border p-1 bg-bg-dark/40 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] w-full order-2">
                      <button 
                        onClick={() => setMobileTab('me')}
-                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'me' ? 'bg-ui-green text-bg-dark' : 'text-ui-gray hover:text-white'}`}
+                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all truncate px-1 ${mobileTab === 'me' ? 'bg-ui-green text-bg-dark' : 'text-ui-gray hover:text-white'}`}
                      >
-                       YOU ({calculateScore(userId)})
+                       {user.username} ({calculateScore(userId)})
                      </button>
                      <button 
                        onClick={() => setMobileTab('opponent')}
-                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'opponent' ? 'bg-ui-red text-white' : 'text-ui-gray hover:text-white'}`}
+                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all truncate px-1 ${mobileTab === 'opponent' ? 'bg-ui-red text-white' : 'text-ui-gray hover:text-white'}`}
                      >
                        {opponentName} ({calculateScore(opponentId || 'cpu')})
+                     </button>
+                     <button 
+                       onClick={() => setMobileTab('history')}
+                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'history' ? 'bg-ui-yellow text-bg-dark' : 'text-ui-gray hover:text-white'}`}
+                     >
+                       HISTORY
                      </button>
                    </div>
 
@@ -935,7 +934,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               </div>
 
               {/* Bottom Section: History & Moves */}
-              <div className="w-full max-w-7xl mx-auto px-4">
+              <div className={`w-full max-w-7xl mx-auto px-4 ${mobileTab === 'history' ? 'block' : 'hidden lg:block'}`}>
                 <div className="geometric-border p-5 flex flex-col bg-bg-dark/20 min-h-[48px]">
                   <div className="flex items-center justify-between border-b border-ui-border pb-3 mb-4 w-full">
                     <button 
