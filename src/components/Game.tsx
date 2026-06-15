@@ -415,7 +415,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
   const myName = (state?.game.player1_id === userId ? state?.game.player1_name : state?.game.player2_name) || 'Player';
   const opponentName = (state?.game.player1_id === userId ? state?.game.player2_name : state?.game.player1_name) || (state?.game.is_vs_cpu ? 'CPU' : 'Opponent');
-  const opponentAvatar = state?.game.player1_id === userId ? (state?.game as any).player2_avatar : (state?.game as any).player1_avatar;
+  const opponentAvatar = state?.game?.player1_id === userId ? (state?.game as any)?.player2_avatar : (state?.game as any)?.player1_avatar;
 
   const myCards = state?.cards.filter(c => c.player_id === userId).sort((a,b) => (a.card_index || 0) - (b.card_index || 0)) || [];
   const opponentCards = state?.cards.filter(c => {
