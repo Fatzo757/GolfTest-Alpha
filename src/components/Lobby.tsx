@@ -811,9 +811,9 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                   <div className="text-[8px] text-ui-gray uppercase mb-1">Losses</div>
                   <div className="text-xl font-bold text-ui-red">{stats.losses}</div>
                 </div>
-                <div className="geometric-border p-4 bg-ui-purple/5">
+                <div className="geometric-border p-4 bg-ui-orange/5">
                   <div className="text-[8px] text-ui-gray uppercase mb-1">Win Ratio</div>
-                  <div className="text-xl font-bold text-ui-purple">{stats.ratio}%</div>
+                  <div className="text-xl font-bold text-ui-orange">{stats.ratio}%</div>
                 </div>
               </div>
             </div>
