@@ -26,7 +26,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteLoading, setInviteLoading] = useState<string | null>(null);
-  const [view, setView] = useState<'lobby' | 'online' | 'history' | 'rules'>('lobby');
+  const [view, setView] = useState<'lobby' | 'online' | 'history' | 'rules' | 'stats'>('lobby');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmClearAction, setConfirmClearAction] = useState<'all' | 'old' | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -426,25 +426,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="geometric-border p-4 bg-ui-blue/5">
-          <div className="text-[8px] text-ui-gray uppercase mb-1">Total Games</div>
-          <div className="text-xl font-bold text-ui-yellow">{stats.total}</div>
-        </div>
-        <div className="geometric-border p-4 bg-ui-green/5">
-          <div className="text-[8px] text-ui-gray uppercase mb-1">Wins</div>
-          <div className="text-xl font-bold text-ui-green">{stats.wins}</div>
-        </div>
-        <div className="geometric-border p-4 bg-ui-red/5">
-          <div className="text-[8px] text-ui-gray uppercase mb-1">Losses</div>
-          <div className="text-xl font-bold text-ui-red">{stats.losses}</div>
-        </div>
-        <div className="geometric-border p-4 bg-ui-purple/5">
-          <div className="text-[8px] text-ui-gray uppercase mb-1">Win Ratio</div>
-          <div className="text-xl font-bold text-ui-purple">{stats.ratio}%</div>
-        </div>
-      </div>
+
 
       <div className="flex gap-4 flex-wrap">
         <button 
@@ -464,6 +446,12 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
           className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'history' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
         >
           Match History
+        </button>
+        <button 
+          onClick={() => setView('stats')}
+          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'stats' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
+        >
+          Stats
         </button>
         <button 
           onClick={() => setView('rules')}
@@ -789,16 +777,46 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
                       </button>
                       <button 
                          onClick={() => deleteMatch(game.id)}
-                         className="p-2 text-ui-red hover:bg-ui-red/10 transition-all opacity-0 group-hover:opacity-100"
+                         className="p-3 text-ui-red hover:bg-ui-red/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 bg-ui-red/5 rounded-full"
                          title="Remove from history"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={24} />
                       </button>
                     </div>
                   </motion.div>
                 ))}
               </div>
             )}
+          </motion.div>
+        ) : view === 'stats' ? (
+          <motion.div 
+            key="stats"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-4"
+          >
+            <div className="bg-bg-dark p-8 border-4 border-ui-border relative overflow-hidden">
+              <h4 className="text-[10px] text-ui-orange mb-6 tracking-widest uppercase border-b-2 border-ui-orange w-fit pb-1">Your Statistics</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
+                <div className="geometric-border p-4 bg-ui-blue/5">
+                  <div className="text-[8px] text-ui-gray uppercase mb-1">Total Games</div>
+                  <div className="text-xl font-bold text-ui-yellow">{stats.total}</div>
+                </div>
+                <div className="geometric-border p-4 bg-ui-green/5">
+                  <div className="text-[8px] text-ui-gray uppercase mb-1">Wins</div>
+                  <div className="text-xl font-bold text-ui-green">{stats.wins}</div>
+                </div>
+                <div className="geometric-border p-4 bg-ui-red/5">
+                  <div className="text-[8px] text-ui-gray uppercase mb-1">Losses</div>
+                  <div className="text-xl font-bold text-ui-red">{stats.losses}</div>
+                </div>
+                <div className="geometric-border p-4 bg-ui-purple/5">
+                  <div className="text-[8px] text-ui-gray uppercase mb-1">Win Ratio</div>
+                  <div className="text-xl font-bold text-ui-purple">{stats.ratio}%</div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         ) : view === 'rules' ? (
           <motion.div 
