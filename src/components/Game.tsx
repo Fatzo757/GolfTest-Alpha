@@ -684,7 +684,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       <Layers size={6} />
                       Deck
                     </span>
-                    <span className="text-[10px] text-ui-purple font-bold leading-none tracking-tighter">
+                    <span className="text-[10px] text-white font-bold leading-none tracking-tighter drop-shadow-sm">
                       {state.game.deck_count} LEFT
                     </span>
                   </div>
