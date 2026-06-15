@@ -679,6 +679,9 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 </button>
 
                 <div className="flex items-center gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-1.5 border border-ui-border rounded-full shadow-lg">
+                  <div className="flex flex-col items-center group relative cursor-help">
+                    <span className="text-[5px] text-ui-gray uppercase leading-none mb-0.5 flex items-center gap-1">
+                      <Layers size={6} />
                       Deck
                     </span>
                     <span className="text-[10px] text-ui-purple font-bold leading-none tracking-tighter">
