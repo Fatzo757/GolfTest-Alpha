@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Move, Card, User } from '../types.ts';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, X, SkipForward, SkipBack, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, X, SkipForward, SkipBack, Clock, FastForward } from 'lucide-react';
 import UserAvatar from './UserAvatar.tsx';
 import CardComponent from './Card.tsx';
 
@@ -17,6 +17,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
   const [moves, setMoves] = useState<Move[]>([]);
   const [currentIdx, setCurrentIdx] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState<1 | 2 | 4>(1);
   const [loading, setLoading] = useState(true);
 
   const [displayState, setDisplayState] = useState<{
@@ -108,14 +109,76 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
   useEffect(() => {
     let timer: any;
     if (isPlaying && currentIdx < moves.length - 1) {
+      const nextMove = moves[currentIdx + 1];
+      let delay = 800 / playbackSpeed;
+      if (['initial_card', 'initial_discard'].includes(nextMove.move_type)) {
+        delay = 0;
+      }
       timer = setTimeout(() => {
         setCurrentIdx(prev => prev + 1);
-      }, 800);
-    } else {
+      }, delay);
+    } else if (currentIdx >= moves.length - 1) {
       setIsPlaying(false);
     }
     return () => clearTimeout(timer);
-  }, [isPlaying, currentIdx, moves.length]);
+  }, [isPlaying, currentIdx, moves, playbackSpeed]);
+
+  const getPoints = (value: string) => {
+    if (value === 'J') return -2;
+    if (value === 'K') return 0;
+    if (value === 'Q') return 10;
+    if (value === 'A') return 1;
+    const num = parseInt(value);
+    return isNaN(num) ? 10 : num;
+  };
+
+  const calculateScore = (cards: Card[]) => {
+    const partOfSet = new Set<number>();
+    const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+    const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
+
+    rows.forEach(indices => {
+      const row = indices.map(i => cards[i]);
+      if (row.every(c => c && c.is_face_up) && row[0].value === row[1].value && row[1].value === row[2].value) {
+        indices.forEach(i => partOfSet.add(i));
+      }
+    });
+
+    cols.forEach(indices => {
+      const col = indices.map(i => cards[i]);
+      if (col.every(c => c && c.is_face_up) && col[0].value === col[1].value && col[1].value === col[2].value) {
+        indices.forEach(i => partOfSet.add(i));
+      }
+    });
+
+    let total = 0;
+    cards.forEach((card, index) => {
+      if (card && card.is_face_up && !partOfSet.has(index)) {
+        total += getPoints(card.value);
+      }
+    });
+    return total;
+  };
+
+  const roundNavigation = useMemo(() => {
+    const rounds: { startIdx: number; endIdx: number }[] = [];
+    if (!moves.length) return rounds;
+    
+    let currentRoundStart = 0;
+    for (let i = 0; i < moves.length; i++) {
+      if (moves[i].move_type === 'round_start') {
+        if (rounds.length > 0) {
+          rounds[rounds.length - 1].endIdx = i - 1;
+        }
+        currentRoundStart = i;
+        while (currentRoundStart < moves.length && ['round_start', 'initial_card', 'initial_discard'].includes(moves[currentRoundStart].move_type)) {
+          currentRoundStart++;
+        }
+        rounds.push({ startIdx: currentRoundStart - 1, endIdx: moves.length - 1 });
+      }
+    }
+    return rounds;
+  }, [moves]);
 
   if (loading) return <div className="p-12 text-center text-ui-yellow animate-pulse uppercase">Accessing Memory...</div>;
   if (!gameData) return <div className="p-12 text-center text-ui-red uppercase">Memory Corrupted</div>;
@@ -166,6 +229,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
                    <UserAvatar type={gameData.player2_avatar} size={10} />
                 </div>
                 {gameData.player2_name}
+                <span className="ml-2 font-bold text-ui-red">{calculateScore(displayState.p2Cards)} PTS</span>
              </div>
              <div className="grid grid-cols-3 gap-2">
                 {displayState.p2Cards.map((c, i) => renderCard(c, i))}
@@ -194,6 +258,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
                    <UserAvatar type={gameData.player1_avatar} size={10} />
                 </div>
                 {gameData.player1_name}
+                <span className="ml-2 font-bold text-ui-green">{calculateScore(displayState.p1Cards)} PTS</span>
              </div>
           </div>
         </div>
@@ -237,6 +302,44 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
               {isPlaying ? <Pause size={18} /> : <Play size={18} />}
               <span>{isPlaying ? 'Pause Playback' : 'Auto Play'}</span>
             </button>
+
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 4].map(speed => (
+                <button
+                  key={speed}
+                  onClick={() => setPlaybackSpeed(speed as 1 | 2 | 4)}
+                  className={`py-2 text-[8px] uppercase font-bold border-2 transition-all flex items-center justify-center gap-1 ${
+                    playbackSpeed === speed ? 'border-ui-yellow text-ui-yellow bg-ui-yellow/10' : 'border-ui-border text-ui-gray hover:bg-white/5'
+                  }`}
+                >
+                  <FastForward size={10} /> {speed}x
+                </button>
+              ))}
+            </div>
+
+            {roundNavigation.length > 0 && (
+              <div className="space-y-2 border-t border-ui-border pt-4">
+                <div className="text-[8px] text-ui-yellow uppercase font-bold">Round Jumps</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {roundNavigation.map((round, idx) => (
+                    <React.Fragment key={idx}>
+                      <button 
+                        onClick={() => { setCurrentIdx(round.startIdx); setIsPlaying(false); }}
+                        className="py-2 text-[8px] uppercase border border-ui-border text-ui-gray hover:text-white hover:border-ui-gray transition-all flex items-center justify-center gap-1"
+                      >
+                        <SkipBack size={10} /> R{idx + 1} Start
+                      </button>
+                      <button 
+                        onClick={() => { setCurrentIdx(round.endIdx); setIsPlaying(false); }}
+                        className="py-2 text-[8px] uppercase border border-ui-border text-ui-gray hover:text-white hover:border-ui-gray transition-all flex items-center justify-center gap-1"
+                      >
+                        R{idx + 1} End <SkipForward size={10} />
+                      </button>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <button 
               onClick={() => { setCurrentIdx(-1); setIsPlaying(false); }}
