@@ -526,7 +526,6 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 <span className="text-[5px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
                 <div className="flex items-center gap-1 relative z-50">
                   <motion.div
-                    layoutId={state.game.drawn_card.id}
                     drag={isMyTurn}
                     dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                     dragSnapToOrigin
