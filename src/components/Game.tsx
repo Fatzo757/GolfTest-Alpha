@@ -524,22 +524,71 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 className="flex flex-col items-center gap-1"
               >
                 <span className="text-[5px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
-                <div className="flex items-center gap-1">
-                  <CardComponent
-                    key={state.game.drawn_card.id}
-                    card={state.game.drawn_card}
-                    index={-1}
-                    style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
-                    className="small md:normal border-ui-yellow ring-2 ring-ui-yellow/20"
-                    forceFaceUp={true}
-                  />
-                  <button 
-                    onClick={() => handleMove(0, 'discard_drawn')} 
-                    className="p-1.5 md:p-3 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all shadow-[1px_1px_0px_0px_rgba(220,38,38,0.2)]"
-                    title="Discard Active Card"
+                <div className="flex items-center gap-1 relative z-50">
+                  <motion.div
+                    layoutId={state.game.drawn_card.id}
+                    drag={isMyTurn}
+                    dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+                    dragSnapToOrigin
+                    onDragStart={() => soundService.playDraw()}
+                    onDrag={(e, info) => {
+                      const x = info.point.x;
+                      const y = info.point.y;
+                      
+                      const discardRect = discardPileRef.current?.getBoundingClientRect();
+                      if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
+                        setDraggingOver({ type: 'discard' });
+                        return;
+                      }
+
+                      for (let i = 0; i < gridRefs.current.length; i++) {
+                        const rect = gridRefs.current[i]?.getBoundingClientRect();
+                        if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                          setDraggingOver({ type: 'grid', index: i });
+                          return;
+                        }
+                      }
+                      setDraggingOver(null);
+                    }}
+                    onDragEnd={(e, info) => {
+                      const x = info.point.x;
+                      const y = info.point.y;
+                      setDraggingOver(null);
+                      const discardRect = discardPileRef.current?.getBoundingClientRect();
+                      if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
+                        handleMove(0, 'discard_drawn');
+                        return;
+                      }
+                      for (let i = 0; i < gridRefs.current.length; i++) {
+                        const rect = gridRefs.current[i]?.getBoundingClientRect();
+                        if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                          handleMove(i, 'replace');
+                          return;
+                        }
+                      }
+                    }}
+                    whileHover={isMyTurn ? { scale: 1.05 } : {}}
+                    whileDrag={{ scale: 1.15, zIndex: 100 }}
+                    className={isMyTurn ? "cursor-grab active:cursor-grabbing" : ""}
                   >
-                    <X size={10} />
-                  </button>
+                    <CardComponent
+                      key={state.game.drawn_card.id}
+                      card={state.game.drawn_card}
+                      index={-1}
+                      style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
+                      className={`small md:normal border-ui-yellow ${isMyTurn ? 'ring-2 ring-ui-yellow/20 shadow-[0_0_20px_rgba(255,205,117,0.3)]' : ''}`}
+                      forceFaceUp={true}
+                    />
+                  </motion.div>
+                  {isMyTurn && (
+                    <button 
+                      onClick={() => handleMove(0, 'discard_drawn')} 
+                      className="p-1.5 md:p-3 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all shadow-[1px_1px_0px_0px_rgba(220,38,38,0.2)]"
+                      title="Discard Active Card"
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
                 </div>
               </motion.div>
             ) : (
@@ -815,66 +864,6 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                        </div>
                        
                        <AnimatePresence>
-                         {state.game.drawn_card && isMyTurn && (
-                           <div className="hidden lg:flex absolute -right-4 lg:-right-20 top-1/2 -translate-y-1/2 z-30 flex-col items-center gap-4">
-                             <span className="hidden xl:block text-[7px] text-ui-yellow bg-bg-dark px-2 py-1 border border-ui-yellow animate-pulse mb-2 whitespace-nowrap uppercase tracking-[0.2em]">Drawn Card</span>
-                             
-                             <motion.div 
-                               layoutId={state.game.drawn_card.id}
-                               drag
-                               dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-                               dragSnapToOrigin
-                               onDragStart={() => soundService.playDraw()}
-                               onDrag={(e, info) => {
-                                 const x = info.point.x;
-                                 const y = info.point.y;
-                                 
-                                 const discardRect = discardPileRef.current?.getBoundingClientRect();
-                                 if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
-                                   setDraggingOver({ type: 'discard' });
-                                   return;
-                                 }
-   
-                                 for (let i = 0; i < gridRefs.current.length; i++) {
-                                   const rect = gridRefs.current[i]?.getBoundingClientRect();
-                                   if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                                     setDraggingOver({ type: 'grid', index: i });
-                                     return;
-                                   }
-                                 }
-                                 setDraggingOver(null);
-                               }}
-                               onDragEnd={(e, info) => {
-                                 const x = info.point.x;
-                                 const y = info.point.y;
-                                 setDraggingOver(null);
-                                 const discardRect = discardPileRef.current?.getBoundingClientRect();
-                                 if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
-                                   handleMove(0, 'discard_drawn');
-                                   return;
-                                 }
-                                 for (let i = 0; i < gridRefs.current.length; i++) {
-                                   const rect = gridRefs.current[i]?.getBoundingClientRect();
-                                   if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                                     handleMove(i, 'replace');
-                                     return;
-                                   }
-                                 }
-                               }}
-                               whileHover={{ scale: 1.05 }}
-                               whileDrag={{ scale: 1.15, zIndex: 100 }}
-                               className="cursor-grab active:cursor-grabbing w-16 h-24 md:w-24 md:h-32"
-                             >
-                               <CardComponent
-                                 card={state.game.drawn_card}
-                                 index={-1}
-                                 style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
-                                 className="fluid border-ui-yellow ring-4 ring-ui-yellow/20 shadow-[0_0_20px_rgba(255,205,117,0.3)]"
-                                 forceFaceUp={true}
-                               />
-                             </motion.div>
-                           </div>
-                         )}
                        </AnimatePresence>
    
                        <motion.div 

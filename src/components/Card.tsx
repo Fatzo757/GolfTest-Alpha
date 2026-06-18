@@ -38,8 +38,8 @@ export const CardPattern = ({ backStyle, backColor }: { backStyle: string, backC
         </div>
       )}
       {backStyle === 'modern' && (
-        <div className="absolute inset-0 flex items-center justify-center">
-           <div className={`w-8 h-8 rounded-full border-2 ${cMap.border}`} />
+        <div className={`absolute inset-1.5 rounded-[6px] border-2 ${cMap.border} opacity-80 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] flex items-center justify-center`}>
+           <div className={`w-2/3 h-2/3 rounded-[4px] border ${cMap.border30} opacity-50`} />
         </div>
       )}
       {backStyle === 'sketch' && (
