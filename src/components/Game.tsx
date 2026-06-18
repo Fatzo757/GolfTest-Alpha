@@ -569,7 +569,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     }}
                     whileHover={isMyTurn ? { scale: 1.05 } : {}}
                     whileDrag={{ scale: 1.15, zIndex: 100 }}
-                    className={isMyTurn ? "cursor-grab active:cursor-grabbing" : ""}
+                    className={`${isMyTurn ? "cursor-grab active:cursor-grabbing" : ""} w-16 md:w-24 aspect-[3/4]`}
                   >
                     <CardComponent
                       key={state.game.drawn_card.id}
