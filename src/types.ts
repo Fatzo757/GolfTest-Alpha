@@ -3,6 +3,8 @@ export interface User {
   username: string;
   theme?: string;
   card_style?: string;
+  card_back_style?: string;
+  card_back_color?: string;
   avatar?: string;
   mute_sounds?: number;
   sound_volume?: number;

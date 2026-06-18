@@ -5,7 +5,7 @@ import { RefreshCw, ArrowLeft, History, Info, ChevronRight, X, ChevronDown, Chev
 import { Chat } from './Chat';
 import { soundService } from '../services/soundService';
 import UserAvatar from './UserAvatar.tsx';
-import CardComponent from './Card.tsx';
+import CardComponent, { CardPattern, getCardBackColors } from './Card.tsx';
 import { formatMatchTime } from '../lib/timeUtils';
 import Confetti from './Confetti';
 
@@ -493,13 +493,17 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
              whileHover={canDraw ? { scale: 1.1, rotate: 5, boxShadow: '8px 8px 0px 0px rgba(255,123,82,0.4)' } : {}}
              whileTap={canDraw ? { scale: 0.9 } : {}}
              className={`w-full aspect-[3/4] geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${canDraw ? 'border-ui-yellow' : 'opacity-40 grayscale'} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') ? 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]' : ''}`}
+             style={{ backgroundColor: getCardBackColors(user.card_back_color || 'ui-red').hex }}
            >
              {latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') && (
                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-orange text-white text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
                  {latestMove.player_id === "cpu" ? "CPU" : "OPPONENT"}
                </div>
              )}
-             <div className="card-pattern flex items-center justify-center">
+             <div className="card-pattern absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
+               <CardPattern backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} />
+             </div>
+             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                <div className={`text-[7px] md:text-[10px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
                  {state?.game?.deck_count}
                </div>
@@ -525,7 +529,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     key={state.game.drawn_card.id}
                     card={state.game.drawn_card}
                     index={-1}
-                    style={user.card_style || 'classic'}
+                    style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
                     className="small md:normal border-ui-yellow ring-2 ring-ui-yellow/20"
                     forceFaceUp={true}
                   />
@@ -576,7 +580,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   key={state.game.discard[state.game.discard.length-1].id || 'discard'}
                   card={state.game.discard[state.game.discard.length-1]}
                   index={999}
-                  style={user.card_style || 'classic'}
+                  style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
                   className="small md:normal"
                   forceFaceUp={true}
                 />
@@ -752,7 +756,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                    {/* Opponent Area (Left Column on Desktop) */}
                    <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
-                     <div className={`relative p-4 md:p-6 bg-ui-red/5 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
+                     <div className={`relative p-4 md:p-6 bg-ui-red/20 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
                        <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
                           <div className="px-3 flex items-center gap-2 border-l border-white/10 flex-row-reverse">
                             <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
@@ -787,7 +791,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              <CardComponent 
                                card={card}
                                index={idx}
-                               style={user.card_style || 'classic'}
+                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
                                className={`fluid ${latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]' : ''}`}
                              />
                            </div>
@@ -797,7 +801,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    </div>
 
                    <div className={`flex-1 w-full max-w-2xl order-4 lg:order-3 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
-                     <div className={`relative p-4 md:p-6 bg-ui-green/5 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
+                     <div className={`relative p-4 md:p-6 bg-ui-green/20 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
                        <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
                          <div className="px-3 flex items-center gap-2 border-r border-white/10">
                             <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
@@ -864,7 +868,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                                <CardComponent
                                  card={state.game.drawn_card}
                                  index={-1}
-                                 style={user.card_style || 'classic'}
+                                 style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
                                  className="fluid border-ui-yellow ring-4 ring-ui-yellow/20 shadow-[0_0_20px_rgba(255,205,117,0.3)]"
                                  forceFaceUp={true}
                                />
@@ -900,7 +904,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              <CardComponent
                                card={card}
                                index={idx}
-                               style={user.card_style || 'classic'}
+                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
                                onClick={() => {
                                  if (state.game.status === 'initializing') {
                                    handleReveal(idx);

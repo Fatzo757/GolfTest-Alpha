@@ -39,7 +39,10 @@ const TIMEZONES = [
 
 export default function Settings({ user, token, onUpdate, onClose }: SettingsProps) {
   const [theme, setTheme] = useState(user.theme || 'default');
+  const [uiMode, setUiMode] = useState(user.ui_mode || 'retro');
   const [cardStyle, setCardStyle] = useState(user.card_style || 'classic');
+  const [cardBackStyle, setCardBackStyle] = useState(user.card_back_style || 'classic');
+  const [cardBackColor, setCardBackColor] = useState(user.card_back_color || 'ui-red');
   const [avatar, setAvatar] = useState(user.avatar || 'user');
   const [muteSounds, setMuteSounds] = useState(!!user.mute_sounds);
   const [soundVolume, setSoundVolume] = useState(user.sound_volume ?? 1.0);
@@ -108,7 +111,10 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
         },
         body: JSON.stringify({ 
           theme, 
+          ui_mode: uiMode,
           card_style: cardStyle,
+          card_back_style: cardBackStyle,
+          card_back_color: cardBackColor,
           mute_sounds: muteSounds,
           sound_volume: soundVolume,
           time_zone: timeZone,
@@ -133,7 +139,10 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
         onUpdate({ 
           ...user, 
           theme, 
+          ui_mode: uiMode,
           card_style: cardStyle, 
+          card_back_style: cardBackStyle,
+          card_back_color: cardBackColor,
           avatar,
           mute_sounds: muteSounds ? 1 : 0,
           sound_volume: soundVolume,
@@ -323,6 +332,36 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             </div>
           </section>
 
+          {/* UI Mode Section */}
+          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+            <div className="flex items-center gap-2 mb-4">
+              <Layers size={14} className="text-ui-gray" />
+              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Layout Style</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={() => setUiMode('retro')}
+                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${
+                  uiMode === 'retro' ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border hover:border-ui-gray'
+                }`}
+              >
+                <div className="text-[10px] font-bold uppercase text-ui-yellow">Classic Retro</div>
+                <div className="text-[8px] text-ui-gray text-center uppercase">8-Bit Blocky Shapes</div>
+                {uiMode === 'retro' && <Check size={16} className="text-ui-yellow mt-2" />}
+              </button>
+              <button
+                onClick={() => setUiMode('modern')}
+                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${
+                  uiMode === 'modern' ? 'border-ui-green bg-ui-green/5' : 'border-ui-border hover:border-ui-gray'
+                }`}
+              >
+                <div className="text-[10px] font-bold uppercase text-ui-green">Modern Glass</div>
+                <div className="text-[8px] text-ui-gray text-center uppercase">Rounded Glassmorphism</div>
+                {uiMode === 'modern' && <Check size={16} className="text-ui-green mt-2" />}
+              </button>
+            </div>
+          </section>
+
           {/* Card Graphics Section */}
           <section className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
@@ -345,6 +384,59 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     <div className="text-[8px] text-ui-gray uppercase">{s.description}</div>
                   </div>
                   {cardStyle === s.id && <Check size={16} className="text-ui-green" />}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Card Back Pattern Section */}
+          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+            <div className="flex items-center gap-2 mb-4">
+              <Layers size={14} className="text-ui-gray" />
+              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Card Back Pattern</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {CARD_STYLES.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setCardBackStyle(s.id)}
+                  className={`h-full p-4 border-4 text-left transition-all flex items-center justify-between ${
+                    cardBackStyle === s.id ? 'border-ui-orange bg-ui-orange/5' : 'border-ui-border hover:border-ui-gray'
+                  }`}
+                >
+                  <div className={`text-[10px] font-bold uppercase ${cardBackStyle === s.id ? 'text-ui-orange' : 'text-text-main'}`}>
+                    {s.name}
+                  </div>
+                  {cardBackStyle === s.id && <Check size={16} className="text-ui-orange" />}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Card Back Color Section */}
+          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+            <div className="flex items-center gap-2 mb-4">
+              <Palette size={14} className="text-ui-gray" />
+              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Card Back Color</h3>
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+              {[
+                { id: 'red', label: 'Red', hex: '#dc2626' },
+                { id: 'blue', label: 'Blue', hex: '#2563eb' },
+                { id: 'green', label: 'Green', hex: '#16a34a' },
+                { id: 'yellow', label: 'Yellow', hex: '#eab308' },
+                { id: 'orange', label: 'Orange', hex: '#f97316' },
+                { id: 'purple', label: 'Purple', hex: '#9333ea' }
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setCardBackColor(c.id)}
+                  className={`flex flex-col items-center justify-center p-2 border-2 transition-all ${
+                    cardBackColor === c.id ? 'border-white scale-110 shadow-lg' : 'border-ui-border opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <div className="w-full h-8 border border-black mb-1" style={{ backgroundColor: c.hex }}></div>
+                  <span className="text-[8px] font-bold uppercase">{c.label}</span>
                 </button>
               ))}
             </div>

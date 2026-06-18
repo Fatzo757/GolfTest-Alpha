@@ -172,3 +172,86 @@ body {
   --color-ui-yellow: #fbbf24; 
   --color-ui-purple: #422006; 
 }
+
+/* --- OBSIDIAN LINKS COLOR PALETTE --- */
+.theme-obsidian {
+  --color-bg-dark: #0f172a; 
+  --color-ui-blue: #1e293b; 
+  --color-ui-border: #334155; 
+  --color-ui-yellow: #22c55e; /* Golf Green */
+  --color-ui-green: #4be277;
+  --color-ui-purple: #1e293b;
+  --color-ui-orange: #6bff8f;
+  --color-ui-red: #ffb4ab;
+  --color-text-main: #dae2fd;
+}
+
+/* Glassmorphism Overrides for Modern Layout Mode */
+.ui-mode-modern {
+  --font-press-start: "Montserrat", sans-serif;
+  --font-handdrawn: "Inter", sans-serif;
+}
+
+.ui-mode-modern .geometric-border {
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(30, 41, 59, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 12px !important;
+}
+
+.ui-mode-modern .geometric-button {
+  border: none !important;
+  border-radius: 8px !important;
+  background-color: var(--color-ui-yellow) !important;
+  color: #003915 !important;
+  box-shadow: 0 0 15px var(--color-ui-yellow) !important;
+  font-family: "Inter", sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.ui-mode-modern .geometric-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 0 20px var(--color-ui-yellow) !important;
+}
+
+.ui-mode-modern .geometric-button:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 0 5px var(--color-ui-yellow) !important;
+}
+
+.ui-mode-modern .geometric-card {
+  border: 3px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: var(--color-bg-dark) !important;
+  font-family: "Montserrat", sans-serif !important;
+}
+
+.ui-mode-modern .geometric-card-back {
+  /* Removed background-color: var(--color-bg-dark) !important; */
+}
+
+.ui-mode-modern header {
+  border: none !important;
+  box-shadow: none !important;
+  background-color: var(--color-ui-blue) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.ui-mode-modern input, .ui-mode-modern select {
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  font-family: "Inter", sans-serif !important;
+}
+
+.ui-mode-modern .card-pattern {
+  border: none !important;
+  opacity: 0.1 !important;
+}

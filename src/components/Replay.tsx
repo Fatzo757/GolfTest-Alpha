@@ -189,7 +189,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
         key={index}
         card={card}
         index={index}
-        style={user.card_style || 'classic'}
+        style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
         className="w-16 h-24 md:w-20 md:h-28"
       />
     );

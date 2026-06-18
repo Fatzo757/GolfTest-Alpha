@@ -27,6 +27,8 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     theme TEXT DEFAULT 'default',
     card_style TEXT DEFAULT 'classic',
+    card_back_style TEXT DEFAULT 'classic',
+    card_back_color TEXT DEFAULT 'ui-red',
     avatar TEXT DEFAULT 'user',
     mute_sounds INTEGER DEFAULT 0,
     sound_volume REAL DEFAULT 1.0,
@@ -34,7 +36,8 @@ db.exec(`
     time_format TEXT DEFAULT '12h',
     show_date INTEGER DEFAULT 1,
     show_move_date INTEGER DEFAULT 0,
-    is_admin INTEGER DEFAULT 0
+    is_admin INTEGER DEFAULT 0,
+    ui_mode TEXT DEFAULT 'retro'
   );
 
   CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -152,6 +155,9 @@ try {
   addColumn('users', 'show_date', "INTEGER DEFAULT 1");
   addColumn('users', 'show_move_date', "INTEGER DEFAULT 0");
   addColumn('users', 'is_admin', "INTEGER DEFAULT 0");
+  addColumn('users', 'ui_mode', "TEXT DEFAULT 'retro'");
+  addColumn('users', 'card_back_style', "TEXT DEFAULT 'classic'");
+  addColumn('users', 'card_back_color', "TEXT DEFAULT 'ui-red'");
 
   // If last_active_at was just added, it might be null for existing rows.
   // We can optionally initialize it.

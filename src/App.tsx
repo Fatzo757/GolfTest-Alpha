@@ -203,7 +203,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-bg-dark text-text-main font-press-start ${getThemeClasses(user?.theme)}`}>
+    <div className={`min-h-screen bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}>
       {/* Header Container */}
       <div className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30">
         <header className={`p-2 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:py-2 opacity-90' : ''}`}>
