@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -50,6 +51,7 @@ declare global {
 async function startServer() {
   console.log("SERVER: Initializing server...");
   const app = express();
+  app.use(cors({ origin: true, credentials: true }));
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
   // 1. Listen immediately to open the port
