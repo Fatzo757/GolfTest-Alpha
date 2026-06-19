@@ -52,7 +52,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       if (!silent && !prevStateRef.current) setLoading(true);
       loadingStateRef.current = true;
 
-      const res = await fetch(`/api/games/${gameId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -160,7 +160,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       if (!token) return;
       try {
         // Update my own status
-        const hbRes = await fetch('/api/heartbeat', {
+        const hbRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/heartbeat`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -169,7 +169,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
         // Check opponent status
         if (prevStateRef.current?.game.id) {
-          const res = await fetch(`/api/games/${prevStateRef.current.game.id}/online`, {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${prevStateRef.current.game.id}/online`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -216,7 +216,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     
     setLoading(true);
     try {
-      const res = await fetch(`/api/games/${gameId}/rematch`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/rematch`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -241,7 +241,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     if (state.game.drawn_card) return; // Already drawn
 
     try {
-      const res = await fetch(`/api/games/${gameId}/draw`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/draw`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +274,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     }
 
     try {
-      const res = await fetch(`/api/games/${gameId}/reveal`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/reveal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -292,7 +292,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
   const handleMove = async (cardIndex: number, moveType: 'replace' | 'discard_drawn') => {
     try {
-      const res = await fetch(`/api/games/${gameId}/move`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/move`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1137,7 +1137,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   </div>
                   <button 
                     onClick={async () => {
-                      const res = await fetch(`/api/games/${gameId}/next-round`, {
+                      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/next-round`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}` }
                       });

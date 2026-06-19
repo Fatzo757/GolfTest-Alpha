@@ -50,7 +50,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('/api/settings');
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/settings`);
       const data = await res.json();
       if (data.app_version) {
         setAppVersionInput(data.app_version);
@@ -62,7 +62,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const fetchSummary = async () => {
     try {
-      const res = await fetch('/api/admin/summary', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/summary`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -75,7 +75,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/admin/users', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -87,7 +87,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const fetchGames = async () => {
     try {
-      const res = await fetch('/api/admin/games', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/games`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -117,7 +117,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const executeDeleteUser = async (userId: string) => {
     try {
-      await fetch(`/api/admin/users/${userId}`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -140,7 +140,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const executeDeleteGame = async (gameId: string) => {
     try {
-      await fetch(`/api/admin/games/${gameId}`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/games/${gameId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -155,7 +155,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const handleKickUser = async (userId: string) => {
     try {
-      await fetch(`/api/admin/kick/${userId}`, {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/kick/${userId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -175,7 +175,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
     if (!resetPassUser || !newPass || newPass.length < 6) return;
     
     try {
-      const res = await fetch(`/api/admin/users/${resetPassUser}/reset-password`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/users/${resetPassUser}/reset-password`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -194,7 +194,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const handleToggleAdmin = async (userId: string) => {
     try {
-      const res = await fetch(`/api/admin/users/${userId}/toggle-admin`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/users/${userId}/toggle-admin`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -214,7 +214,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
 
   const handleUpdateAppVersion = async () => {
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/settings`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`,

@@ -22,7 +22,7 @@ export async function subscribeUserToPush(token: string) {
     const registration = await navigator.serviceWorker.ready;
     
     // Get public key from server
-    const keyRes = await fetch('/api/push/public-key', {
+    const keyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/public-key`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const { publicKey } = await keyRes.json();
@@ -36,7 +36,7 @@ export async function subscribeUserToPush(token: string) {
       });
 
       // Send subscription to server
-      await fetch('/api/push/subscribe', {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export async function resetPushSubscription(token: string) {
 
 export async function testPushNotification(token: string) {
   try {
-    const res = await fetch('/api/push/test', {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/test`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });

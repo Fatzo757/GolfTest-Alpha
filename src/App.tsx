@@ -37,7 +37,7 @@ export default function App() {
   const isAdmin = user && (user.is_admin === 1 || user.username === 'fatzo757@gmail.com' || user.username === 'admin' || user.username === 'system');
 
   useEffect(() => {
-    fetch('/api/settings')
+    fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/settings`)
       .then(res => res.json())
       .then(data => {
         if (data && data.app_version) {
@@ -59,7 +59,7 @@ export default function App() {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 5000);
-          const res = await fetch('/api/auth/me', {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/me`, {
             method: 'HEAD',
             headers: token ? { Authorization: `Bearer ${token}` } : {},
             signal: controller.signal
@@ -120,7 +120,7 @@ export default function App() {
 
     if (token) {
       setLoading(true);
-      fetch('/api/auth/me', {
+      fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
         signal: controller.signal
       })

@@ -35,7 +35,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
   useEffect(() => {
     const fetchReplay = async () => {
       try {
-        const res = await fetch(`/api/games/${gameId}/replay`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/replay`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();

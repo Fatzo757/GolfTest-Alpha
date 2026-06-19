@@ -64,7 +64,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
   const fetchMessages = async () => {
     if (!gameId || !token) return;
     try {
-      const res = await fetch(`/api/games/${gameId}/messages`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
@@ -107,7 +107,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/games/${gameId}/messages`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
