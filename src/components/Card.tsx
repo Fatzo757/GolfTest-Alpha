@@ -33,34 +33,47 @@ export const CardPattern = ({ backStyle, backColor }: { backStyle: string, backC
   return (
     <>
       {backStyle === 'classic' && (
-        <div className={`absolute inset-2 border-2 ${cMap.border} flex flex-col items-center justify-center`}>
-           <div className={`w-1/2 h-1/2 border-2 ${cMap.border} rotate-45`} />
+        <div className="absolute inset-2 border-2 border-white/60 flex flex-col items-center justify-center">
+           <div className="w-1/2 h-1/2 border-2 border-white/60 rotate-45" />
         </div>
       )}
       {backStyle === 'modern' && (
-        <div className={`absolute inset-1.5 rounded-[6px] border-2 ${cMap.border} opacity-80 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] flex items-center justify-center`}>
-           <div className={`w-2/3 h-2/3 rounded-[4px] border ${cMap.border30} opacity-50`} />
+        <div className="absolute inset-1.5 rounded-[6px] border-2 border-white/60 opacity-80 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] flex items-center justify-center">
+           <div className="w-2/3 h-2/3 rounded-[4px] border border-white/40 opacity-50" />
         </div>
       )}
       {backStyle === 'sketch' && (
-        <div className={`absolute inset-2 border-2 border-dashed ${cMap.border} flex items-center justify-center`}>
-           <span className={`font-handdrawn text-[8px] ${cMap.text} opacity-50`}>?</span>
+        <div className="absolute inset-2 border-[3px] border-white/50 rounded-lg flex items-center justify-center opacity-70">
+           <div className="w-full h-full relative">
+              <svg className="w-full h-full text-white/40" viewBox="0 0 100 100" preserveAspectRatio="none">
+                 <path d="M10,10 Q50,0 90,10 Q100,50 90,90 Q50,100 10,90 Q0,50 10,10 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+                 <path d="M20,20 L80,80 M80,20 L20,80" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+              </svg>
+           </div>
+        </div>
+      )}
+      {backStyle === 'geometric' && (
+        <div className="absolute inset-1 border border-white/30 grid grid-cols-2 grid-rows-2 gap-1 p-1">
+           <div className="bg-white/20 rounded-tl-lg" />
+           <div className="bg-white/40 rounded-tr-sm" />
+           <div className="bg-white/40 rounded-bl-sm" />
+           <div className="bg-white/20 rounded-br-lg" />
         </div>
       )}
       {backStyle === 'retro_grid' && (
-        <div className={`absolute inset-0 overflow-hidden border ${cMap.border} group-hover:${cMap.border} transition-colors`}>
-          <div className={`w-12 h-12 absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border ${cMap.border} ${cMap.bg20}`}></div>
+        <div className="absolute inset-0 overflow-hidden border border-white/40 group-hover:border-white/60 transition-colors">
+          <div className="w-12 h-12 absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/40 bg-white/10"></div>
           <div className="absolute bottom-0 w-full h-[60%] [perspective:150px]">
-            <div className={`w-[200%] h-[200%] absolute -left-[50%] top-0 border-t ${cMap.border30} [transform:rotateX(75deg)]`}
-                 style={{backgroundImage: `linear-gradient(to right, ${cMap.hex} 1px, transparent 1px), linear-gradient(to bottom, ${cMap.hex} 1px, transparent 1px)`, opacity: 0.3, backgroundSize: '10px 10px'}}>
+            <div className="w-[200%] h-[200%] absolute -left-[50%] top-0 border-t border-white/30 [transform:rotateX(75deg)]"
+                 style={{backgroundImage: `linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px)`, backgroundSize: '10px 10px'}}>
             </div>
           </div>
         </div>
       )}
       {backStyle === 'minimal' && (
-        <div className={`absolute inset-3 border-[0.5px] ${cMap.border} rounded-[1px] flex items-center justify-center`}>
-          <div className={`w-1.5 h-1.5 border-[0.5px] ${cMap.border} rounded-full`}></div>
-          <div className={`absolute inset-[3px] border-[0.5px] ${cMap.border50} rounded-[1px]`}></div>
+        <div className="absolute inset-3 border-[0.5px] border-white/60 rounded-[1px] flex items-center justify-center">
+          <div className="w-1.5 h-1.5 border-[0.5px] border-white/60 bg-white/20 rounded-full"></div>
+          <div className="absolute inset-[3px] border-[0.5px] border-white/30 rounded-[1px]"></div>
         </div>
       )}
       {backStyle === 'cyber' && (
