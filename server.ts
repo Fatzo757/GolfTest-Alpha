@@ -10,14 +10,15 @@ import db from "./src/db.ts";
 import dotenv from "dotenv";
 import webpush from "web-push";
 import fs from "fs";
-import admin from "firebase-admin";
+import { initializeApp, applicationDefault, getApps } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
 
 dotenv.config();
 
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   try {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault()
+    initializeApp({
+      credential: applicationDefault()
     });
     console.log("SERVER: Firebase Admin initialized successfully.");
   } catch (err) {
@@ -201,8 +202,8 @@ async function startServer() {
           const subscriptionPayload = JSON.parse(row.subscription);
           
           if (subscriptionPayload.platform === 'android') {
-             if (admin.apps.length > 0) {
-               await admin.messaging().send({
+             if (getApps().length > 0) {
+               await getMessaging().send({
                  token: subscriptionPayload.token,
                  notification: { title, body },
                  data: { url }
