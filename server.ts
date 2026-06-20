@@ -10,8 +10,22 @@ import db from "./src/db.ts";
 import dotenv from "dotenv";
 import webpush from "web-push";
 import fs from "fs";
+import admin from "firebase-admin";
 
 dotenv.config();
+
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault()
+    });
+    console.log("SERVER: Firebase Admin initialized successfully.");
+  } catch (err) {
+    console.error("SERVER: Firebase Admin initialization failed:", err);
+  }
+} else {
+  console.log("SERVER: GOOGLE_APPLICATION_CREDENTIALS not set. Firebase Admin not initialized.");
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -184,14 +198,28 @@ async function startServer() {
       
       for (const row of subscriptions) {
         try {
-          const subscription = JSON.parse(row.subscription);
-          await webpush.sendNotification(subscription, JSON.stringify({
-            title,
-            body,
-            url
-          }));
+          const subscriptionPayload = JSON.parse(row.subscription);
+          
+          if (subscriptionPayload.platform === 'android') {
+             if (admin.apps.length > 0) {
+               await admin.messaging().send({
+                 token: subscriptionPayload.token,
+                 notification: { title, body },
+                 data: { url }
+               });
+             } else {
+               console.warn("SERVER: Cannot send Android push, Firebase Admin not initialized");
+             }
+          } else {
+            const webSub = subscriptionPayload.platform === 'web' ? subscriptionPayload.details : subscriptionPayload;
+            await webpush.sendNotification(webSub, JSON.stringify({
+              title,
+              body,
+              url
+            }));
+          }
         } catch (err: any) {
-          if (err.statusCode === 410 || err.statusCode === 404 || err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 400) {
+          if (err.statusCode === 410 || err.statusCode === 404 || err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 400 || (err.code && err.code.includes('messaging/registration-token-not-registered'))) {
             // Subscription expired, invalid, or VAPID key mismatch
             db.prepare("DELETE FROM push_subscriptions WHERE user_id = ? AND subscription = ?").run(userId, row.subscription);
           } else {

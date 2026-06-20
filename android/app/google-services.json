@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "464886618679",
+    "project_id": "golf-card-game-alpha",
+    "storage_bucket": "golf-card-game-alpha.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:464886618679:android:0f0c0f3937d29af39a3db2",
+        "android_client_info": {
+          "package_name": "com.golfgame.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJKdDy5Gj6oqOxKxf_GKJG2V4QOdwnwvI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

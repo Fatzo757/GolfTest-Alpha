@@ -1,3 +1,6 @@
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+
 export async function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     try {
@@ -12,8 +15,48 @@ export async function registerServiceWorker() {
 
 export async function subscribeUserToPush(token: string) {
   try {
+    if (Capacitor.isNativePlatform()) {
+      let permStatus = await PushNotifications.checkPermissions();
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+      if (permStatus.receive !== 'granted') {
+        console.log('Native push permission denied');
+        return;
+      }
+      
+      await PushNotifications.removeAllListeners();
+      
+      PushNotifications.addListener('registration', async (tokenObj) => {
+        try {
+          await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ subscription: { platform: 'android', token: tokenObj.value } })
+          });
+          console.log('Successfully registered native push token');
+        } catch (e) {
+          console.error('Failed to send native push token to backend', e);
+        }
+      });
+      
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('Error on native registration:', error);
+      });
+      
+      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+        console.log('Push notification received: ', notification);
+      });
+      
+      await PushNotifications.register();
+      return;
+    }
+
+    // --- Web Push Fallback ---
     if (!('Notification' in window)) return;
-    
     if (Notification.permission === 'denied') {
       console.log('Push notifications permission denied.');
       return;
@@ -21,12 +64,10 @@ export async function subscribeUserToPush(token: string) {
 
     const registration = await navigator.serviceWorker.ready;
     
-    // Get public key from server
     const keyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/public-key`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const { publicKey } = await keyRes.json();
-    
     if (!publicKey) return;
 
     try {
@@ -35,23 +76,17 @@ export async function subscribeUserToPush(token: string) {
         applicationServerKey: urlBase64ToUint8Array(publicKey)
       });
 
-      // Send subscription to server
       await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ subscription })
+        body: JSON.stringify({ subscription: { platform: 'web', details: subscription } })
       });
-
-      console.log('User is subscribed to push notifications');
+      console.log('User is subscribed to web push notifications');
     } catch (subError: any) {
-      if (subError.message && subError.message.includes('permission denied')) {
-        console.log('Push notifications permission denied.');
-      } else {
-        console.error('Failed to subscribe user:', subError);
-      }
+      console.error('Failed to subscribe web user:', subError);
     }
   } catch (error) {
     console.error('Failed to prepare push subscription:', error);
