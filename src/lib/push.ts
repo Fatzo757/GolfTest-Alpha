@@ -26,7 +26,16 @@ export async function subscribeUserToPush(token: string) {
       }
       
       await PushNotifications.removeAllListeners();
-      
+
+      await PushNotifications.createChannel({
+        id: 'fcm_default_channel',
+        name: 'Default',
+        description: 'Default notification channel',
+        importance: 3,
+        visibility: 1,
+        sound: 'beep.wav',
+      });
+
       PushNotifications.addListener('registration', async (tokenObj) => {
         try {
           await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {

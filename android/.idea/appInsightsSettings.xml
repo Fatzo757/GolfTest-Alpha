@@ -22,10 +22,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.golfgame.app" />
+                  <option name="mobileSdkAppId" value="1:464886618679:android:0f0c0f3937d29af39a3db2" />
+                  <option name="projectId" value="golf-card-game-alpha" />
+                  <option name="projectNumber" value="464886618679" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
