@@ -126,6 +126,9 @@ export default function App() {
       })
       .then(async res => {
         if (!res.ok) {
+          if (res.status === 401) {
+            throw new Error('UNAUTHORIZED');
+          }
           throw new Error(`Server returned ${res.status}`);
         }
         const data = await res.json();
@@ -139,11 +142,14 @@ export default function App() {
         if (err.name === 'AbortError') return;
         console.error('Auth check failed:', err);
         setError(`Authentication service unavailable: ${err.message}`);
-        setToken(null);
-        setUser(null);
-        try {
-          localStorage.removeItem('golf_token');
-        } catch (e) {}
+        
+        if (err.message === 'UNAUTHORIZED') {
+          setToken(null);
+          setUser(null);
+          try {
+            localStorage.removeItem('golf_token');
+          } catch (e) {}
+        }
       })
       .finally(() => {
         clearTimeout(timeoutId);
@@ -205,7 +211,10 @@ export default function App() {
   return (
     <div className={`min-h-screen bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}>
       {/* Header Container */}
-      <div className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30">
+      <div
+        className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30"
+        style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 0.5rem)' }}
+      >
         <header className={`p-2 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:py-2 opacity-90' : ''}`}>
           <div className="flex items-center gap-2 md:gap-4">
             <div className={`w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}>
@@ -304,7 +313,10 @@ export default function App() {
       )}
 
       {/* Retro Footer */}
-      <footer className="p-4 text-[10px] text-center text-neutral-500">
+      <footer
+        className="p-4 text-[10px] text-center text-neutral-500"
+        style={{ paddingBottom: 'calc(var(--safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
         © 2026 GOLF CARD GAME - {appVersion}
       </footer>
     </div>
