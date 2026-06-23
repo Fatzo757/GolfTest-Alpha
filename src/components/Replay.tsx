@@ -220,7 +220,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
             </div>
           </div>
         </div>
-        <button onClick={onExit} className="p-2 bg-ui-red/20 border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all">
+        <button onClick={onExit} className="secondary-button p-2 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all flex items-center justify-center">
           <X size={20} />
         </button>
       </div>
@@ -246,7 +246,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
             <div className="relative">
               <div className="absolute -left-12 top-1/2 -translate-y-1/2 text-[10px] text-ui-yellow font-bold uppercase rotate-90 origin-center whitespace-nowrap opacity-50 tracking-widest">Discard Pile</div>
               {displayState.discard.length > 0 ? renderCard(displayState.discard[displayState.discard.length - 1], 999) : (
-                <div className="w-20 h-28 border-2 border-dashed border-ui-border flex items-center justify-center opacity-20">
+                <div className="w-20 h-28 border-2 border-dashed border-black flex items-center justify-center opacity-40">
                   <X />
                 </div>
               )}

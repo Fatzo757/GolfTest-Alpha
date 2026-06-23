@@ -13,6 +13,7 @@ export interface User {
   show_date?: number;
   show_move_date?: number;
   is_admin?: number;
+  sound_profile?: string;
 }
 
 export interface Card {

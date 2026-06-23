@@ -492,7 +492,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
              onClick={() => canDraw && handleDraw('deck')}
              whileHover={canDraw ? { scale: 1.1, rotate: 5, boxShadow: '8px 8px 0px 0px rgba(255,123,82,0.4)' } : {}}
              whileTap={canDraw ? { scale: 0.9 } : {}}
-             className={`w-full aspect-[3/4] geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${canDraw ? 'border-ui-yellow' : 'opacity-40 grayscale'} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') ? 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]' : ''}`}
+             className={`w-full aspect-[3/4] geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${canDraw ? '!border-black ring-2 ring-ui-yellow ring-offset-2 ring-offset-bg-dark' : 'opacity-60 !border-black'} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') ? 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]' : ''}`}
              style={{ backgroundColor: getCardBackColors(user.card_back_color || 'ui-red').hex }}
            >
              {latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') && (
@@ -575,7 +575,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       card={state.game.drawn_card}
                       index={-1}
                       style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
-                      className={`small md:normal border-ui-yellow ${isMyTurn ? 'ring-2 ring-ui-yellow/20 shadow-[0_0_20px_rgba(255,205,117,0.3)]' : ''}`}
+                      className={`small md:normal !border-black ${isMyTurn ? 'ring-2 ring-ui-yellow/50 shadow-[0_0_20px_rgba(255,205,117,0.3)]' : ''}`}
                       forceFaceUp={true}
                     />
                   </motion.div>
@@ -615,7 +615,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                  handleDraw('discard');
                }
              }}
-             className={`w-full aspect-[3/4] relative cursor-pointer transition-all small md:normal ${isMyTurn && state?.game?.status !== 'initializing' ? 'border-ui-green' : 'opacity-40'} ${draggingOver?.type === 'discard' ? 'scale-110 ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(56,217,115,0.6)]' : ''} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') ? 'ring-2 ring-ui-green ring-offset-1 ring-offset-bg-dark shadow-[0_0_10px_rgba(56,217,115,0.5)]' : ''}`}
+             className={`w-full aspect-[3/4] relative cursor-pointer transition-all small md:normal ${isMyTurn && state?.game?.status !== 'initializing' ? 'ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark' : 'opacity-40'} ${draggingOver?.type === 'discard' ? 'scale-110 ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(56,217,115,0.6)]' : ''} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') ? 'ring-2 ring-ui-green ring-offset-1 ring-offset-bg-dark shadow-[0_0_10px_rgba(56,217,115,0.5)]' : ''}`}
            >
              {latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') && (
                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-green text-bg-dark text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
@@ -633,7 +633,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   forceFaceUp={true}
                 />
               ) : (
-                <div className="geometric-card small md:normal border-2 border-dashed border-ui-border flex items-center justify-center opacity-20">
+                <div className="geometric-card small md:normal border-2 border-dashed border-black flex items-center justify-center opacity-40">
                   <X size={12} />
                 </div>
               )}
@@ -724,7 +724,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               <div className="flex items-center justify-between px-4 py-2 pointer-events-none relative z-[100]">
                 <button 
                   onClick={onExit} 
-                  className="pointer-events-auto p-2 bg-bg-dark/60 border border-ui-border hover:border-ui-orange text-ui-gray hover:text-ui-orange transition-all group shadow-lg"
+                  className="pointer-events-auto secondary-button p-2 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all group shadow-lg flex items-center justify-center"
                   title="Exit Game"
                 >
                   <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />

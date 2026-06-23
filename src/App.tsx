@@ -95,6 +95,7 @@ export default function App() {
     if (user) {
       soundService.setMuted(!!user.mute_sounds);
       soundService.setVolume(user.sound_volume ?? 1.0);
+      soundService.setProfile(user.sound_profile || 'classic');
 
       // Check URL pathname for direct game link on load
       const match = window.location.pathname.match(/^\/game\/(.+)$/);
@@ -241,7 +242,7 @@ export default function App() {
                   <button
                     key={view}
                     onClick={() => handleNavClick(view)}
-                    className={`px-4 py-4 md:py-5 text-xs md:text-sm uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${lobbyView === view && !currentGameId && !replayGameId ? 'text-ui-yellow bg-ui-blue/20' : 'text-ui-gray'}`}
+                    className={`px-4 py-4 md:py-5 text-xs md:text-sm uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${lobbyView === view && !currentGameId && !replayGameId ? 'text-ui-yellow bg-ui-blue/20' : 'text-text-main opacity-70 hover:opacity-100'}`}
                   >
                     {view === 'history' ? 'Match History' : view}
                   </button>

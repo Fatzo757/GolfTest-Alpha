@@ -40,6 +40,13 @@ const CARD_STYLES = [
   { id: 'cyber', name: 'Cyber Circuit', description: 'Matrix circuit board lines' },
 ];
 
+const SOUND_PROFILES = [
+  { id: 'classic', name: 'Classic Synthetic', description: 'Standard digital tones' },
+  { id: 'arcade', name: 'Retro Arcade', description: '8-bit chip-tune blips' },
+  { id: 'casino', name: 'Casino / Cards', description: 'Metallic chimes and snaps' },
+  { id: 'minimal', name: 'Minimalist', description: 'Soft, low-frequency clicks' }
+];
+
 const TIMEZONES = [
   'UTC', 'GMT', 'EST', 'CST', 'MST', 'PST', 'AEST', 'AWST', 'CET', 'EET'
 ];
@@ -53,6 +60,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [avatar, setAvatar] = useState(user.avatar || 'user');
   const [muteSounds, setMuteSounds] = useState(!!user.mute_sounds);
   const [soundVolume, setSoundVolume] = useState(user.sound_volume ?? 1.0);
+  const [soundProfile, setSoundProfile] = useState(user.sound_profile || 'classic');
   const [timeZone, setTimeZone] = useState(user.time_zone || 'UTC');
   const [timeFormat, setTimeFormat] = useState(user.time_format || '12h');
   const [showDate, setShowDate] = useState(!!user.show_date);
@@ -139,6 +147,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           card_back_color: cardBackColor,
           mute_sounds: muteSounds,
           sound_volume: soundVolume,
+          sound_profile: soundProfile,
           time_zone: timeZone,
           time_format: timeFormat,
           show_date: showDate,
@@ -168,6 +177,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           avatar,
           mute_sounds: muteSounds ? 1 : 0,
           sound_volume: soundVolume,
+          sound_profile: soundProfile,
           time_zone: timeZone,
           time_format: timeFormat,
           show_date: showDate ? 1 : 0,
@@ -254,6 +264,34 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 }}
                 className="w-full h-2 bg-ui-border rounded-lg appearance-none cursor-pointer accent-ui-yellow"
               />
+              
+              <div className="mt-4 space-y-2">
+                <span className="text-[10px] font-bold uppercase text-ui-gray">Sound Profile</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {SOUND_PROFILES.map((profile) => (
+                    <button
+                      key={profile.id}
+                      onClick={() => {
+                        setSoundProfile(profile.id);
+                        soundService.setProfile(profile.id);
+                        if (!muteSounds) soundService.playTurn();
+                      }}
+                      className={`p-3 border-2 text-left transition-all ${
+                        soundProfile === profile.id 
+                          ? 'border-text-main bg-text-main/10' 
+                          : 'border-ui-border hover:border-text-main/50'
+                      }`}
+                    >
+                      <div className={`text-[10px] font-bold uppercase mb-1 text-text-main`}>
+                        {profile.name}
+                      </div>
+                      <div className="text-[8px] text-ui-gray font-sans opacity-80">
+                        {profile.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 
