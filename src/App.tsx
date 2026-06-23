@@ -209,7 +209,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}>
+    <div className={`h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}>
       {/* Header Container */}
       <div
         className={`sticky top-0 z-[100] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'}`}
@@ -270,7 +270,7 @@ export default function App() {
         </header>
       </div>
 
-      <main className={`${currentGameId || replayGameId ? 'max-w-7xl pb-4' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500`}>
+      <main className={`flex-1 overflow-y-auto w-full ${currentGameId || replayGameId ? 'max-w-7xl pb-4' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500`}>
         {!user ? (
           <Auth onLogin={handleLogin} />
         ) : currentGameId ? (

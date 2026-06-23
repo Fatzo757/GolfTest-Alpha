@@ -96,6 +96,11 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
           }
           lastMove = `${m.player_id === 'cpu' ? 'CPU' : 'Player'} discarded drawn card and revealed another`;
           break;
+        case 'round_end':
+          p1Cards = p1Cards.map(c => ({...c, is_face_up: true}));
+          p2Cards = p2Cards.map(c => ({...c, is_face_up: true}));
+          lastMove = 'Round Ended - All Cards Revealed';
+          break;
       }
     }
 

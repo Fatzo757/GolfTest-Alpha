@@ -959,7 +959,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     <div className="max-h-[300px] overflow-y-auto space-y-6 pr-2 custom-scrollbar">
                       {(() => {
                         const filteredMoves = state.moves.filter(m => {
-                          if (m.move_type === 'initial_card' || m.move_type === 'initial_discard' || m.move_type === 'round_start') return false;
+                          if (m.move_type === 'initial_card' || m.move_type === 'initial_discard' || m.move_type === 'round_start' || m.move_type === 'round_end') return false;
                           if (moveFilter === 'ME' && m.player_id !== userId) return false;
                           if (moveFilter === 'OPPONENT' && m.player_id === userId) return false;
                           return true;

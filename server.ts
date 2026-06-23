@@ -960,6 +960,7 @@ async function startServer() {
 
         if (status === 'round_end') {
           db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
+          db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, round_number) VALUES (?, ?, ?, 'round_end', ?)").run(nanoid(), gameId, 'system', game.round_number);
           const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
           
           const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
@@ -1164,6 +1165,7 @@ async function startServer() {
 
       if (status === 'round_end') {
         db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
+        db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, round_number) VALUES (?, ?, ?, 'round_end', ?)").run(nanoid(), gameId, 'system', game.round_number);
         const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
         
         const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
