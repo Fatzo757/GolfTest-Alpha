@@ -11,7 +11,7 @@ interface SettingsProps {
   onClose: () => void;
 }
 
-const THEMES = [
+const NEON_THEMES = [
   { id: 'default', name: 'Cyber Neon', primary: 'bg-[#ffcd75]', secondary: 'bg-[#5d275d]' },
   { id: 'retro', name: 'Classic Gameboy', primary: 'bg-green-600', secondary: 'bg-green-900' },
   { id: 'slate', name: 'Deep Space', primary: 'bg-slate-400', secondary: 'bg-slate-800' },
@@ -22,6 +22,13 @@ const THEMES = [
   { id: 'matrix', name: 'Matrix Terminal', primary: 'bg-emerald-400', secondary: 'bg-emerald-900' },
   { id: 'bubblegum', name: 'Bubblegum', primary: 'bg-pink-400', secondary: 'bg-fuchsia-900' },
   { id: 'gold', name: 'Royal Gold', primary: 'bg-amber-400', secondary: 'bg-yellow-900' },
+];
+
+const WIN32_THEMES = [
+  { id: 'win_green', name: 'Classic Green', primary: 'bg-[#008000]', secondary: 'bg-[#c0c0c0]' },
+  { id: 'win_teal', name: 'Desktop Teal', primary: 'bg-[#008080]', secondary: 'bg-[#c0c0c0]' },
+  { id: 'win_burgundy', name: 'Burgundy', primary: 'bg-[#800000]', secondary: 'bg-[#c0c0c0]' },
+  { id: 'win_gray', name: 'Neutral Gray', primary: 'bg-[#808080]', secondary: 'bg-[#c0c0c0]' },
 ];
 
 const CARD_STYLES = [
@@ -57,6 +64,21 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [passError, setPassError] = useState<string | null>(null);
   const [passSuccess, setPassSuccess] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  const isWin32Mode = uiMode === 'classic' || uiMode === 'modern_win32';
+  const activeThemes = isWin32Mode ? WIN32_THEMES : NEON_THEMES;
+
+  const handleUiModeChange = (newMode: string) => {
+    setUiMode(newMode);
+    const isNowWin32 = newMode === 'classic' || newMode === 'modern_win32';
+    const isCurrentlyWin32Theme = WIN32_THEMES.some(t => t.id === theme);
+    
+    if (isNowWin32 && !isCurrentlyWin32Theme) {
+      setTheme('win_green');
+    } else if (!isNowWin32 && isCurrentlyWin32Theme) {
+      setTheme('default');
+    }
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,8 +131,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          theme, 
+        body: JSON.stringify({
+          theme,
           ui_mode: uiMode,
           card_style: cardStyle,
           card_back_style: cardBackStyle,
@@ -123,7 +145,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           show_move_date: showMoveDate
         })
       });
-      
+
       const avatarRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/avatar`, {
         method: 'POST',
         headers: {
@@ -136,11 +158,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
       if (res.ok && avatarRes.ok) {
         soundService.setMuted(muteSounds);
         soundService.setVolume(soundVolume);
-        onUpdate({ 
-          ...user, 
-          theme, 
+        onUpdate({
+          ...user,
+          theme,
           ui_mode: uiMode,
-          card_style: cardStyle, 
+          card_style: cardStyle,
           card_back_style: cardBackStyle,
           card_back_color: cardBackColor,
           avatar,
@@ -162,7 +184,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm px-4">
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className={`w-full max-w-2xl bg-bg-dark border-4 border-ui-border shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden flex flex-col max-h-[90vh] theme-${theme}`}
@@ -179,7 +201,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
         <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-grow relative">
           {statusMsg && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`p-4 border-2 mb-6 flex justify-between items-center ${statusMsg.type === 'success' ? 'bg-ui-green/10 border-ui-green text-ui-green' : 'bg-ui-red/10 border-ui-red text-ui-red'}`}
@@ -197,9 +219,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             </div>
             <button
               onClick={() => setMuteSounds(!muteSounds)}
-              className={`w-full p-4 border-4 flex items-center justify-between transition-all ${
-                muteSounds ? 'border-ui-red bg-ui-red/5' : 'border-ui-green bg-ui-green/5'
-              }`}
+              className={`w-full p-4 border-4 flex items-center justify-between transition-all ${muteSounds ? 'border-ui-red bg-ui-red/5' : 'border-ui-green bg-ui-green/5'
+                }`}
             >
               <div className="flex items-center gap-4">
                 {muteSounds ? <VolumeX className="text-ui-red" size={20} /> : <Volume2 className="text-ui-green" size={20} />}
@@ -211,16 +232,16 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <div className={`absolute top-0 bottom-0 w-1/2 transition-all ${muteSounds ? 'right-0 bg-ui-red' : 'left-0 bg-ui-green'}`} />
               </div>
             </button>
-            
+
             <div className={`w-full p-4 flex flex-col gap-2 transition-all ${muteSounds ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase text-ui-gray">Volume</span>
                 <span className="text-[10px] font-bold uppercase text-ui-yellow">{Math.round(soundVolume * 100)}%</span>
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="1.0" 
+              <input
+                type="range"
+                min="0"
+                max="1.0"
                 step="0.1"
                 value={soundVolume}
                 onChange={(e) => {
@@ -245,7 +266,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[8px] text-ui-gray uppercase font-bold">Time Zone Selection</label>
-                <select 
+                <select
                   value={timeZone}
                   onChange={(e) => setTimeZone(e.target.value)}
                   className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[10px] text-white uppercase font-bold focus:border-ui-yellow outline-none"
@@ -256,13 +277,13 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <div className="space-y-2">
                 <label className="text-[8px] text-ui-gray uppercase font-bold">Time Format</label>
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => setTimeFormat('12h')}
                     className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '12h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-ui-gray'}`}
                   >
                     12H (AM/PM)
                   </button>
-                  <button 
+                  <button
                     onClick={() => setTimeFormat('24h')}
                     className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '24h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-ui-gray'}`}
                   >
@@ -273,9 +294,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             </div>
             <button
               onClick={() => setShowDate(!showDate)}
-              className={`w-full p-4 border-4 flex items-center justify-between transition-all ${
-                showDate ? 'border-ui-blue bg-ui-blue/5' : 'border-ui-border'
-              }`}
+              className={`w-full p-4 border-4 flex items-center justify-between transition-all ${showDate ? 'border-ui-blue bg-ui-blue/5' : 'border-ui-border'
+                }`}
             >
               <div className="flex items-center gap-4">
                 <Calendar className={showDate ? 'text-ui-blue' : 'text-ui-gray'} size={20} />
@@ -288,9 +308,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
             <button
               onClick={() => setShowMoveDate(!showMoveDate)}
-              className={`w-full p-4 border-4 flex items-center justify-between transition-all ${
-                showMoveDate ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border'
-              }`}
+              className={`w-full p-4 border-4 flex items-center justify-between transition-all ${showMoveDate ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border'
+                }`}
             >
               <div className="flex items-center gap-4">
                 <Clock className={showMoveDate ? 'text-ui-yellow' : 'text-ui-gray'} size={20} />
@@ -309,13 +328,12 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Visual Theme</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {THEMES.map((t) => (
+              {activeThemes.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
-                  className={`h-full p-4 border-4 text-left transition-all relative ${
-                    theme === t.id ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border hover:border-ui-gray'
-                  }`}
+                  className={`h-full p-4 border-4 text-left transition-all relative ${theme === t.id ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border hover:border-ui-gray'
+                    }`}
                 >
                   <div className="flex justify-between items-center mb-2">
                     <span className={`text-[10px] font-bold uppercase ${theme === t.id ? 'text-ui-yellow' : 'text-text-main'}`}>
@@ -338,26 +356,42 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Layout Style</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
-                onClick={() => setUiMode('retro')}
-                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${
-                  uiMode === 'retro' ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border hover:border-ui-gray'
-                }`}
+                onClick={() => handleUiModeChange('retro')}
+                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'retro' ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border hover:border-ui-gray'
+                  }`}
               >
-                <div className="text-[10px] font-bold uppercase text-ui-yellow">Classic Retro</div>
+                <div className="text-[10px] font-bold uppercase text-ui-yellow text-center">Classic Retro</div>
                 <div className="text-[8px] text-ui-gray text-center uppercase">8-Bit Blocky Shapes</div>
                 {uiMode === 'retro' && <Check size={16} className="text-ui-yellow mt-2" />}
               </button>
               <button
-                onClick={() => setUiMode('modern')}
-                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${
-                  uiMode === 'modern' ? 'border-ui-green bg-ui-green/5' : 'border-ui-border hover:border-ui-gray'
-                }`}
+                onClick={() => handleUiModeChange('modern')}
+                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'modern' ? 'border-ui-green bg-ui-green/5' : 'border-ui-border hover:border-ui-gray'
+                  }`}
               >
-                <div className="text-[10px] font-bold uppercase text-ui-green">Modern Glass</div>
+                <div className="text-[10px] font-bold uppercase text-ui-green text-center">Modern Glass</div>
                 <div className="text-[8px] text-ui-gray text-center uppercase">Rounded Glassmorphism</div>
                 {uiMode === 'modern' && <Check size={16} className="text-ui-green mt-2" />}
+              </button>
+              <button
+                onClick={() => handleUiModeChange('classic')}
+                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'classic' ? 'border-ui-orange bg-ui-orange/5' : 'border-ui-border hover:border-ui-gray'
+                  }`}
+              >
+                <div className="text-[10px] font-bold uppercase text-ui-orange text-center">Classic Win32</div>
+                <div className="text-[8px] text-ui-gray text-center uppercase">90s Bevels & Gray</div>
+                {uiMode === 'classic' && <Check size={16} className="text-ui-orange mt-2" />}
+              </button>
+              <button
+                onClick={() => handleUiModeChange('modern_win32')}
+                className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'modern_win32' ? 'border-ui-blue bg-ui-blue/5' : 'border-ui-border hover:border-ui-gray'
+                  }`}
+              >
+                <div className="text-[10px] font-bold uppercase text-ui-blue text-center">Modern Win32</div>
+                <div className="text-[8px] text-ui-gray text-center uppercase">Soft Shadows & Flat</div>
+                {uiMode === 'modern_win32' && <Check size={16} className="text-ui-blue mt-2" />}
               </button>
             </div>
           </section>
@@ -373,9 +407,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <button
                   key={s.id}
                   onClick={() => setCardStyle(s.id)}
-                  className={`h-full p-6 border-4 text-left transition-all flex items-center justify-between ${
-                    cardStyle === s.id ? 'border-ui-green bg-ui-green/5' : 'border-ui-border hover:border-ui-gray'
-                  }`}
+                  className={`h-full p-6 border-4 text-left transition-all flex items-center justify-between ${cardStyle === s.id ? 'border-ui-green bg-ui-green/5' : 'border-ui-border hover:border-ui-gray'
+                    }`}
                 >
                   <div>
                     <div className={`text-[10px] font-bold uppercase mb-1 ${cardStyle === s.id ? 'text-ui-green' : 'text-text-main'}`}>
@@ -400,9 +433,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <button
                   key={s.id}
                   onClick={() => setCardBackStyle(s.id)}
-                  className={`h-full p-4 border-4 text-left transition-all flex items-center justify-between ${
-                    cardBackStyle === s.id ? 'border-ui-orange bg-ui-orange/5' : 'border-ui-border hover:border-ui-gray'
-                  }`}
+                  className={`h-full p-4 border-4 text-left transition-all flex items-center justify-between ${cardBackStyle === s.id ? 'border-ui-orange bg-ui-orange/5' : 'border-ui-border hover:border-ui-gray'
+                    }`}
                 >
                   <div className={`text-[10px] font-bold uppercase ${cardBackStyle === s.id ? 'text-ui-orange' : 'text-text-main'}`}>
                     {s.name}
@@ -431,9 +463,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <button
                   key={c.id}
                   onClick={() => setCardBackColor(c.id)}
-                  className={`flex flex-col items-center justify-center p-2 border-2 transition-all ${
-                    cardBackColor === c.id ? 'border-white scale-110 shadow-lg' : 'border-ui-border opacity-60 hover:opacity-100'
-                  }`}
+                  className={`flex flex-col items-center justify-center p-2 border-2 transition-all ${cardBackColor === c.id ? 'border-white scale-110 shadow-lg' : 'border-ui-border opacity-60 hover:opacity-100'
+                    }`}
                 >
                   <div className="w-full h-8 border border-black mb-1" style={{ backgroundColor: c.hex }}></div>
                   <span className="text-[8px] font-bold uppercase">{c.label}</span>
@@ -453,9 +484,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <button
                   key={a}
                   onClick={() => setAvatar(a)}
-                  className={`w-12 h-12 flex items-center justify-center border-2 transition-all ${
-                    avatar === a ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow shadow-[2px_2px_0px_0px_rgba(255,184,0,0.5)]' : 'border-ui-border text-ui-gray opacity-40 hover:opacity-100'
-                  }`}
+                  className={`w-12 h-12 flex items-center justify-center border-2 transition-all ${avatar === a ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow shadow-[2px_2px_0px_0px_rgba(255,184,0,0.5)]' : 'border-ui-border text-ui-gray opacity-40 hover:opacity-100'
+                    }`}
                   title={a}
                 >
                   <UserAvatar type={a} size={20} />
@@ -463,7 +493,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               ))}
             </div>
           </section>
-          
+
           {/* Security Section */}
           <section className="space-y-4 pt-4 border-t border-ui-border/20">
             <div className="flex items-center gap-2 mb-4">
@@ -501,7 +531,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </button>
             </div>
           </section>
-          
+
           {/* Password Change Section */}
           <section className="space-y-4">
             {!showPasswordChange ? (
@@ -576,61 +606,61 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
           {/* Danger Zone */}
           <section className="pt-8 border-t-2 border-ui-red/20 space-y-4">
-             <div className="text-[10px] text-ui-red uppercase font-bold tracking-widest">Danger Zone</div>
-             
-             {!showConfirmReset ? (
-               <button 
-                 onClick={() => setShowConfirmReset(true)}
-                 className="w-full py-4 border-4 border-ui-red/30 text-ui-red/60 text-[8px] uppercase font-bold hover:bg-ui-red hover:text-white hover:border-ui-red transition-all shadow-[4px_4px_0px_0px_rgba(220,38,38,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(220,38,38,0.2)]"
-               >
-                 Initiate Hard Reset
-               </button>
-             ) : (
-               <div className="p-4 border-4 border-ui-red bg-ui-red/5 space-y-4 animate-pulse">
-                 <div className="text-[9px] text-ui-red font-black uppercase text-center leading-tight">
-                   ARE YOU ABSOLUTELY SURE?<br/>ALL MATCH DATA WILL BE PERMANENTLY DELETED.
-                 </div>
-                 <div className="flex gap-2">
-                   <button 
-                     onClick={async () => {
-                       setSaving(true);
-                       try {
-                          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/stats/reset`, {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` }
-                          });
-                          
-                          if (res.ok) {
-                            setStatusMsg({ type: 'success', text: 'Statistics and Match History have been hard reset. Reloading...' });
-                            setTimeout(() => window.location.reload(), 2000);
-                          } else {
-                            const errData = await res.json();
-                            setStatusMsg({ type: 'error', text: errData.error || 'Failed to reset statistics' });
-                            setShowConfirmReset(false);
-                          }
-                       } catch (err) { 
-                         console.error(err); 
-                         setStatusMsg({ type: 'error', text: 'Connection error while resetting statistics' });
-                         setShowConfirmReset(false);
-                       } finally {
-                         setSaving(false);
-                       }
-                     }}
-                     disabled={saving}
-                     className="flex-1 py-3 bg-ui-red text-white text-[8px] uppercase font-bold hover:bg-white hover:text-ui-red transition-all disabled:opacity-50"
-                   >
-                     {saving ? 'RESETTING...' : 'YES, ERASE EVERYTHING'}
-                   </button>
-                   <button 
-                     onClick={() => setShowConfirmReset(false)}
-                     disabled={saving}
-                     className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-[8px] uppercase font-bold hover:bg-ui-gray hover:text-white transition-all disabled:opacity-50"
-                   >
-                     CANCEL
-                   </button>
-                 </div>
-               </div>
-             )}
+            <div className="text-[10px] text-ui-red uppercase font-bold tracking-widest">Danger Zone</div>
+
+            {!showConfirmReset ? (
+              <button
+                onClick={() => setShowConfirmReset(true)}
+                className="w-full py-4 border-4 border-ui-red/30 text-ui-red/60 text-[8px] uppercase font-bold hover:bg-ui-red hover:text-white hover:border-ui-red transition-all shadow-[4px_4px_0px_0px_rgba(220,38,38,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(220,38,38,0.2)]"
+              >
+                Initiate Hard Reset
+              </button>
+            ) : (
+              <div className="p-4 border-4 border-ui-red bg-ui-red/5 space-y-4 animate-pulse">
+                <div className="text-[9px] text-ui-red font-black uppercase text-center leading-tight">
+                  ARE YOU ABSOLUTELY SURE?<br />ALL MATCH DATA WILL BE PERMANENTLY DELETED.
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      try {
+                        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/stats/reset`, {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        if (res.ok) {
+                          setStatusMsg({ type: 'success', text: 'Statistics and Match History have been hard reset. Reloading...' });
+                          setTimeout(() => window.location.reload(), 2000);
+                        } else {
+                          const errData = await res.json();
+                          setStatusMsg({ type: 'error', text: errData.error || 'Failed to reset statistics' });
+                          setShowConfirmReset(false);
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        setStatusMsg({ type: 'error', text: 'Connection error while resetting statistics' });
+                        setShowConfirmReset(false);
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    disabled={saving}
+                    className="flex-1 py-3 bg-ui-red text-white text-[8px] uppercase font-bold hover:bg-white hover:text-ui-red transition-all disabled:opacity-50"
+                  >
+                    {saving ? 'RESETTING...' : 'YES, ERASE EVERYTHING'}
+                  </button>
+                  <button
+                    onClick={() => setShowConfirmReset(false)}
+                    disabled={saving}
+                    className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-[8px] uppercase font-bold hover:bg-ui-gray hover:text-white transition-all disabled:opacity-50"
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         </div>
 

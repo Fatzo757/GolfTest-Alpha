@@ -308,7 +308,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
           <motion.div 
             key={game.id}
             whileHover={{ scale: 1.01 }}
-            className="p-4 border-2 border-ui-green bg-bg-dark flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 h-full"
+            className="theme-panel p-4 border-2 border-ui-green bg-bg-dark flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 h-full"
           >
             <div className="flex flex-col gap-2">
               <div className="text-[9px] uppercase font-bold flex items-center gap-2">
@@ -357,13 +357,13 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                   >
                     <button
                       onClick={() => abandonGame(game.id)}
-                      className="px-3 py-2 bg-ui-red text-white text-[8px] font-black uppercase hover:bg-white hover:text-ui-red transition-all"
+                      className="secondary-button px-3 py-2 bg-ui-red text-white text-[8px] font-black uppercase hover:bg-white hover:text-ui-red transition-all"
                     >
                       CONFIRM DELETE
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(null)}
-                      className="p-2 border-2 border-ui-border text-ui-gray hover:text-white transition-all"
+                      className="secondary-button p-2 border-2 border-ui-border text-ui-gray hover:text-white transition-all"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -377,7 +377,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                   >
                     <button
                       onClick={() => setConfirmDeleteId(game.id)}
-                      className="p-2 border-2 border-ui-border text-ui-gray hover:text-ui-red hover:border-ui-red transition-all"
+                      className="secondary-button p-2 border-2 border-ui-border text-ui-gray hover:text-ui-red hover:border-ui-red transition-all"
                       title="Abandon Match"
                     >
                       <Trash2 size={14} />
@@ -385,7 +385,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     {game.status === 'playing' && game.current_turn_player_id !== user.id && !game.is_vs_cpu && (
                       <button
                         onClick={() => remindOpponent(game.id)}
-                        className="px-4 py-2 border-2 border-ui-yellow text-ui-yellow text-[10px] font-black hover:bg-ui-yellow hover:text-bg-dark transition-all whitespace-nowrap"
+                        className="secondary-button px-4 py-2 border-2 border-ui-yellow text-ui-yellow text-[10px] font-black hover:bg-ui-yellow hover:text-bg-dark transition-all whitespace-nowrap"
                         title="Send Nudge"
                       >
                         NUDGE
@@ -393,7 +393,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     )}
                     <button
                       onClick={() => onJoinGame(game.id)}
-                      className="px-4 py-2 bg-ui-green text-bg-dark text-[10px] font-black hover:bg-white transition-all whitespace-nowrap"
+                      className="secondary-button px-4 py-2 bg-ui-green text-bg-dark text-[10px] font-black hover:bg-white transition-all whitespace-nowrap"
                     >
                       {game.status === 'playing' ? 'RESUME' : 'VIEW'}
                     </button>
@@ -577,7 +577,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     <motion.div 
                       key={game.id}
                       whileHover={{ scale: 1.02 }}
-                      className="p-4 border-2 border-ui-yellow bg-bg-dark flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full group"
+                      className="theme-panel p-4 border-2 border-ui-yellow bg-bg-dark flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full group"
                     >
                       <div className="flex items-center gap-3">
                          <div className="w-10 h-10 border border-ui-yellow/30 bg-ui-yellow/5 flex items-center justify-center">
@@ -597,7 +597,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                       </div>
                       <button
                         onClick={() => onJoinGame(game.id)}
-                        className="px-4 py-2 border-2 border-ui-yellow text-[8px] font-black hover:bg-ui-yellow hover:text-bg-dark transition-all mt-4 sm:mt-0 w-full sm:w-auto"
+                        className="secondary-button px-4 py-2 border-2 border-ui-yellow text-[8px] font-black hover:bg-ui-yellow hover:text-bg-dark transition-all mt-4 sm:mt-0 w-full sm:w-auto"
                       >
                         JOIN
                       </button>

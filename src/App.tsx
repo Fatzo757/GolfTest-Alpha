@@ -222,21 +222,21 @@ export default function App() {
     <div className={`h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}>
       {/* Header Container */}
       <div
-        className={`sticky top-0 z-[100] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'}`}
+        className={`sticky top-0 z-[9000] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'}`}
         style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 0.25rem)' }}
       >
         <header className={`p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'}`}>
           <div className="flex items-center gap-2 md:gap-4 relative">
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}
+              className={`secondary-button w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}
             >
               {isMenuOpen ? <X className="text-white" size={16} /> : <Menu className="text-ui-orange group-hover:text-white" size={currentGameId || replayGameId ? 12 : 16} />}
             </button>
             
             {/* Dropdown Menu */}
             {isMenuOpen && (
-              <div className="absolute top-full left-0 mt-2 w-56 md:w-64 bg-bg-dark border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] z-[200] flex flex-col">
+              <div className="absolute top-full left-0 mt-2 w-56 md:w-64 bg-bg-dark border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] z-[9999] flex flex-col">
                 {(['lobby', 'online', 'history', 'stats', 'rules'] as const).map(view => (
                   <button
                     key={view}
@@ -268,7 +268,7 @@ export default function App() {
             <div className="flex items-center gap-2 md:gap-4">
               <button 
                 onClick={() => setShowSettings(true)}
-                className="flex items-center gap-2 md:gap-4 hover:opacity-80 transition-all p-1 md:p-2 bg-black/40 border-2 border-ui-border rounded-sm group cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
+                className="secondary-button flex items-center gap-2 md:gap-4 hover:opacity-80 transition-all p-1 md:p-2 bg-black/40 border-2 border-ui-border rounded-sm group cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
               >
                 <div className="w-6 h-6 md:w-8 md:h-8 bg-black/60 border-2 border-ui-green flex items-center justify-center group-hover:bg-ui-green group-hover:text-black transition-all">
                   <UserAvatar type={user.avatar} size={14} />
@@ -282,14 +282,14 @@ export default function App() {
                 {isAdmin && (
                   <button 
                     onClick={() => setShowAdmin(true)}
-                    className="p-2 md:p-3 bg-red-900 border-b-4 border-ui-red text-xs hover:bg-opacity-80 transition-all flex items-center gap-2"
+                    className="secondary-button p-2 md:p-3 bg-red-900 border-b-4 border-ui-red text-xs hover:bg-opacity-80 transition-all flex items-center gap-2"
                   >
                     <ShieldAlert size={16} className="text-white" />
                   </button>
                 )}
                 <button 
                   onClick={handleLogout}
-                  className="p-2 md:p-3 bg-ui-red border-b-4 border-ui-purple text-xs hover:bg-red-600 transition-all"
+                  className="secondary-button p-2 md:p-3 bg-ui-red border-b-4 border-ui-purple text-xs hover:bg-red-600 transition-all"
                 >
                   <LogOut size={16} />
                 </button>

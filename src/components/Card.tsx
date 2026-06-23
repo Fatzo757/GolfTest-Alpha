@@ -143,21 +143,21 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className={`w-full h-full flex flex-col items-start justify-between ${style === 'sketch' ? 'font-handdrawn' : ''}`}
           >
-            <span className={`font-bold ${isRed ? 'text-ui-red' : 'text-bg-dark'} ${style === 'sketch' ? 'text-lg italic' : style === 'modern' ? 'text-2xl' : 'text-sm'} ${style === 'classic' ? 'tracking-tighter' : ''}`}>
+            <span className={`font-bold ${isRed ? 'text-ui-red' : 'text-black'} ${style === 'sketch' ? 'text-lg italic' : style === 'modern' ? 'text-2xl' : 'text-sm'} ${style === 'classic' ? 'tracking-tighter' : ''}`}>
               {card.value}
             </span>
             
             <div className={`flex-1 flex items-center justify-center w-full ${style === 'modern' ? 'scale-110' : ''}`}>
                {style === 'modern' ? (
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isRed ? 'bg-ui-red text-white shadow-sm' : 'bg-bg-dark text-white shadow-sm'}`}>
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isRed ? 'bg-ui-red text-white shadow-sm' : 'bg-black text-white shadow-sm'}`}>
                     <span className="text-4xl">{symbol}</span>
                 </div>
                ) : style === 'sketch' ? (
-                <div className={`text-4xl ${isRed ? 'text-ui-red' : 'text-bg-dark'} rotate-3`}>
+                <div className={`text-4xl ${isRed ? 'text-ui-red' : 'text-black'} rotate-3`}>
                     {symbol}
                 </div>
                ) : (
-                <span className={`text-3xl ${isRed ? 'text-ui-red' : 'text-bg-dark'} ${style === 'classic' ? 'image-rendering-pixelated' : ''}`}>
+                <span className={`text-3xl ${isRed ? 'text-ui-red' : 'text-black'} ${style === 'classic' ? 'image-rendering-pixelated' : ''}`}>
                     {symbol}
                 </span>
                )}
@@ -165,7 +165,7 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
             
             <div className="w-full flex justify-between items-center mt-auto">
                <span className={`${style === 'modern' ? 'text-[8px]' : 'text-[6px]'} opacity-30 ${style === 'sketch' ? 'font-handdrawn' : ''}`}>{getPoints(card.value)} PT</span>
-               <span className={`${style === 'modern' ? 'text-xs' : 'text-[8px]'} font-bold self-end rotate-180 opacity-20 ${isRed ? 'text-ui-red' : 'text-bg-dark'}`}>{card.value}</span>
+               <span className={`${style === 'modern' ? 'text-xs' : 'text-[8px]'} font-bold self-end rotate-180 opacity-20 ${isRed ? 'text-ui-red' : 'text-black'}`}>{card.value}</span>
             </div>
           </motion.div>
         )}

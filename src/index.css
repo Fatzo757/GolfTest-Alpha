@@ -103,82 +103,92 @@ body {
 
 /* Theme Overrides */
 .theme-default {
-  --color-bg-dark: #1a1c2c; 
-  --color-ui-blue: #29366f; 
-  --color-ui-border: #333c57; 
-  --color-ui-yellow: #ffcd75; 
-  --color-ui-purple: #5d275d; 
+  --color-bg-dark: #1a1c2c;
+  --color-ui-blue: #29366f;
+  --color-ui-border: #333c57;
+  --color-ui-yellow: #ffcd75;
+  --color-ui-purple: #5d275d;
 }
+
 .theme-retro {
-  --color-bg-dark: #0f170a; 
-  --color-ui-blue: #14532d; 
-  --color-ui-border: #15803d; 
-  --color-ui-yellow: #16a34a; 
-  --color-ui-purple: #064e3b; 
+  --color-bg-dark: #0f170a;
+  --color-ui-blue: #14532d;
+  --color-ui-border: #15803d;
+  --color-ui-yellow: #16a34a;
+  --color-ui-purple: #064e3b;
 }
+
 .theme-slate {
-  --color-bg-dark: #0f172a; 
-  --color-ui-blue: #1e293b; 
-  --color-ui-border: #334155; 
-  --color-ui-yellow: #94a3b8; 
-  --color-ui-purple: #0f172a; 
+  --color-bg-dark: #0f172a;
+  --color-ui-blue: #1e293b;
+  --color-ui-border: #334155;
+  --color-ui-yellow: #94a3b8;
+  --color-ui-purple: #0f172a;
 }
+
 .theme-voltage {
-  --color-bg-dark: #1a1c2c; 
-  --color-ui-blue: #431407; 
-  --color-ui-border: #9a3412; 
-  --color-ui-yellow: #ff7b52; 
-  --color-ui-purple: #1a1c2c; 
+  --color-bg-dark: #1a1c2c;
+  --color-ui-blue: #431407;
+  --color-ui-border: #9a3412;
+  --color-ui-yellow: #ff7b52;
+  --color-ui-purple: #1a1c2c;
 }
+
 .theme-ocean {
-  --color-bg-dark: #082f49; 
-  --color-ui-blue: #1e3a8a; 
-  --color-ui-border: #1e40af; 
-  --color-ui-yellow: #22d3ee; 
-  --color-ui-purple: #172554; 
+  --color-bg-dark: #082f49;
+  --color-ui-blue: #1e3a8a;
+  --color-ui-border: #1e40af;
+  --color-ui-yellow: #22d3ee;
+  --color-ui-purple: #172554;
 }
+
 .theme-crimson {
-  --color-bg-dark: #2c0b0e; 
-  --color-ui-blue: #7f1d1d; 
-  --color-ui-border: #991b1b; 
-  --color-ui-yellow: #ef4444; 
-  --color-ui-purple: #4c0519; 
+  --color-bg-dark: #2c0b0e;
+  --color-ui-blue: #7f1d1d;
+  --color-ui-border: #991b1b;
+  --color-ui-yellow: #ef4444;
+  --color-ui-purple: #4c0519;
 }
+
 .theme-midnight {
-  --color-bg-dark: #1e1b4b; 
-  --color-ui-blue: #312e81; 
-  --color-ui-border: #4338ca; 
-  --color-ui-yellow: #a78bfa; 
-  --color-ui-purple: #2e1065; 
+  --color-bg-dark: #1e1b4b;
+  --color-ui-blue: #312e81;
+  --color-ui-border: #4338ca;
+  --color-ui-yellow: #a78bfa;
+  --color-ui-purple: #2e1065;
 }
+
 .theme-matrix {
-  --color-bg-dark: #022c22; 
-  --color-ui-blue: #064e3b; 
-  --color-ui-border: #065f46; 
-  --color-ui-yellow: #34d399; 
-  --color-ui-purple: #022c22; 
+  --color-bg-dark: #022c22;
+  --color-ui-blue: #064e3b;
+  --color-ui-border: #065f46;
+  --color-ui-yellow: #34d399;
+  --color-ui-purple: #022c22;
 }
+
 .theme-bubblegum {
-  --color-bg-dark: #4a044e; 
-  --color-ui-blue: #701a75; 
-  --color-ui-border: #86198f; 
-  --color-ui-yellow: #f472b6; 
-  --color-ui-purple: #4a044e; 
+  --color-bg-dark: #4a044e;
+  --color-ui-blue: #701a75;
+  --color-ui-border: #86198f;
+  --color-ui-yellow: #f472b6;
+  --color-ui-purple: #4a044e;
 }
+
 .theme-gold {
-  --color-bg-dark: #451a03; 
-  --color-ui-blue: #713f12; 
-  --color-ui-border: #854d0e; 
-  --color-ui-yellow: #fbbf24; 
-  --color-ui-purple: #422006; 
+  --color-bg-dark: #451a03;
+  --color-ui-blue: #713f12;
+  --color-ui-border: #854d0e;
+  --color-ui-yellow: #fbbf24;
+  --color-ui-purple: #422006;
 }
 
 /* --- OBSIDIAN LINKS COLOR PALETTE --- */
 .theme-obsidian {
-  --color-bg-dark: #0f172a; 
-  --color-ui-blue: #1e293b; 
-  --color-ui-border: #334155; 
-  --color-ui-yellow: #22c55e; /* Golf Green */
+  --color-bg-dark: #0f172a;
+  --color-ui-blue: #1e293b;
+  --color-ui-border: #334155;
+  --color-ui-yellow: #22c55e;
+  /* Golf Green */
   --color-ui-green: #4be277;
   --color-ui-purple: #1e293b;
   --color-ui-orange: #6bff8f;
@@ -243,7 +253,8 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.ui-mode-modern input, .ui-mode-modern select {
+.ui-mode-modern input,
+.ui-mode-modern select {
   border-radius: 8px !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   box-shadow: none !important;
@@ -254,4 +265,252 @@ body {
 .ui-mode-modern .card-pattern {
   border: none !important;
   opacity: 0.1 !important;
+}
+
+/* Win32 Color Themes */
+.theme-win_green {
+  --color-bg-dark: #008000;
+  --color-ui-blue: #c0c0c0;
+}
+.theme-win_teal {
+  --color-bg-dark: #008080;
+  --color-ui-blue: #c0c0c0;
+}
+.theme-win_burgundy {
+  --color-bg-dark: #800000;
+  --color-ui-blue: #c0c0c0;
+}
+.theme-win_gray {
+  --color-bg-dark: #808080;
+  --color-ui-blue: #c0c0c0;
+}
+
+/* Windows 3.1 Classic Layout Mode */
+.ui-mode-classic {
+  --font-press-start: "Arial", sans-serif;
+  --font-handdrawn: "Times New Roman", serif;
+  --color-text-main: #ffffff;
+}
+
+.ui-mode-classic .bg-bg-dark {
+  background-color: var(--color-bg-dark) !important;
+}
+
+.ui-mode-classic .text-text-main {
+  color: var(--color-text-main) !important;
+}
+
+.ui-mode-classic .geometric-border {
+  border: 2px solid !important;
+  border-color: #ffffff #000000 #000000 #ffffff !important;
+  background-color: #c0c0c0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  color: #000000 !important;
+}
+
+.ui-mode-classic .geometric-button {
+  border: 2px solid !important;
+  border-color: #ffffff #000000 #000000 #ffffff !important;
+  border-radius: 0 !important;
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+  font-family: "Arial", sans-serif !important;
+  font-weight: bold !important;
+  padding: 8px 16px !important;
+}
+
+.ui-mode-classic .secondary-button {
+  border: 2px solid !important;
+  border-color: #ffffff #000000 #000000 #ffffff !important;
+  border-radius: 0 !important;
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+  font-family: "Arial", sans-serif !important;
+}
+
+.ui-mode-classic .secondary-button:hover {
+  transform: none !important;
+}
+
+.ui-mode-classic .secondary-button:active {
+  transform: none !important;
+  border-color: #000000 #ffffff #ffffff #000000 !important;
+}
+
+.ui-mode-classic .theme-panel {
+  border: 2px solid !important;
+  border-color: #ffffff #000000 #000000 #ffffff !important;
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+}
+
+/* Fix nested colors inside Classic buttons */
+.ui-mode-classic .secondary-button .text-ui-green,
+.ui-mode-classic .secondary-button .text-ui-yellow,
+.ui-mode-classic .secondary-button .text-ui-red,
+.ui-mode-classic .secondary-button .text-ui-blue,
+.ui-mode-classic .secondary-button .text-ui-purple,
+.ui-mode-classic .secondary-button .text-ui-orange,
+.ui-mode-classic .secondary-button .text-white,
+.ui-mode-classic .secondary-button .group-hover\:text-white {
+  color: inherit !important;
+}
+
+.ui-mode-classic .secondary-button .border-ui-green,
+.ui-mode-classic .secondary-button .border-ui-yellow,
+.ui-mode-classic .secondary-button .border-ui-red {
+  border-color: rgba(0,0,0,0.3) !important;
+}
+
+.ui-mode-classic .secondary-button .bg-black\/20,
+.ui-mode-classic .secondary-button .bg-black\/40,
+.ui-mode-classic .secondary-button .bg-black\/60 {
+  background-color: transparent !important;
+}
+
+.ui-mode-classic .geometric-button:hover {
+  transform: none !important;
+}
+
+.ui-mode-classic .geometric-button:active {
+  transform: none !important;
+  border-color: #000000 #ffffff #ffffff #000000 !important;
+  padding: 9px 15px 7px 17px !important; /* Simulate inset push */
+}
+
+.ui-mode-classic header {
+  border: 2px solid !important;
+  border-color: #ffffff #000000 #000000 #ffffff !important;
+  box-shadow: none !important;
+  background-color: #000080 !important; /* Windows title bar blue */
+  color: #ffffff !important;
+}
+
+.ui-mode-classic input, .ui-mode-classic select {
+  border: 2px solid !important;
+  border-color: #000000 #ffffff #ffffff #000000 !important;
+  box-shadow: none !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 0 !important;
+  font-family: "Arial", sans-serif !important;
+}
+
+.ui-mode-classic .geometric-border .text-ui-gray {
+  color: #333333 !important;
+}
+
+/* Modern Win32 Layout Mode */
+.ui-mode-modern_win32 {
+  --font-press-start: "Segoe UI", "Arial", sans-serif;
+  --font-handdrawn: "Times New Roman", serif;
+  --color-text-main: #ffffff;
+}
+
+.ui-mode-modern_win32 .bg-bg-dark {
+  background-color: var(--color-bg-dark) !important;
+}
+
+.ui-mode-modern_win32 .text-text-main {
+  color: var(--color-text-main) !important;
+}
+
+.ui-mode-modern_win32 .geometric-border {
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  background-color: #f8f9fa !important; /* Light neutral gray */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+  border-radius: 8px !important;
+  color: #333333 !important;
+}
+
+.ui-mode-modern_win32 .geometric-button {
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  border-radius: 4px !important;
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  font-family: "Segoe UI", "Arial", sans-serif !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  transition: all 0.2s ease !important;
+  text-transform: none !important;
+}
+
+.ui-mode-modern_win32 .secondary-button {
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  border-radius: 4px !important;
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  transition: all 0.2s ease !important;
+}
+
+.ui-mode-modern_win32 .secondary-button:hover {
+  background-color: #cbd5e1 !important;
+}
+
+.ui-mode-modern_win32 .theme-panel {
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+  border-radius: 6px !important;
+}
+
+/* Fix nested colors inside Modern Win32 buttons */
+.ui-mode-modern_win32 .secondary-button .text-ui-green,
+.ui-mode-modern_win32 .secondary-button .text-ui-yellow,
+.ui-mode-modern_win32 .secondary-button .text-ui-red,
+.ui-mode-modern_win32 .secondary-button .text-ui-blue,
+.ui-mode-modern_win32 .secondary-button .text-ui-purple,
+.ui-mode-modern_win32 .secondary-button .text-ui-orange,
+.ui-mode-modern_win32 .secondary-button .text-white,
+.ui-mode-modern_win32 .secondary-button .group-hover\:text-white {
+  color: inherit !important;
+}
+
+.ui-mode-modern_win32 .secondary-button .border-ui-green,
+.ui-mode-modern_win32 .secondary-button .border-ui-yellow,
+.ui-mode-modern_win32 .secondary-button .border-ui-red {
+  border-color: rgba(0,0,0,0.2) !important;
+}
+
+.ui-mode-modern_win32 .secondary-button .bg-black\/20,
+.ui-mode-modern_win32 .secondary-button .bg-black\/40,
+.ui-mode-modern_win32 .secondary-button .bg-black\/60 {
+  background-color: transparent !important;
+}
+
+.ui-mode-modern_win32 .geometric-button:hover {
+  transform: translateY(-1px) !important;
+  background-color: #f1f5f9 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.ui-mode-modern_win32 .geometric-button:active {
+  transform: translateY(1px) !important;
+  background-color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.ui-mode-modern_win32 header {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+  background-color: #f8f9fa !important; /* Bright modern color matching bg */
+  color: #1e293b !important;
+}
+
+.ui-mode-modern_win32 input, .ui-mode-modern_win32 select {
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05) !important;
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border-radius: 4px !important;
+  font-family: "Segoe UI", "Arial", sans-serif !important;
+}
+
+.ui-mode-modern_win32 .geometric-border .text-ui-gray {
+  color: #64748b !important;
 }
