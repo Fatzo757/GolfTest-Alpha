@@ -236,12 +236,12 @@ export default function App() {
             
             {/* Dropdown Menu */}
             {isMenuOpen && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-bg-dark border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] z-[200] flex flex-col">
+              <div className="absolute top-full left-0 mt-2 w-56 md:w-64 bg-bg-dark border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] z-[200] flex flex-col">
                 {(['lobby', 'online', 'history', 'stats', 'rules'] as const).map(view => (
                   <button
                     key={view}
                     onClick={() => handleNavClick(view)}
-                    className={`px-4 py-3 text-[10px] uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${lobbyView === view && !currentGameId && !replayGameId ? 'text-ui-yellow bg-ui-blue/20' : 'text-ui-gray'}`}
+                    className={`px-4 py-4 md:py-5 text-xs md:text-sm uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${lobbyView === view && !currentGameId && !replayGameId ? 'text-ui-yellow bg-ui-blue/20' : 'text-ui-gray'}`}
                   >
                     {view === 'history' ? 'Match History' : view}
                   </button>
