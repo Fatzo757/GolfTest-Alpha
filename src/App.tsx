@@ -7,7 +7,7 @@ import Replay from './components/Replay.tsx';
 import Settings from './components/Settings.tsx';
 import AdminDashboard from './components/AdminDashboard.tsx';
 import UserAvatar from './components/UserAvatar.tsx';
-import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard } from 'lucide-react';
+import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X } from 'lucide-react';
 import { soundService } from './services/soundService';
 
 const getThemeClasses = (themeId?: string) => {
@@ -34,7 +34,17 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [appVersion, setAppVersion] = useState<string>('V0.1-Alpha');
 
+  const [lobbyView, setLobbyView] = useState<'lobby' | 'online' | 'history' | 'rules' | 'stats'>('lobby');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const isAdmin = user && (user.is_admin === 1 || user.username === 'fatzo757@gmail.com' || user.username === 'admin' || user.username === 'system');
+
+  const handleNavClick = (view: 'lobby' | 'online' | 'history' | 'rules' | 'stats') => {
+    setLobbyView(view);
+    setCurrentGameId(null);
+    setReplayGameId(null);
+    setIsMenuOpen(false);
+  };
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/settings`)
@@ -216,10 +226,29 @@ export default function App() {
         style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 0.25rem)' }}
       >
         <header className={`p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'}`}>
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className={`w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}>
-              <CreditCard className="text-ui-orange" size={currentGameId || replayGameId ? 12 : 16} />
-            </div>
+          <div className="flex items-center gap-2 md:gap-4 relative">
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}
+            >
+              {isMenuOpen ? <X className="text-white" size={16} /> : <Menu className="text-ui-orange group-hover:text-white" size={currentGameId || replayGameId ? 12 : 16} />}
+            </button>
+            
+            {/* Dropdown Menu */}
+            {isMenuOpen && (
+              <div className="absolute top-full left-0 mt-2 w-48 bg-bg-dark border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] z-[200] flex flex-col">
+                {(['lobby', 'online', 'history', 'stats', 'rules'] as const).map(view => (
+                  <button
+                    key={view}
+                    onClick={() => handleNavClick(view)}
+                    className={`px-4 py-3 text-[10px] uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${lobbyView === view && !currentGameId && !replayGameId ? 'text-ui-yellow bg-ui-blue/20' : 'text-ui-gray'}`}
+                  >
+                    {view === 'history' ? 'Match History' : view}
+                  </button>
+                ))}
+              </div>
+            )}
+            
             <div>
               <h1 className={`text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out ${currentGameId || replayGameId ? 'md:text-xs hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF</h1>
               <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest hidden sm:block">
@@ -294,6 +323,8 @@ export default function App() {
             user={user}
             onJoinGame={setCurrentGameId} 
             onViewReplay={setReplayGameId}
+            currentView={lobbyView}
+            onViewChange={setLobbyView}
           />
         )}
 

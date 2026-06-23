@@ -11,9 +11,11 @@ interface LobbyProps {
   user: User;
   onJoinGame: (gameId: string) => void;
   onViewReplay: (gameId: string) => void;
+  currentView: 'lobby' | 'online' | 'history' | 'rules' | 'stats';
+  onViewChange: (view: 'lobby' | 'online' | 'history' | 'rules' | 'stats') => void;
 }
 
-export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyProps) {
+export default function Lobby({ token, user, onJoinGame, onViewReplay, currentView, onViewChange }: LobbyProps) {
   const [roomCode, setRoomCode] = useState('');
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
   const [error, setError] = useState('');
@@ -26,7 +28,6 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteLoading, setInviteLoading] = useState<string | null>(null);
-  const [view, setView] = useState<'lobby' | 'online' | 'history' | 'rules' | 'stats'>('lobby');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmClearAction, setConfirmClearAction] = useState<'all' | 'old' | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -427,40 +428,6 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
         )}
       </AnimatePresence>
 
-
-      <div className="flex gap-4 flex-wrap">
-        <button 
-          onClick={() => setView('lobby')}
-          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'lobby' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
-        >
-          Lobby
-        </button>
-        <button 
-          onClick={() => setView('online')}
-          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'online' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
-        >
-          Online
-        </button>
-        <button 
-          onClick={() => setView('history')}
-          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'history' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
-        >
-          Match History
-        </button>
-        <button 
-          onClick={() => setView('stats')}
-          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'stats' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
-        >
-          Stats
-        </button>
-        <button 
-          onClick={() => setView('rules')}
-          className={`px-6 py-2 text-[10px] uppercase font-bold border-b-4 transition-all ${view === 'rules' ? 'border-ui-yellow text-ui-yellow' : 'border-transparent text-ui-gray opacity-50 hover:opacity-100'}`}
-        >
-          Rules
-        </button>
-      </div>
-
       {activeMatches.length > 0 && activeMatchesSection}
 
       <AnimatePresence mode="wait">
@@ -498,7 +465,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
           </motion.div>
         )}
 
-        {view === 'lobby' ? (
+        {currentView === 'lobby' ? (
           <motion.div 
             key="lobby"
             initial={{ opacity: 0, x: -20 }}
@@ -549,7 +516,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
 
                 <motion.button
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setView('online')}
+                  onClick={() => onViewChange('online')}
                   disabled={loading}
                   className="w-full geometric-button py-4 text-xs border-ui-green flex items-center justify-center gap-3"
                 >
@@ -559,7 +526,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               </div>
             </motion.div>
           </motion.div>
-        ) : view === 'online' ? (
+        ) : currentView === 'online' ? (
           <motion.div 
             key="online"
             initial={{ opacity: 0, x: -20 }}
@@ -702,7 +669,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               </div>
             </motion.div>
           </motion.div>
-        ) : view === 'history' ? (
+        ) : currentView === 'history' ? (
           <motion.div 
             key="history"
             initial={{ opacity: 0, x: 20 }}
@@ -788,7 +755,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               </div>
             )}
           </motion.div>
-        ) : view === 'stats' ? (
+        ) : currentView === 'stats' ? (
           <motion.div 
             key="stats"
             initial={{ opacity: 0, x: 20 }}
@@ -818,7 +785,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay }: LobbyPr
               </div>
             </div>
           </motion.div>
-        ) : view === 'rules' ? (
+        ) : currentView === 'rules' ? (
           <motion.div 
             key="rules"
             initial={{ opacity: 0, x: 20 }}
