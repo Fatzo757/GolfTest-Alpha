@@ -212,17 +212,19 @@ export default function App() {
     <div className={`min-h-screen bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}>
       {/* Header Container */}
       <div
-        className="sticky top-0 z-[100] p-2 md:p-4 bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30"
-        style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 0.5rem)' }}
+        className={`sticky top-0 z-[100] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'}`}
+        style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 0.25rem)' }}
       >
-        <header className={`p-2 md:p-6 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:py-2 opacity-90' : ''}`}>
+        <header className={`p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'}`}>
           <div className="flex items-center gap-2 md:gap-4">
             <div className={`w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}>
               <CreditCard className="text-ui-orange" size={currentGameId || replayGameId ? 12 : 16} />
             </div>
             <div>
               <h1 className={`text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out ${currentGameId || replayGameId ? 'md:text-xs hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF</h1>
-              <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest hidden sm:block">{appVersion}</div>
+              <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest hidden sm:block">
+                {appVersion} {(currentGameId || replayGameId) && ' • © 2026'}
+              </div>
             </div>
             {/* Online Status Indicator */}
             <div className="hidden sm:flex items-center gap-1.5 ml-2 md:ml-4 border border-ui-border bg-black/40 px-2 py-1 rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
@@ -268,7 +270,7 @@ export default function App() {
         </header>
       </div>
 
-      <main className={`${currentGameId || replayGameId ? 'max-w-7xl' : 'max-w-5xl'} mx-auto p-4 md:p-8 pb-32 transition-all duration-500`}>
+      <main className={`${currentGameId || replayGameId ? 'max-w-7xl pb-4' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500`}>
         {!user ? (
           <Auth onLogin={handleLogin} />
         ) : currentGameId ? (
@@ -294,6 +296,13 @@ export default function App() {
             onViewReplay={setReplayGameId}
           />
         )}
+
+        {/* Integrated Footer to reduce scroll depth */}
+        {!(currentGameId || replayGameId) && (
+          <div className="mt-12 text-[10px] text-center text-neutral-500/40 uppercase tracking-widest">
+            © 2026 GOLF CARD GAME - {appVersion}
+          </div>
+        )}
       </main>
 
       {showSettings && user && (
@@ -311,14 +320,6 @@ export default function App() {
           onClose={() => setShowAdmin(false)} 
         />
       )}
-
-      {/* Retro Footer */}
-      <footer
-        className="p-4 text-[10px] text-center text-neutral-500"
-        style={{ paddingBottom: 'calc(var(--safe-area-inset-bottom, 0px) + 1rem)' }}
-      >
-        © 2026 GOLF CARD GAME - {appVersion}
-      </footer>
     </div>
   );
 }
