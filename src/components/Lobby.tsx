@@ -737,7 +737,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     <div className="flex flex-wrap items-center justify-start md:justify-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
                       <button 
                         onClick={() => onViewReplay(game.id)}
-                        className="geometric-button px-4 py-2 text-[8px] flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all"
+                        className="geometric-button px-4 py-2 text-[8px] flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
                       >
                         <Eye size={12} />
                         REPLAY
