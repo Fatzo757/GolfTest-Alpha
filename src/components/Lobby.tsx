@@ -421,7 +421,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-24 left-1/2 -translate-x-1/2 z-[200] p-4 border-2 flex gap-4 justify-between items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${statusMsg.type === 'success' ? 'bg-bg-dark border-ui-green text-ui-green' : 'bg-bg-dark border-ui-red text-ui-red'}`}
+            className={`fixed top-24 left-1/2 -translate-x-1/2 z-[9999] p-4 border-2 flex gap-4 justify-between items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${statusMsg.type === 'success' ? 'bg-bg-dark border-ui-green text-ui-green' : 'bg-bg-dark border-ui-red text-ui-red'}`}
           >
             <span className="text-[10px] uppercase font-bold">{statusMsg.text}</span>
             <button onClick={() => setStatusMsg(null)} className="text-[10px] hover:opacity-70 transition-opacity">✕</button>

@@ -317,13 +317,13 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <div className="flex gap-2">
                   <button
                     onClick={() => setTimeFormat('12h')}
-                    className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '12h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-ui-gray'}`}
+                    className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '12h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-text-main'}`}
                   >
                     12H (AM/PM)
                   </button>
                   <button
                     onClick={() => setTimeFormat('24h')}
-                    className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '24h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-ui-gray'}`}
+                    className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '24h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-text-main'}`}
                   >
                     24H (00:00)
                   </button>
@@ -336,8 +336,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 }`}
             >
               <div className="flex items-center gap-4">
-                <Calendar className={showDate ? 'text-ui-blue' : 'text-ui-gray'} size={20} />
-                <span className={`text-[10px] font-bold uppercase ${showDate ? 'text-ui-blue' : 'text-ui-gray'}`}>
+                <Calendar className={showDate ? 'text-ui-blue' : 'text-text-main'} size={20} />
+                <span className={`text-[10px] font-bold uppercase ${showDate ? 'text-ui-blue' : 'text-text-main'}`}>
                   {showDate ? 'Display Date Enabled' : 'Date Display Disabled'}
                 </span>
               </div>
@@ -350,8 +350,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 }`}
             >
               <div className="flex items-center gap-4">
-                <Clock className={showMoveDate ? 'text-ui-yellow' : 'text-ui-gray'} size={20} />
-                <span className={`text-[10px] font-bold uppercase ${showMoveDate ? 'text-ui-yellow' : 'text-ui-gray'}`}>
+                <Clock className={showMoveDate ? 'text-ui-yellow' : 'text-text-main'} size={20} />
+                <span className={`text-[10px] font-bold uppercase ${showMoveDate ? 'text-ui-yellow' : 'text-text-main'}`}>
                   {showMoveDate ? 'Show Date in Move History' : 'Hide Date in Move History'}
                 </span>
               </div>
