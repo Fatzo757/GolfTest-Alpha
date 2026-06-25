@@ -216,8 +216,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               animate={{ opacity: 1, y: 0 }}
               className={`p-4 border-2 mb-6 flex justify-between items-center ${statusMsg.type === 'success' ? 'bg-ui-green/10 border-ui-green text-ui-green' : 'bg-ui-red/10 border-ui-red text-ui-red'}`}
             >
-              <span className="text-[10px] uppercase font-bold">{statusMsg.text}</span>
-              <button onClick={() => setStatusMsg(null)} className="text-[10px]">✕</button>
+              <span className="text-[12px] uppercase font-bold">{statusMsg.text}</span>
+              <button onClick={() => setStatusMsg(null)} className="text-[12px]">✕</button>
             </motion.div>
           )}
 
@@ -225,7 +225,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Volume2 size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Audio Control</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Audio Control</h3>
             </div>
             <button
               onClick={() => setMuteSounds(!muteSounds)}
@@ -234,7 +234,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             >
               <div className="flex items-center gap-4">
                 {muteSounds ? <VolumeX className="text-ui-red" size={20} /> : <Volume2 className="text-ui-green" size={20} />}
-                <span className={`text-[10px] font-bold uppercase ${muteSounds ? 'text-ui-red' : 'text-ui-green'}`}>
+                <span className={`text-[12px] font-bold uppercase ${muteSounds ? 'text-ui-red' : 'text-ui-green'}`}>
                   {muteSounds ? 'Sounds Muted' : 'Sounds Enabled'}
                 </span>
               </div>
@@ -245,8 +245,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
             <div className={`w-full p-4 flex flex-col gap-2 transition-all ${muteSounds ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase text-ui-gray">Volume</span>
-                <span className="text-[10px] font-bold uppercase text-ui-yellow">{Math.round(soundVolume * 100)}%</span>
+                <span className="text-[12px] font-bold uppercase text-ui-gray">Volume</span>
+                <span className="text-[12px] font-bold uppercase text-ui-yellow">{Math.round(soundVolume * 100)}%</span>
               </div>
               <input
                 type="range"
@@ -266,7 +266,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               />
               
               <div className="mt-4 space-y-2">
-                <span className="text-[10px] font-bold uppercase text-ui-gray">Sound Profile</span>
+                <span className="text-[12px] font-bold uppercase text-ui-gray">Sound Profile</span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {SOUND_PROFILES.map((profile) => (
                     <button
@@ -282,10 +282,10 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                           : 'border-ui-border hover:border-text-main/50'
                       }`}
                     >
-                      <div className={`text-[10px] font-bold uppercase mb-1 text-text-main`}>
+                      <div className={`text-[12px] font-bold uppercase mb-1 text-text-main`}>
                         {profile.name}
                       </div>
-                      <div className="text-[8px] text-ui-gray font-sans opacity-80">
+                      <div className="text-[10px] text-ui-gray font-sans opacity-80">
                         {profile.description}
                       </div>
                     </button>
@@ -299,31 +299,31 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Clock size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Time & Regional</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Time & Regional</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[8px] text-ui-gray uppercase font-bold">Time Zone Selection</label>
+                <label className="text-[10px] text-ui-gray uppercase font-bold">Time Zone Selection</label>
                 <select
                   value={timeZone}
                   onChange={(e) => setTimeZone(e.target.value)}
-                  className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[10px] text-white uppercase font-bold focus:border-ui-yellow outline-none"
+                  className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[12px] text-white uppercase font-bold focus:border-ui-yellow outline-none"
                 >
                   {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[8px] text-ui-gray uppercase font-bold">Time Format</label>
+                <label className="text-[10px] text-ui-gray uppercase font-bold">Time Format</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setTimeFormat('12h')}
-                    className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '12h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-text-main'}`}
+                    className={`flex-1 py-3 text-[12px] border-2 font-bold transition-all ${timeFormat === '12h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-text-main'}`}
                   >
                     12H (AM/PM)
                   </button>
                   <button
                     onClick={() => setTimeFormat('24h')}
-                    className={`flex-1 py-3 text-[10px] border-2 font-bold transition-all ${timeFormat === '24h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-text-main'}`}
+                    className={`flex-1 py-3 text-[12px] border-2 font-bold transition-all ${timeFormat === '24h' ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow' : 'border-ui-border text-text-main'}`}
                   >
                     24H (00:00)
                   </button>
@@ -337,7 +337,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             >
               <div className="flex items-center gap-4">
                 <Calendar className={showDate ? 'text-ui-blue' : 'text-text-main'} size={20} />
-                <span className={`text-[10px] font-bold uppercase ${showDate ? 'text-ui-blue' : 'text-text-main'}`}>
+                <span className={`text-[12px] font-bold uppercase ${showDate ? 'text-ui-blue' : 'text-text-main'}`}>
                   {showDate ? 'Display Date Enabled' : 'Date Display Disabled'}
                 </span>
               </div>
@@ -351,7 +351,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             >
               <div className="flex items-center gap-4">
                 <Clock className={showMoveDate ? 'text-ui-yellow' : 'text-text-main'} size={20} />
-                <span className={`text-[10px] font-bold uppercase ${showMoveDate ? 'text-ui-yellow' : 'text-text-main'}`}>
+                <span className={`text-[12px] font-bold uppercase ${showMoveDate ? 'text-ui-yellow' : 'text-text-main'}`}>
                   {showMoveDate ? 'Show Date in Move History' : 'Hide Date in Move History'}
                 </span>
               </div>
@@ -363,7 +363,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Palette size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Visual Theme</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Visual Theme</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeThemes.map((t) => (
@@ -374,7 +374,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     }`}
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <span className={`text-[10px] font-bold uppercase ${theme === t.id ? 'text-ui-yellow' : 'text-text-main'}`}>
+                    <span className={`text-[12px] font-bold uppercase ${theme === t.id ? 'text-ui-yellow' : 'text-text-main'}`}>
                       {t.name}
                     </span>
                     {theme === t.id && <Check size={14} className="text-ui-yellow" />}
@@ -392,7 +392,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4 pt-4 border-t border-ui-border/20">
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Layout Style</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Layout Style</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
@@ -400,8 +400,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'retro' ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border hover:border-ui-gray'
                   }`}
               >
-                <div className="text-[10px] font-bold uppercase text-ui-yellow text-center">Classic Retro</div>
-                <div className="text-[8px] text-ui-gray text-center uppercase">8-Bit Blocky Shapes</div>
+                <div className="text-[12px] font-bold uppercase text-ui-yellow text-center">Classic Retro</div>
+                <div className="text-[10px] text-ui-gray text-center uppercase">8-Bit Blocky Shapes</div>
                 {uiMode === 'retro' && <Check size={16} className="text-ui-yellow mt-2" />}
               </button>
               <button
@@ -409,8 +409,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'modern' ? 'border-ui-green bg-ui-green/5' : 'border-ui-border hover:border-ui-gray'
                   }`}
               >
-                <div className="text-[10px] font-bold uppercase text-ui-green text-center">Modern Glass</div>
-                <div className="text-[8px] text-ui-gray text-center uppercase">Rounded Glassmorphism</div>
+                <div className="text-[12px] font-bold uppercase text-ui-green text-center">Modern Glass</div>
+                <div className="text-[10px] text-ui-gray text-center uppercase">Rounded Glassmorphism</div>
                 {uiMode === 'modern' && <Check size={16} className="text-ui-green mt-2" />}
               </button>
               <button
@@ -418,8 +418,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'classic' ? 'border-ui-orange bg-ui-orange/5' : 'border-ui-border hover:border-ui-gray'
                   }`}
               >
-                <div className="text-[10px] font-bold uppercase text-ui-orange text-center">Classic Win32</div>
-                <div className="text-[8px] text-ui-gray text-center uppercase">90s Bevels & Gray</div>
+                <div className="text-[12px] font-bold uppercase text-ui-orange text-center">Classic Win32</div>
+                <div className="text-[10px] text-ui-gray text-center uppercase">90s Bevels & Gray</div>
                 {uiMode === 'classic' && <Check size={16} className="text-ui-orange mt-2" />}
               </button>
               <button
@@ -427,8 +427,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 className={`h-full p-4 border-4 text-left transition-all flex flex-col items-center justify-center gap-2 ${uiMode === 'modern_win32' ? 'border-ui-blue bg-ui-blue/5' : 'border-ui-border hover:border-ui-gray'
                   }`}
               >
-                <div className="text-[10px] font-bold uppercase text-ui-blue text-center">Modern Win32</div>
-                <div className="text-[8px] text-ui-gray text-center uppercase">Soft Shadows & Flat</div>
+                <div className="text-[12px] font-bold uppercase text-ui-blue text-center">Modern Win32</div>
+                <div className="text-[10px] text-ui-gray text-center uppercase">Soft Shadows & Flat</div>
                 {uiMode === 'modern_win32' && <Check size={16} className="text-ui-blue mt-2" />}
               </button>
             </div>
@@ -438,7 +438,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Card Graphics</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Graphics</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {CARD_STYLES.map((s) => (
@@ -449,10 +449,10 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     }`}
                 >
                   <div>
-                    <div className={`text-[10px] font-bold uppercase mb-1 ${cardStyle === s.id ? 'text-ui-green' : 'text-text-main'}`}>
+                    <div className={`text-[12px] font-bold uppercase mb-1 ${cardStyle === s.id ? 'text-ui-green' : 'text-text-main'}`}>
                       {s.name}
                     </div>
-                    <div className="text-[8px] text-ui-gray uppercase">{s.description}</div>
+                    <div className="text-[10px] text-ui-gray uppercase">{s.description}</div>
                   </div>
                   {cardStyle === s.id && <Check size={16} className="text-ui-green" />}
                 </button>
@@ -464,7 +464,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4 pt-4 border-t border-ui-border/20">
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Card Back Pattern</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Back Pattern</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {CARD_STYLES.map((s) => (
@@ -474,7 +474,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   className={`h-full p-4 border-4 text-left transition-all flex items-center justify-between ${cardBackStyle === s.id ? 'border-ui-orange bg-ui-orange/5' : 'border-ui-border hover:border-ui-gray'
                     }`}
                 >
-                  <div className={`text-[10px] font-bold uppercase ${cardBackStyle === s.id ? 'text-ui-orange' : 'text-text-main'}`}>
+                  <div className={`text-[12px] font-bold uppercase ${cardBackStyle === s.id ? 'text-ui-orange' : 'text-text-main'}`}>
                     {s.name}
                   </div>
                   {cardBackStyle === s.id && <Check size={16} className="text-ui-orange" />}
@@ -487,7 +487,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4 pt-4 border-t border-ui-border/20">
             <div className="flex items-center gap-2 mb-4">
               <Palette size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Card Back Color</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Back Color</h3>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
               {[
@@ -505,7 +505,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     }`}
                 >
                   <div className="w-full h-8 border border-black mb-1" style={{ backgroundColor: c.hex }}></div>
-                  <span className="text-[8px] font-bold uppercase">{c.label}</span>
+                  <span className="text-[10px] font-bold uppercase">{c.label}</span>
                 </button>
               ))}
             </div>
@@ -515,7 +515,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4 pt-4 border-t border-ui-border/20">
             <div className="flex items-center gap-2 mb-4">
               <UserIcon size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Player Icon</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Player Icon</h3>
             </div>
             <div className="grid grid-cols-5 gap-2">
               {AVATAR_LIST.map((a) => (
@@ -536,7 +536,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4 pt-4 border-t border-ui-border/20">
             <div className="flex items-center gap-2 mb-4">
               <Key size={14} className="text-ui-gray" />
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Security</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Security</h3>
             </div>
           </section>
 
@@ -544,7 +544,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <section className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-ui-gray text-[14px]">🔔</span>
-              <h3 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest">Push Notifications</h3>
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Push Notifications</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
@@ -553,7 +553,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   const success = await resetPushSubscription(token);
                   alert(success ? "Notifications reset and re-subscribed successfully." : "Failed to reset notifications.");
                 }}
-                className="w-full py-3 border-2 border-ui-border text-[10px] uppercase font-bold text-ui-gray hover:text-white hover:border-white transition-all"
+                className="w-full py-3 border-2 border-ui-border text-[12px] uppercase font-bold text-ui-gray hover:text-white hover:border-white transition-all"
               >
                 Reset Subscription
               </button>
@@ -563,7 +563,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   const success = await testPushNotification(token);
                   if (!success) alert("Failed to send test notification. Try resetting your subscription.");
                 }}
-                className="w-full py-3 bg-ui-blue border-2 border-ui-border text-[10px] uppercase font-bold text-white hover:border-ui-yellow transition-all"
+                className="w-full py-3 bg-ui-blue border-2 border-ui-border text-[12px] uppercase font-bold text-white hover:border-ui-yellow transition-all"
               >
                 Test Notification
               </button>
@@ -575,55 +575,55 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             {!showPasswordChange ? (
               <button
                 onClick={() => setShowPasswordChange(true)}
-                className="w-full py-3 border-2 border-ui-border text-[10px] uppercase font-bold text-ui-gray hover:text-white hover:border-white transition-all"
+                className="w-full py-3 border-2 border-ui-border text-[12px] uppercase font-bold text-ui-gray hover:text-white hover:border-white transition-all"
               >
                 Change Account Password
               </button>
             ) : (
               <form onSubmit={handlePasswordChange} className="p-4 border-2 border-ui-border bg-white/5 space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[8px] text-ui-gray uppercase font-bold">Current Password</label>
+                  <label className="text-[10px] text-ui-gray uppercase font-bold">Current Password</label>
                   <input
                     type="password"
                     required
                     value={passwords.current}
                     onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                    className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[10px] outline-none focus:border-ui-yellow"
+                    className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[12px] outline-none focus:border-ui-yellow"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[8px] text-ui-gray uppercase font-bold">New Password (MIN 6)</label>
+                  <label className="text-[10px] text-ui-gray uppercase font-bold">New Password (MIN 6)</label>
                   <input
                     type="password"
                     required
                     value={passwords.next}
                     onChange={(e) => setPasswords({ ...passwords, next: e.target.value })}
-                    className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[10px] outline-none focus:border-ui-yellow"
+                    className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[12px] outline-none focus:border-ui-yellow"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[8px] text-ui-gray uppercase font-bold">Confirm New Password</label>
+                  <label className="text-[10px] text-ui-gray uppercase font-bold">Confirm New Password</label>
                   <input
                     type="password"
                     required
                     value={passwords.confirm}
                     onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                    className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[10px] outline-none focus:border-ui-yellow"
+                    className="w-full p-3 bg-bg-dark border-2 border-ui-border text-[12px] outline-none focus:border-ui-yellow"
                   />
                 </div>
 
                 {passError && (
-                  <div className="text-[8px] text-ui-red uppercase font-bold animate-pulse">{passError}</div>
+                  <div className="text-[10px] text-ui-red uppercase font-bold animate-pulse">{passError}</div>
                 )}
                 {passSuccess && (
-                  <div className="text-[8px] text-ui-green uppercase font-bold">Password updated successfully!</div>
+                  <div className="text-[10px] text-ui-green uppercase font-bold">Password updated successfully!</div>
                 )}
 
                 <div className="flex gap-2">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 py-3 bg-ui-yellow text-bg-dark text-[8px] font-bold uppercase transition-all disabled:opacity-50"
+                    className="flex-1 py-3 bg-ui-yellow text-bg-dark text-[10px] font-bold uppercase transition-all disabled:opacity-50"
                   >
                     {saving ? 'UPDATING...' : 'UPDATE PASSWORD'}
                   </button>
@@ -633,7 +633,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                       setShowPasswordChange(false);
                       setPassError(null);
                     }}
-                    className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-[8px] font-bold uppercase"
+                    className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-[10px] font-bold uppercase"
                   >
                     CANCEL
                   </button>
@@ -644,18 +644,18 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
           {/* Danger Zone */}
           <section className="pt-8 border-t-2 border-ui-red/20 space-y-4">
-            <div className="text-[10px] text-ui-red uppercase font-bold tracking-widest">Danger Zone</div>
+            <div className="text-[12px] text-ui-red uppercase font-bold tracking-widest">Danger Zone</div>
 
             {!showConfirmReset ? (
               <button
                 onClick={() => setShowConfirmReset(true)}
-                className="w-full py-4 border-4 border-ui-red/30 text-ui-red/60 text-[8px] uppercase font-bold hover:bg-ui-red hover:text-white hover:border-ui-red transition-all shadow-[4px_4px_0px_0px_rgba(220,38,38,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(220,38,38,0.2)]"
+                className="w-full py-4 border-4 border-ui-red/30 text-ui-red/60 text-[10px] uppercase font-bold hover:bg-ui-red hover:text-white hover:border-ui-red transition-all shadow-[4px_4px_0px_0px_rgba(220,38,38,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(220,38,38,0.2)]"
               >
                 Initiate Hard Reset
               </button>
             ) : (
               <div className="p-4 border-4 border-ui-red bg-ui-red/5 space-y-4 animate-pulse">
-                <div className="text-[9px] text-ui-red font-black uppercase text-center leading-tight">
+                <div className="text-[11px] text-ui-red font-black uppercase text-center leading-tight">
                   ARE YOU ABSOLUTELY SURE?<br />ALL MATCH DATA WILL BE PERMANENTLY DELETED.
                 </div>
                 <div className="flex gap-2">
@@ -685,14 +685,14 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                       }
                     }}
                     disabled={saving}
-                    className="flex-1 py-3 bg-ui-red text-white text-[8px] uppercase font-bold hover:bg-white hover:text-ui-red transition-all disabled:opacity-50"
+                    className="flex-1 py-3 bg-ui-red text-white text-[10px] uppercase font-bold hover:bg-white hover:text-ui-red transition-all disabled:opacity-50"
                   >
                     {saving ? 'RESETTING...' : 'YES, ERASE EVERYTHING'}
                   </button>
                   <button
                     onClick={() => setShowConfirmReset(false)}
                     disabled={saving}
-                    className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-[8px] uppercase font-bold hover:bg-ui-gray hover:text-white transition-all disabled:opacity-50"
+                    className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-[10px] uppercase font-bold hover:bg-ui-gray hover:text-white transition-all disabled:opacity-50"
                   >
                     CANCEL
                   </button>
@@ -706,13 +706,13 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="flex-1 geometric-button py-4 text-[10px] uppercase font-bold shadow-[4px_4px_0px_0px_#000]"
+            className="flex-1 geometric-button py-4 text-[12px] uppercase font-bold shadow-[4px_4px_0px_0px_#000]"
           >
             {saving ? 'Saving...' : 'Apply Changes'}
           </button>
           <button
             onClick={onClose}
-            className="px-8 border-4 border-ui-border text-[10px] uppercase font-bold hover:bg-white/5 transition-all"
+            className="px-8 border-4 border-ui-border text-[12px] uppercase font-bold hover:bg-white/5 transition-all"
           >
             Cancel
           </button>

@@ -138,7 +138,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
       >
         <MessageSquare size={24} />
         {unreadCount > 0 && (
-          <div className="absolute -top-2 -right-2 bg-ui-red text-white text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-black animate-bounce shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <div className="absolute -top-2 -right-2 bg-ui-red text-white text-[12px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-black animate-bounce shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </div>
         )}
@@ -158,7 +158,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
             <div className="p-4 border-b-2 border-ui-border flex justify-between items-center bg-ui-blue/10">
               <div className="flex items-center gap-2">
                 <MessageSquare size={16} className="text-ui-yellow" />
-                <span className="text-[10px] text-ui-gray uppercase tracking-widest font-bold">Game Chat</span>
+                <span className="text-[12px] text-ui-gray uppercase tracking-widest font-bold">Game Chat</span>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
@@ -176,7 +176,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
               {messages.length === 0 ? (
                 <div className="h-full flex items-center justify-center opacity-20 flex-col gap-2">
                   <MessageSquare size={32} />
-                  <span className="text-[8px] uppercase tracking-widest">No messages yet</span>
+                  <span className="text-[10px] uppercase tracking-widest">No messages yet</span>
                 </div>
               ) : (
                 <AnimatePresence initial={false}>
@@ -192,19 +192,19 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
                          <div className={`w-4 h-4 flex items-center justify-center opacity-60 ${msg.sender_id === userId ? 'text-ui-yellow' : 'text-ui-gray'}`}>
                            <UserAvatar type={msg.sender_avatar} size={12} />
                          </div>
-                         <span className="text-[7px] text-ui-gray uppercase">
+                         <span className="text-[9px] text-ui-gray uppercase">
                            {msg.sender_name}
                          </span>
                       </div>
                       <div
-                        className={`max-w-[85%] p-3 text-[11px] leading-tight shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] ${
+                        className={`max-w-[85%] p-3 text-[13px] leading-tight shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] ${
                           msg.sender_id === userId
                             ? 'bg-ui-yellow text-bg-dark font-medium border-r-4 border-b-4 border-black'
                             : 'bg-ui-blue/20 text-ui-gray border-2 border-ui-border'
                         }`}
                       >
                         {msg.content}
-                        <div className={`text-[6px] opacity-40 mt-1 flex items-center justify-end gap-1 ${msg.sender_id === userId ? 'text-bg-dark' : 'text-ui-gray'}`}>
+                        <div className={`text-[8px] opacity-40 mt-1 flex items-center justify-end gap-1 ${msg.sender_id === userId ? 'text-bg-dark' : 'text-ui-gray'}`}>
                            <Clock size={8} />
                            {formatMatchTime(msg.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
                         </div>
@@ -231,12 +231,12 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
                   className="bg-ui-yellow text-bg-dark p-2 border-2 border-black shrink-0 disabled:opacity-50 relative group"
                 >
                   {cooldown > 0 ? (
-                    <span className="text-[10px] font-bold">{cooldown}s</span>
+                    <span className="text-[12px] font-bold">{cooldown}s</span>
                   ) : (
                     <Send size={16} />
                   )}
                   {cooldown > 0 && (
-                    <div className="absolute -top-8 right-0 bg-ui-red text-white text-[7px] px-1.5 py-0.5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold">
+                    <div className="absolute -top-8 right-0 bg-ui-red text-white text-[9px] px-1.5 py-0.5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold">
                       Wait {cooldown}s
                     </div>
                   )}

@@ -435,7 +435,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       >
         <ChevronRight size={10} strokeWidth={3} />
       </motion.div>
-      <span className="text-[7px] tracking-[0.2em] animate-pulse">ACTIVE_TURN</span>
+      <span className="text-[9px] tracking-[0.2em] animate-pulse">ACTIVE_TURN</span>
     </motion.div>
   );
 
@@ -496,7 +496,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
              style={{ backgroundColor: getCardBackColors(user.card_back_color || 'ui-red').hex }}
            >
              {latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') && (
-               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-orange text-white text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
+               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-orange text-white text-[7px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
                  {latestMove.player_id === "cpu" ? "CPU" : "OPPONENT"}
                </div>
              )}
@@ -504,12 +504,12 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                <CardPattern backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} />
              </div>
              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-               <div className={`text-[7px] md:text-[10px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
+               <div className={`text-[9px] md:text-[12px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
                  {state?.game?.deck_count}
                </div>
              </div>
            </motion.div>
-           <span className="text-[5px] md:text-[8px] text-ui-orange tracking-widest font-bold uppercase">Deck</span>
+           <span className="text-[7px] md:text-[10px] text-ui-orange tracking-widest font-bold uppercase">Deck</span>
         </motion.div>
 
         {/* Integrated Active Card Area - Fixed Width Slot */}
@@ -523,7 +523,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 exit={{ scale: 0.8, opacity: 0 }}
                 className="flex flex-col items-center gap-1"
               >
-                <span className="text-[5px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
+                <span className="text-[7px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
                 <div className="flex items-center gap-1 relative z-50">
                   <motion.div
                     drag={isMyTurn}
@@ -591,9 +591,9 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 </div>
               </motion.div>
             ) : (
-              <div key="placeholder" className="h-full flex flex-col items-center justify-center opacity-10">
-                <div className="w-[40px] h-[58px] md:w-[80px] md:h-[110px] border border-dashed border-ui-border rounded-sm flex items-center justify-center">
-                   <div className="text-[6px] font-bold">READY</div>
+              <div key="placeholder" className="h-full flex flex-col items-center justify-center opacity-40">
+                <div className="w-[40px] h-[58px] md:w-[80px] md:h-[110px] border border-dashed border-ui-border rounded-sm flex items-center justify-center bg-ui-blue/5">
+                   <div className="text-[10px] font-bold uppercase tracking-widest text-ui-yellow">READY</div>
                 </div>
               </div>
             )}
@@ -618,7 +618,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
              className={`w-full aspect-[3/4] relative cursor-pointer transition-all small md:normal ${isMyTurn && state?.game?.status !== 'initializing' ? 'ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark' : 'opacity-40'} ${draggingOver?.type === 'discard' ? 'scale-110 ring-2 ring-ui-green ring-offset-2 ring-offset-bg-dark shadow-[0_0_15px_rgba(56,217,115,0.6)]' : ''} ${latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') ? 'ring-2 ring-ui-green ring-offset-1 ring-offset-bg-dark shadow-[0_0_10px_rgba(56,217,115,0.5)]' : ''}`}
            >
              {latestMove?.player_id !== userId && latestMove?.move_type.includes('discard') && (
-               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-green text-bg-dark text-[5px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
+               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-ui-green text-bg-dark text-[7px] font-bold px-1 py-0.5 rounded-full whitespace-nowrap animate-bounce z-50">
                  {latestMove.player_id === "cpu" ? "CPU" : "OPPONENT"}
                </div>
              )}
@@ -639,7 +639,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               )}
              </AnimatePresence>
            </div>
-           <span className="text-[5px] md:text-[8px] text-ui-green tracking-widest font-bold uppercase">Discard</span>
+           <span className="text-[7px] md:text-[10px] text-ui-green tracking-widest font-bold uppercase">Discard</span>
         </motion.div>
       </div>
     );
@@ -663,7 +663,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               className="h-full bg-ui-yellow shadow-[0_0_10px_rgba(255,205,117,0.5)]"
             />
           </div>
-          <span className="text-[6px] text-ui-gray uppercase font-mono">Verifying Session ID: {gameId}</span>
+          <span className="text-[8px] text-ui-gray uppercase font-mono">Verifying Session ID: {gameId}</span>
         </motion.div>
       ) : error && !state ? (
         <motion.div 
@@ -674,17 +674,17 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
           className="min-h-[80vh] flex flex-col items-center justify-center p-8 bg-bg-dark border-4 border-ui-red shadow-[8px_8px_0px_0px_rgba(239,68,68,0.2)]"
         >
           <div className="text-ui-red font-mono text-xs mb-4 uppercase tracking-widest font-bold">Sync Failure</div>
-          <div className="text-[10px] text-ui-gray mb-8 uppercase text-center leading-loose max-w-xs">{error}</div>
+          <div className="text-[12px] text-ui-gray mb-8 uppercase text-center leading-loose max-w-xs">{error}</div>
           <div className="flex flex-col gap-4 w-full max-w-xs">
             <button 
               onClick={() => fetchState(false)}
-              className="geometric-button text-[10px] w-full border-ui-yellow text-ui-yellow"
+              className="geometric-button text-[12px] w-full border-ui-yellow text-ui-yellow"
             >
               RETRY CONNECTION
             </button>
             <button 
               onClick={onExit}
-              className="geometric-button text-[10px] w-full"
+              className="geometric-button text-[12px] w-full"
             >
               ABANDON MISSION
             </button>
@@ -710,7 +710,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   >
                     <div className="flex items-center justify-center gap-4">
                        <Info className="text-ui-yellow" size={16} />
-                       <span className="text-[10px] text-ui-yellow font-bold uppercase tracking-widest">
+                       <span className="text-[12px] text-ui-yellow font-bold uppercase tracking-widest">
                          {myCards.filter(c => c.is_face_up).length < 2 
                            ? "Game Setup: Select 2 cards to reveal and start the game" 
                            : "Ready: Waiting for opponent..."}
@@ -732,11 +732,11 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                 <div className="flex items-center gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-1.5 border border-ui-border rounded-full shadow-lg">
                   <div className="flex flex-col items-center group relative cursor-help">
-                    <span className="text-[5px] text-ui-gray uppercase leading-none mb-0.5 flex items-center gap-1">
+                    <span className="text-[7px] text-ui-gray uppercase leading-none mb-0.5 flex items-center gap-1">
                       <Layers size={6} />
                       Deck
                     </span>
-                    <span className="text-[10px] text-white font-bold leading-none tracking-tighter drop-shadow-sm">
+                    <span className="text-[12px] text-white font-bold leading-none tracking-tighter drop-shadow-sm">
                       {state.game.deck_count} LEFT
                     </span>
                   </div>
@@ -748,14 +748,14 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-green/30">
                         <UserAvatar type={user.avatar} size={8} />
                       </div>
-                      <span className="text-[9px] text-ui-green font-black">{userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score}</span>
+                      <span className="text-[11px] text-ui-green font-black">{userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score}</span>
                     </div>
                     
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-red/30">
                         <UserAvatar type={opponentAvatar} size={8} />
                       </div>
-                      <span className="text-[9px] text-ui-red font-black">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}</span>
+                      <span className="text-[11px] text-ui-red font-black">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}</span>
                     </div>
                   </div>
 
@@ -764,7 +764,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   <div className="flex flex-col items-end">
                      <div className="flex items-center gap-1">
                         <div className={`shrink-0 w-1 h-1 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
-                        <span className="text-[7px] text-white/40 uppercase font-black tracking-widest w-[50px] text-right truncate">
+                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest w-[50px] text-right truncate">
                           {state.game.status === 'playing' ? (isMyTurn ? user.username : opponentName) : state.game.status}
                         </span>
                      </div>
@@ -784,19 +784,19 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    <div className="lg:hidden flex border-2 border-ui-border p-1 bg-bg-dark/40 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] w-full order-2">
                      <button 
                        onClick={() => setMobileTab('me')}
-                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all truncate px-1 ${mobileTab === 'me' ? 'bg-ui-green text-bg-dark' : 'text-ui-gray hover:text-white'}`}
+                       className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest transition-all truncate px-1 ${mobileTab === 'me' ? 'bg-ui-green text-black opacity-100' : 'opacity-60 hover:opacity-100'}`}
                      >
                        {user.username} ({calculateScore(userId)})
                      </button>
                      <button 
                        onClick={() => setMobileTab('opponent')}
-                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all truncate px-1 ${mobileTab === 'opponent' ? 'bg-ui-red text-white' : 'text-ui-gray hover:text-white'}`}
+                       className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest transition-all truncate px-1 ${mobileTab === 'opponent' ? 'bg-ui-red text-white opacity-100' : 'opacity-60 hover:opacity-100'}`}
                      >
                        {opponentName} ({calculateScore(opponentId || 'cpu')})
                      </button>
                      <button 
                        onClick={() => setMobileTab('history')}
-                       className={`flex-1 py-1.5 text-[8px] font-bold uppercase tracking-widest transition-all ${mobileTab === 'history' ? 'bg-ui-yellow text-bg-dark' : 'text-ui-gray hover:text-white'}`}
+                       className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest transition-all ${mobileTab === 'history' ? 'bg-ui-yellow text-black opacity-100' : 'opacity-60 hover:opacity-100'}`}
                      >
                        HISTORY
                      </button>
@@ -805,7 +805,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    {/* Opponent Area (Left Column on Desktop) */}
                    <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-red/20 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
-                       <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
+                       <div className="absolute -top-3 left-6 bg-bg-dark text-[10px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
                           <div className="px-3 flex items-center gap-2 border-l border-white/10 flex-row-reverse">
                             <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
                                <UserAvatar type={(state.game as any).player2_avatar} size={10} />
@@ -830,7 +830,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                                  animate={{ opacity: 1, y: 0 }}
                                  className="absolute -top-6 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap pointer-events-none"
                                >
-                                 <div className="bg-ui-yellow text-bg-dark text-[7px] font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
+                                 <div className="bg-ui-yellow text-bg-dark text-[9px] font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
                                     <span className="w-1.5 h-1.5 bg-bg-dark/50 animate-pulse rounded-full inline-block" />
                                     Last Move
                                  </div>
@@ -850,7 +850,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                    <div className={`flex-1 w-full max-w-2xl order-4 lg:order-3 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-green/20 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
-                       <div className="absolute -top-3 left-6 bg-bg-dark text-[8px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
+                       <div className="absolute -top-3 left-6 bg-bg-dark text-[10px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
                          <div className="px-3 flex items-center gap-2 border-r border-white/10">
                             <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
                                <UserAvatar type={user.avatar} size={10} />
@@ -883,7 +883,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                                  animate={{ opacity: 1, y: 0 }}
                                  className="absolute -top-6 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap pointer-events-none"
                                >
-                                 <div className="bg-ui-yellow text-bg-dark text-[7px] font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
+                                 <div className="bg-ui-yellow text-bg-dark text-[9px] font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
                                    <span className="w-1.5 h-1.5 bg-bg-dark/50 animate-pulse rounded-full inline-block" />
                                    Last Move
                                  </div>
@@ -905,7 +905,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              
                              {state.game.status === 'initializing' && !card.is_face_up && (
                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                 <span className="text-[6px] text-ui-yellow font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest bg-bg-dark/80 px-2 py-1 border border-ui-yellow transition-opacity">Reveal</span>
+                                 <span className="text-[8px] text-ui-yellow font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest bg-bg-dark/80 px-2 py-1 border border-ui-yellow transition-opacity">Reveal</span>
                                </div>
                              )}
    
@@ -915,7 +915,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                                  animate={{ opacity: 1 }}
                                  className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none"
                                >
-                                 <div className="text-[8px] text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
+                                 <div className="text-[10px] text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
                                </motion.div>
                              )}
 
@@ -934,7 +934,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   <div className="flex items-center justify-between border-b border-ui-border pb-3 mb-4 w-full">
                     <button 
                       onClick={() => setHistoryCollapsed(!historyCollapsed)}
-                      className="text-[8px] text-ui-gray uppercase tracking-widest flex items-center gap-2 hover:text-ui-yellow transition-colors"
+                      className="text-xs text-white uppercase tracking-widest flex items-center gap-2 hover:text-ui-yellow transition-colors"
                     >
                       <History size={12} /> Recent Moves {historyCollapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
                     </button>
@@ -944,7 +944,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                           <button
                             key={f}
                             onClick={() => setMoveFilter(f as any)}
-                            className={`text-[8px] uppercase tracking-widest px-2 py-1 rounded-sm border ${moveFilter === f ? 'bg-ui-yellow text-bg-dark border-transparent font-bold' : 'bg-transparent text-ui-gray border-ui-border hover:border-ui-yellow'}`}
+                            className={`text-[12px] uppercase tracking-widest px-2 py-1 rounded-sm border ${moveFilter === f ? 'bg-ui-yellow text-bg-dark border-transparent font-bold' : 'bg-transparent text-ui-gray border-ui-border hover:border-ui-yellow hover:text-white'}`}
                           >
                             {f}
                           </button>
@@ -975,34 +975,34 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                         const sortedRounds = Object.entries(grouped).sort((a, b) => Number(b[0]) - Number(a[0]));
                         
                         if (sortedRounds.length === 0) {
-                          return <div className="text-[10px] text-ui-gray uppercase text-center py-4">No moves found.</div>;
+                          return <div className="text-[12px] text-ui-gray uppercase text-center py-4">No moves found.</div>;
                         }
 
                         return sortedRounds.map(([round, movesInRound]) => (
                           <div key={round} className="space-y-4">
-                            <h4 className="text-[10px] text-ui-yellow uppercase font-bold tracking-widest flex items-center before:content-[''] before:h-[1px] before:flex-1 before:bg-ui-border/50 before:mr-4 after:content-[''] after:h-[1px] after:flex-1 after:bg-ui-border/50 after:ml-4">
+                            <h4 className="text-xs text-ui-yellow uppercase font-bold tracking-widest flex items-center before:content-[''] before:h-[1px] before:flex-1 before:bg-ui-border/50 before:mr-4 after:content-[''] after:h-[1px] after:flex-1 after:bg-ui-border/50 after:ml-4">
                               Round {round}
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               {(movesInRound as Move[]).map((move, i) => (
                                 <div key={i} className="flex flex-col gap-2 border border-ui-border/30 bg-black/20 p-3 rounded-sm hover:border-ui-border/70 transition-colors h-full">
-                                  <div className="flex justify-between items-center text-[6px] uppercase tracking-widest w-full">
+                                  <div className="flex justify-between items-center text-[12px] uppercase tracking-widest w-full">
                                     <span className={move.player_id === userId ? 'text-ui-green font-bold' : 'text-ui-red font-bold'}>
                                       {move.player_id === userId ? 'YOU' : move.player_id === 'cpu' ? 'CPU' : 'OPPONENT'}
                                     </span>
-                                    <span className="text-ui-gray opacity-50 text-right">{formatMatchTime(move.timestamp, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_move_date })}</span>
+                                    <span className="text-ui-gray opacity-80 text-right">{formatMatchTime(move.timestamp, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_move_date })}</span>
                                   </div>
                                   
                                   <div className="flex items-center gap-3 mt-1">
-                                    <div className="w-8 h-11 border border-ui-border bg-ui-blue flex flex-col items-center justify-center text-[10px] shadow-sm shrink-0">
+                                    <div className="w-8 h-11 border border-ui-border bg-ui-blue flex flex-col items-center justify-center text-xs shadow-sm shrink-0">
                                       <span className={move.card_suit === 'hearts' || move.card_suit === 'diamonds' ? 'text-ui-red' : ''}>
                                         {move.card_value}
                                       </span>
                                       <span className="text-xs">{move.card_suit === 'hearts' ? '♥' : move.card_suit === 'diamonds' ? '♦' : move.card_suit === 'clubs' ? '♣' : '♠'}</span>
                                     </div>
                                     <div className="flex flex-col gap-0.5 min-w-0">
-                                      <span className="text-[7px] text-ui-yellow font-bold uppercase truncate">{move.move_type === 'replace' ? 'Swapped' : move.move_type === 'discard_drawn' ? 'Discarded' : move.move_type}</span>
-                                      <span className="text-[5px] text-ui-gray uppercase truncate">Pos: {move.card_affected_index}</span>
+                                      <span className="text-[12px] text-ui-yellow font-bold uppercase truncate">{move.move_type === 'replace' ? 'Swapped' : move.move_type === 'discard_drawn' ? 'Discarded' : move.move_type}</span>
+                                      <span className="text-[11px] text-white/80 uppercase truncate">Pos: {move.card_affected_index}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1056,7 +1056,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-[10px] text-ui-gray tracking-widest"
+                  className="text-[12px] text-ui-gray tracking-widest"
                  >
                    Calculating scores...
                  </motion.p>
@@ -1073,14 +1073,14 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     <h3 className="text-xs text-ui-green mb-6 border-b border-ui-green/50 pb-2">:: YOUR SCORE ::</h3>
                     <div className="grid grid-cols-3 gap-2 mb-6">
                        {myCards.map((c, i) => (
-                         <div key={i} className="w-12 h-16 border-2 border-ui-green/50 flex flex-col items-center justify-center text-[10px] bg-bg-dark/50 mx-auto">
+                         <div key={i} className="w-12 h-16 border-2 border-ui-green/50 flex flex-col items-center justify-center text-[12px] bg-bg-dark/50 mx-auto">
                             <span className={c.suit === 'hearts' || c.suit === 'diamonds' ? 'text-ui-red' : ''}>{c.value}</span>
                             <span className="text-lg">{c.suit === 'hearts' ? '♥' : c.suit === 'diamonds' ? '♦' : c.suit === 'clubs' ? '♣' : '♠'}</span>
                          </div>
                        ))}
                     </div>
                     <div className="flex justify-between items-end mt-auto">
-                      <span className="text-[8px] text-ui-gray uppercase">Round Total</span>
+                      <span className="text-[10px] text-ui-gray uppercase">Round Total</span>
                       <motion.span 
                         initial={{ scale: 1 }}
                         animate={{ scale: [1, 1.2, 1] }}
@@ -1102,14 +1102,14 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     <h3 className="text-xs text-ui-red mb-6 border-b border-ui-red/50 pb-2">:: OPPONENT SCORE ::</h3>
                     <div className="grid grid-cols-3 gap-2 mb-6">
                        {opponentCards.map((c, i) => (
-                         <div key={i} className="w-12 h-16 border-2 border-ui-red/50 flex flex-col items-center justify-center text-[10px] bg-bg-dark/50 mx-auto">
+                         <div key={i} className="w-12 h-16 border-2 border-ui-red/50 flex flex-col items-center justify-center text-[12px] bg-bg-dark/50 mx-auto">
                              <span className={c.suit === 'hearts' || c.suit === 'diamonds' ? 'text-ui-red' : ''}>{c.value}</span>
                              <span className="text-lg">{c.suit === 'hearts' ? '♥' : c.suit === 'diamonds' ? '♦' : c.suit === 'clubs' ? '♣' : '♠'}</span>
                          </div>
                        ))}
                     </div>
                     <div className="flex justify-between items-end mt-auto">
-                      <span className="text-[8px] text-ui-gray uppercase">Round Total</span>
+                      <span className="text-[10px] text-ui-gray uppercase">Round Total</span>
                       <span className="text-2xl text-ui-red font-bold">{calculateScore(opponentId || 'cpu')} pts</span>
                     </div>
                  </motion.div>
@@ -1122,7 +1122,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 className="flex flex-col md:flex-row border-t-2 border-ui-border pt-8 mt-4 justify-between items-center gap-12"
                >
                   <div className="flex-1 w-full space-y-2">
-                    <div className="flex justify-between text-[10px] text-ui-gray">
+                    <div className="flex justify-between text-[12px] text-ui-gray">
                       <span>YOUR TOTAL SCORE</span>
                       <span className="text-ui-yellow font-bold uppercase">{state.game.player1_total_score} pts</span>
                     </div>
@@ -1143,7 +1143,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       });
                       if (res.ok) fetchState(true);
                     }}
-                    className="geometric-button px-10 py-4 text-[10px] shrink-0"
+                    className="geometric-button px-10 py-4 text-[12px] shrink-0"
                   >
                     Next Round
                   </button>
@@ -1166,7 +1166,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               <div className="w-8 h-8 border-2 border-bg-dark flex items-center justify-center font-bold text-lg animate-pulse">!</div>
               <div className="flex flex-col">
                 <span className="text-xs font-bold tracking-tighter">{notification.title}</span>
-                <span className="text-[8px] opacity-70">{notification.subtitle}</span>
+                <span className="text-[10px] opacity-70">{notification.subtitle}</span>
               </div>
             </div>
           </motion.div>
@@ -1205,7 +1205,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-[10px] text-ui-yellow tracking-[0.5em] font-black uppercase"
+                  className="text-[12px] text-ui-yellow tracking-[0.5em] font-black uppercase"
                 >
                   Final Classification
                 </motion.div>
@@ -1233,21 +1233,21 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       className="absolute inset-0 bg-ui-yellow/5 card-pattern"
                     />
                   )}
-                  <span className="text-[10px] text-ui-gray uppercase font-black tracking-widest relative z-10">
+                  <span className="text-[12px] text-ui-gray uppercase font-black tracking-widest relative z-10">
                     {state.game.player1_id === userId ? ':: YOU' : state.game.player1_name}
                   </span>
                   <div className="flex flex-col relative z-10">
                     <span className={`text-4xl sm:text-6xl font-black italic tracking-tighter ${state.game.winner_player_id === state.game.player1_id ? 'text-ui-yellow' : 'text-ui-border'}`}>
                       {state.game.player1_total_score}
                     </span>
-                    <span className="text-[8px] text-ui-gray uppercase font-bold tracking-tighter">Total Points</span>
+                    <span className="text-[10px] text-ui-gray uppercase font-bold tracking-tighter">Total Points</span>
                   </div>
                   {state.game.winner_player_id === state.game.player1_id && (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', delay: 1 }}
-                      className="absolute top-2 right-2 bg-ui-yellow text-bg-dark text-[8px] font-black px-2 py-0.5 rotate-12 shadow-md z-20"
+                      className="absolute top-2 right-2 bg-ui-yellow text-bg-dark text-[10px] font-black px-2 py-0.5 rotate-12 shadow-md z-20"
                     >
                       WINNER
                     </motion.div>
@@ -1268,21 +1268,21 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       className="absolute inset-0 bg-ui-yellow/5 card-pattern"
                     />
                   )}
-                  <span className="text-[10px] text-ui-gray uppercase font-black tracking-widest relative z-10">
+                  <span className="text-[12px] text-ui-gray uppercase font-black tracking-widest relative z-10">
                     {state.game.player2_id === userId ? ':: YOU' : state.game.player2_name}
                   </span>
                   <div className="flex flex-col relative z-10">
                     <span className={`text-4xl sm:text-6xl font-black italic tracking-tighter ${state.game.winner_player_id === state.game.player2_id || (state.game.player2_id === 'cpu' && state.game.winner_player_id === 'cpu') ? 'text-ui-yellow' : 'text-ui-border'}`}>
                       {state.game.player2_total_score}
                     </span>
-                    <span className="text-[8px] text-ui-gray uppercase font-bold tracking-tighter">Total Points</span>
+                    <span className="text-[10px] text-ui-gray uppercase font-bold tracking-tighter">Total Points</span>
                   </div>
                   {(state.game.winner_player_id === state.game.player2_id || (state.game.player2_id === 'cpu' && state.game.winner_player_id === 'cpu')) && (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', delay: 1 }}
-                      className="absolute top-2 right-2 bg-ui-yellow text-bg-dark text-[8px] font-black px-2 py-0.5 rotate-12 shadow-md z-20"
+                      className="absolute top-2 right-2 bg-ui-yellow text-bg-dark text-[10px] font-black px-2 py-0.5 rotate-12 shadow-md z-20"
                     >
                       WINNER
                     </motion.div>
@@ -1307,7 +1307,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     'Defeat Conceded'
                   )}
                 </div>
-                <div className="text-[8px] text-ui-gray mt-2 tracking-[0.4em] font-bold uppercase opacity-50">
+                <div className="text-[10px] text-ui-gray mt-2 tracking-[0.4em] font-bold uppercase opacity-50">
                   {state.game.winner_player_id === userId ? 'Performance: Exceptional' : 'Performance: Sub-Optimal'}
                 </div>
               </motion.div>
@@ -1318,7 +1318,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 1.5 }}
                   onClick={onExit}
-                  className="geometric-button py-5 text-[10px] font-black uppercase tracking-widest bg-ui-yellow text-bg-dark border-none"
+                  className="geometric-button py-5 text-[12px] font-black uppercase tracking-widest bg-ui-yellow text-bg-dark border-none"
                 >
                   Return to Lobby
                 </motion.button>
@@ -1327,7 +1327,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 1.7 }}
                   onClick={handleNewMatch}
-                  className="geometric-button py-5 text-[10px] font-black uppercase tracking-widest border-white/20 hover:border-white opacity-50 hover:opacity-100 transition-all"
+                  className="geometric-button py-5 text-[12px] font-black uppercase tracking-widest border-white/20 hover:border-white opacity-50 hover:opacity-100 transition-all"
                 >
                   {state.game.next_game_id ? 'Join Rematch' : 'New Match'}
                 </motion.button>

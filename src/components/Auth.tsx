@@ -48,7 +48,7 @@ export default function Auth({ onLogin }: AuthProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-black/80 p-4 border border-ui-border/40 shadow-inner">
-          <label className="block text-[8px] text-ui-yellow mb-3 uppercase tracking-widest font-bold">Username</label>
+          <label className="block text-[10px] text-ui-yellow mb-3 uppercase tracking-widest font-bold">Username</label>
           <input
             type="text"
             value={username}
@@ -59,7 +59,7 @@ export default function Auth({ onLogin }: AuthProps) {
         </div>
 
         <div className="bg-black/80 p-4 border border-ui-border/40 shadow-inner">
-          <label className="block text-[8px] text-ui-yellow mb-3 uppercase tracking-widest font-bold">Password</label>
+          <label className="block text-[10px] text-ui-yellow mb-3 uppercase tracking-widest font-bold">Password</label>
           <input
             type="password"
             value={password}
@@ -69,7 +69,7 @@ export default function Auth({ onLogin }: AuthProps) {
           />
         </div>
 
-        {error && <div className="text-ui-red text-[8px] border-l-2 border-ui-red pl-2">{error}</div>}
+        {error && <div className="text-ui-red text-[10px] border-l-2 border-ui-red pl-2">{error}</div>}
 
         <button
           type="submit"
@@ -83,7 +83,7 @@ export default function Auth({ onLogin }: AuthProps) {
       <div className="mt-8 text-center bg-bg-dark/50 p-4 border-t border-ui-border">
         <button
           onClick={() => setIsLogin(!isLogin)}
-          className="text-[8px] text-ui-gray hover:text-ui-yellow transition-colors tracking-widest"
+          className="text-[10px] text-ui-gray hover:text-ui-yellow transition-colors tracking-widest"
         >
           {isLogin ? "Need an account? Sign up" : "Already have an account? Login"}
         </button>

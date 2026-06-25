@@ -164,8 +164,8 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
             </div>
             
             <div className="w-full flex justify-between items-center mt-auto">
-               <span className={`${style === 'modern' ? 'text-[8px]' : 'text-[6px]'} opacity-30 ${style === 'sketch' ? 'font-handdrawn' : ''}`}>{getPoints(card.value)} PT</span>
-               <span className={`${style === 'modern' ? 'text-xs' : 'text-[8px]'} font-bold self-end rotate-180 opacity-20 ${isRed ? 'text-ui-red' : 'text-black'}`}>{card.value}</span>
+               <span className={`${style === 'modern' ? 'text-[10px]' : 'text-[8px]'} opacity-30 ${style === 'sketch' ? 'font-handdrawn' : ''}`}>{getPoints(card.value)} PT</span>
+               <span className={`${style === 'modern' ? 'text-xs' : 'text-[10px]'} font-bold self-end rotate-180 opacity-20 ${isRed ? 'text-ui-red' : 'text-black'}`}>{card.value}</span>
             </div>
           </motion.div>
         )}

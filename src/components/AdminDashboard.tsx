@@ -245,7 +245,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
           </div>
           <button 
             onClick={onClose}
-            className="bg-white text-ui-red px-3 py-1 text-[10px] font-bold border-2 border-black active:translate-y-1 transition-all"
+            className="bg-white text-ui-red px-3 py-1 text-[12px] font-bold border-2 border-black active:translate-y-1 transition-all"
           >
             CLOSE_X
           </button>
@@ -261,7 +261,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-4 text-[9px] font-bold uppercase transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 px-6 py-4 text-[11px] font-bold uppercase transition-all whitespace-nowrap ${
                 activeTab === tab.id ? 'bg-white/10 text-ui-yellow border-b-4 border-ui-yellow' : 'text-ui-gray hover:text-white'
               }`}
             >
@@ -272,7 +272,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 font-mono text-[10px] relative">
+        <div className="flex-1 overflow-y-auto p-6 font-mono text-[12px] relative">
           {error && (
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
@@ -280,7 +280,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
               className="bg-ui-red/20 border-2 border-ui-red p-4 mb-6 text-ui-red flex justify-between items-center"
             >
               <span>ERROR: {error}</span>
-              <button onClick={() => setError(null)} className="text-[8px] hover:underline">DISMISS</button>
+              <button onClick={() => setError(null)} className="text-[10px] hover:underline">DISMISS</button>
             </motion.div>
           )}
 
@@ -291,7 +291,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
               className="bg-ui-green/20 border-2 border-ui-green p-4 mb-6 text-ui-green flex justify-between items-center"
             >
               <span>SUCCESS: {success}</span>
-              <button onClick={() => setSuccess(null)} className="text-[8px] hover:underline">DISMISS</button>
+              <button onClick={() => setSuccess(null)} className="text-[10px] hover:underline">DISMISS</button>
             </motion.div>
           )}
 
@@ -303,7 +303,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                 exit={{ opacity: 0, y: 10 }}
                 className="absolute inset-x-6 top-6 z-[210] bg-ui-red p-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-white"
               >
-                <div className="font-bold uppercase text-[10px] mb-4">{confirmAction.message}</div>
+                <div className="font-bold uppercase text-[12px] mb-4">{confirmAction.message}</div>
                 <div className="flex gap-4">
                   <button 
                     onClick={() => confirmAction.type === 'user' ? executeDeleteUser(confirmAction.id) : executeDeleteGame(confirmAction.id)}
@@ -328,7 +328,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                 exit={{ opacity: 0, y: 10 }}
                 className="absolute inset-x-6 top-6 z-[210] bg-ui-blue p-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-white"
               >
-                <div className="font-bold uppercase text-[10px] mb-4">Reset Password for User</div>
+                <div className="font-bold uppercase text-[12px] mb-4">Reset Password for User</div>
                 <div className="space-y-4">
                   <input
                     type="password"
@@ -374,7 +374,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                     { label: 'MSG_TRAFFIC', value: summary.messages, color: 'text-ui-purple' }
                   ].map(stat => (
                     <div key={stat.label} className="bg-white/5 border-2 border-white/10 p-4 h-full">
-                      <div className="text-ui-gray text-[8px] mb-2">{stat.label}</div>
+                      <div className="text-ui-gray text-[10px] mb-2">{stat.label}</div>
                       <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
                     </div>
                   ))}
@@ -383,7 +383,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                 <div className="bg-black/40 border-2 border-white/10 p-6 space-y-4">
                   <div className="flex items-center gap-2 text-ui-red mb-4">
                     <Power size={14} />
-                    <span className="font-bold uppercase tracking-widest text-[9px]">Critical System Controls</span>
+                    <span className="font-bold uppercase tracking-widest text-[11px]">Critical System Controls</span>
                   </div>
                   <div className="flex flex-wrap gap-4">
                     <button 
@@ -398,7 +398,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                   </div>
                   
                   <div className="pt-4 border-t border-white/10">
-                    <div className="text-ui-gray text-[8px] mb-2 uppercase">System Status Label (Version)</div>
+                    <div className="text-ui-gray text-[10px] mb-2 uppercase">System Status Label (Version)</div>
                     <div className="flex max-w-sm gap-2">
                       <input 
                         type="text" 
@@ -409,14 +409,14 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                       />
                       <button 
                         onClick={handleUpdateAppVersion}
-                        className="bg-white text-black px-4 py-2 text-[10px] font-bold uppercase hover:bg-ui-yellow transition-colors"
+                        className="bg-white text-black px-4 py-2 text-[12px] font-bold uppercase hover:bg-ui-yellow transition-colors"
                       >
                         Update
                       </button>
                     </div>
                   </div>
 
-                  <p className="text-ui-gray text-[8px] italic">* Actions logged to system monitoring.</p>
+                  <p className="text-ui-gray text-[10px] italic">* Actions logged to system monitoring.</p>
                 </div>
               </motion.div>
             )}
@@ -431,7 +431,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-white/5 uppercase tracking-widest text-ui-gray text-[8px]">
+                    <thead className="bg-white/5 uppercase tracking-widest text-ui-gray text-[10px]">
                       <tr>
                         <th className="p-3">User</th>
                         <th className="p-3">ID</th>
@@ -451,7 +451,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                             </div>
                           </td>
                           <td className="p-3 text-ui-gray font-mono">{u.id.substring(0, 8)}...</td>
-                          <td className="p-3 text-[9px]">{new Date(u.last_active_at + 'Z').toLocaleString()}</td>
+                          <td className="p-3 text-[11px]">{new Date(u.last_active_at + 'Z').toLocaleString()}</td>
                           <td className="p-3 flex gap-2">
                             <button 
                               onClick={() => handleToggleAdmin(u.id)}
@@ -504,7 +504,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-white/5 uppercase tracking-widest text-ui-gray text-[8px]">
+                    <thead className="bg-white/5 uppercase tracking-widest text-ui-gray text-[10px]">
                       <tr>
                         <th className="p-3">Game ID</th>
                         <th className="p-3">Players</th>
@@ -517,12 +517,12 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                       {games.map(g => (
                         <tr key={g.id} className="border-b border-white/5 hover:bg-white/5 transition-all">
                           <td className="p-3 font-mono">{g.id.substring(0, 8)}</td>
-                          <td className="p-3 text-[9px]">
+                          <td className="p-3 text-[11px]">
                             <span className="text-ui-blue font-bold">{g.player1_name || '???'}</span>
                             <span className="text-ui-gray mx-1">vs</span>
                             <span className="text-ui-orange font-bold">{g.player2_name || (g.player2_id === 'cpu' ? 'CPU' : 'WAITING')}</span>
                           </td>
-                          <td className="p-3 capitalize tracking-widest text-[8px]">
+                          <td className="p-3 capitalize tracking-widest text-[10px]">
                             <span className={`px-2 py-0.5 border ${
                               g.status === 'playing' ? 'border-ui-yellow text-ui-yellow' : 
                               g.status === 'finished' ? 'border-ui-green text-ui-green' : 
@@ -531,7 +531,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                               {g.status}
                             </span>
                           </td>
-                          <td className="p-3 text-[8px]">{new Date(g.updated_at + 'Z').toLocaleString()}</td>
+                          <td className="p-3 text-[10px]">{new Date(g.updated_at + 'Z').toLocaleString()}</td>
                           <td className="p-3">
                             <button 
                               onClick={() => handleDeleteGame(g.id)}
@@ -552,7 +552,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
         </div>
 
         {/* Footer */}
-        <div className="bg-black/60 p-3 border-t-2 border-white/10 flex justify-between items-center font-mono text-[8px] text-ui-gray uppercase tracking-widest">
+        <div className="bg-black/60 p-3 border-t-2 border-white/10 flex justify-between items-center font-mono text-[10px] text-ui-gray uppercase tracking-widest">
           <div>Root Terminal Access Granted</div>
           <div>{new Date().toISOString()}</div>
         </div>
