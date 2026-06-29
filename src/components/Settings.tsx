@@ -285,7 +285,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                       <div className={`text-[12px] font-bold uppercase mb-1 text-text-main`}>
                         {profile.name}
                       </div>
-                      <div className="text-[10px] text-ui-gray font-sans opacity-80">
+                      <div className="text-[11px] text-white/80 font-sans">
                         {profile.description}
                       </div>
                     </button>
@@ -401,7 +401,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   }`}
               >
                 <div className="text-[12px] font-bold uppercase text-ui-yellow text-center">Classic Retro</div>
-                <div className="text-[10px] text-ui-gray text-center uppercase">8-Bit Blocky Shapes</div>
+                <div className="text-[11px] text-white/80 text-center uppercase">8-Bit Blocky Shapes</div>
                 {uiMode === 'retro' && <Check size={16} className="text-ui-yellow mt-2" />}
               </button>
               <button
@@ -410,7 +410,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   }`}
               >
                 <div className="text-[12px] font-bold uppercase text-ui-green text-center">Modern Glass</div>
-                <div className="text-[10px] text-ui-gray text-center uppercase">Rounded Glassmorphism</div>
+                <div className="text-[11px] text-white/80 text-center uppercase">Rounded Glassmorphism</div>
                 {uiMode === 'modern' && <Check size={16} className="text-ui-green mt-2" />}
               </button>
               <button
@@ -419,7 +419,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   }`}
               >
                 <div className="text-[12px] font-bold uppercase text-ui-orange text-center">Classic Win32</div>
-                <div className="text-[10px] text-ui-gray text-center uppercase">90s Bevels & Gray</div>
+                <div className="text-[11px] text-white/80 text-center uppercase">90s Bevels & Gray</div>
                 {uiMode === 'classic' && <Check size={16} className="text-ui-orange mt-2" />}
               </button>
               <button
@@ -428,7 +428,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   }`}
               >
                 <div className="text-[12px] font-bold uppercase text-ui-blue text-center">Modern Win32</div>
-                <div className="text-[10px] text-ui-gray text-center uppercase">Soft Shadows & Flat</div>
+                <div className="text-[11px] text-white/80 text-center uppercase">Soft Shadows & Flat</div>
                 {uiMode === 'modern_win32' && <Check size={16} className="text-ui-blue mt-2" />}
               </button>
             </div>
@@ -452,7 +452,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     <div className={`text-[12px] font-bold uppercase mb-1 ${cardStyle === s.id ? 'text-ui-green' : 'text-text-main'}`}>
                       {s.name}
                     </div>
-                    <div className="text-[10px] text-ui-gray uppercase">{s.description}</div>
+                    <div className="text-[11px] text-white/80 uppercase">{s.description}</div>
                   </div>
                   {cardStyle === s.id && <Check size={16} className="text-ui-green" />}
                 </button>
@@ -522,7 +522,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <button
                   key={a}
                   onClick={() => setAvatar(a)}
-                  className={`w-12 h-12 flex items-center justify-center border-2 transition-all ${avatar === a ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow shadow-[2px_2px_0px_0px_rgba(255,184,0,0.5)]' : 'border-ui-border text-ui-gray opacity-40 hover:opacity-100'
+                  className={`w-12 h-12 flex items-center justify-center border-2 transition-all ${avatar === a ? 'border-ui-yellow bg-ui-yellow/10 text-ui-yellow shadow-[2px_2px_0px_0px_rgba(255,184,0,0.5)]' : 'border-ui-border text-white/70 hover:text-white hover:border-white/50 hover:bg-white/5'
                     }`}
                   title={a}
                 >

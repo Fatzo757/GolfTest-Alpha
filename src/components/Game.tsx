@@ -721,50 +721,52 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               </AnimatePresence>
       
               {/* Simplified Game Header */}
-              <div className="flex items-center justify-between px-4 py-2 pointer-events-none relative z-[100]">
+              <div className="flex items-center px-4 py-2 pointer-events-none relative z-[100]">
                 <button 
                   onClick={onExit} 
-                  className="pointer-events-auto secondary-button p-2 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all group shadow-lg flex items-center justify-center"
+                  className="pointer-events-auto secondary-button p-2 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all group shadow-lg flex items-center justify-center shrink-0"
                   title="Exit Game"
                 >
                   <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
 
-                <div className="flex items-center gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-1.5 border border-ui-border rounded-full shadow-lg">
+                <div className="pointer-events-auto flex flex-1 ml-4 items-center justify-between gap-2 md:gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-2 md:px-5 md:py-2.5 border border-ui-border rounded-xl shadow-lg">
                   <div className="flex flex-col items-center group relative cursor-help">
-                    <span className="text-[7px] text-ui-gray uppercase leading-none mb-0.5 flex items-center gap-1">
-                      <Layers size={6} />
+                    <span className="text-[10px] md:text-[12px] text-ui-gray uppercase leading-none mb-1 flex items-center gap-1">
+                      <Layers size={10} className="md:w-3 md:h-3" />
                       Deck
                     </span>
-                    <span className="text-[12px] text-white font-bold leading-none tracking-tighter drop-shadow-sm">
+                    <span className="text-[14px] md:text-[16px] text-white font-bold leading-none tracking-tighter drop-shadow-sm">
                       {state.game.deck_count} LEFT
                     </span>
                   </div>
 
-                  <div className="w-[1px] h-4 bg-ui-border mx-1" />
+                  <div className="w-[1px] h-6 bg-ui-border mx-1" />
                   
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-green/30">
-                        <UserAvatar type={user.avatar} size={8} />
+                  <div className="flex items-center gap-3 md:gap-5">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <div className="w-4 h-4 md:w-5 md:h-5 rounded-full overflow-hidden border border-ui-green/30 flex items-center justify-center">
+                        <UserAvatar type={user.avatar} size={12} className="md:hidden" />
+                        <UserAvatar type={user.avatar} size={16} className="hidden md:block" />
                       </div>
-                      <span className="text-[11px] text-ui-green font-black">{userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score}</span>
+                      <span className="text-[14px] md:text-[16px] text-ui-green font-black">{userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score}</span>
                     </div>
                     
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full overflow-hidden border border-ui-red/30">
-                        <UserAvatar type={opponentAvatar} size={8} />
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <div className="w-4 h-4 md:w-5 md:h-5 rounded-full overflow-hidden border border-ui-red/30 flex items-center justify-center">
+                        <UserAvatar type={opponentAvatar} size={12} className="md:hidden" />
+                        <UserAvatar type={opponentAvatar} size={16} className="hidden md:block" />
                       </div>
-                      <span className="text-[11px] text-ui-red font-black">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}</span>
+                      <span className="text-[14px] md:text-[16px] text-ui-red font-black">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}</span>
                     </div>
                   </div>
 
-                  <div className="w-[1px] h-4 bg-ui-border mx-1" />
+                  <div className="hidden sm:block w-[1px] h-6 bg-ui-border mx-1" />
 
                   <div className="flex flex-col items-end">
-                     <div className="flex items-center gap-1">
-                        <div className={`shrink-0 w-1 h-1 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
-                        <span className="text-[9px] text-white/40 uppercase font-black tracking-widest w-[50px] text-right truncate">
+                     <div className="flex items-center gap-1 md:gap-2">
+                        <div className={`shrink-0 w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
+                        <span className="text-[12px] md:text-[14px] text-white/60 uppercase font-black tracking-widest max-w-[80px] md:max-w-[120px] text-right truncate">
                           {state.game.status === 'playing' ? (isMyTurn ? user.username : opponentName) : state.game.status}
                         </span>
                      </div>
