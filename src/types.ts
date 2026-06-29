@@ -5,6 +5,7 @@ export interface User {
   card_style?: string;
   card_back_style?: string;
   card_back_color?: string;
+  card_back_secondary_color?: string;
   avatar?: string;
   mute_sounds?: number;
   sound_volume?: number;
@@ -55,7 +56,17 @@ export interface GameState {
     cpu_difficulty: 'easy' | 'normal' | 'hard';
     winner_player_id: string | null;
     player1_name?: string;
+    player1_avatar?: string;
+    player1_card_style?: string;
+    player1_card_back_style?: string;
+    player1_card_back_color?: string;
+    player1_card_back_secondary_color?: string;
     player2_name?: string;
+    player2_avatar?: string;
+    player2_card_style?: string;
+    player2_card_back_style?: string;
+    player2_card_back_color?: string;
+    player2_card_back_secondary_color?: string;
   };
   cards: Card[];
   moves: Move[];

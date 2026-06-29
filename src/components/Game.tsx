@@ -29,6 +29,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   const [draggingOver, setDraggingOver] = useState<{ type: 'grid' | 'discard'; index?: number } | null>(null);
   
   const [mobileTab, setMobileTab] = useState<'me' | 'opponent' | 'history'>('me');
+  const [nudgeCooldown, setNudgeCooldown] = useState(false);
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
   const [moveFilter, setMoveFilter] = useState<'ALL' | 'ME' | 'OPPONENT'>('ALL');
   const prevTurnRef = useRef<string | null>(null);
@@ -423,6 +424,11 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     return c.player_id === opponentId;
   }).sort((a,b) => (a.card_index || 0) - (b.card_index || 0)) || [];
 
+  const opponentCardStyle = state?.game?.player1_id === userId ? state?.game?.player2_card_style : state?.game?.player1_card_style;
+  const opponentCardBackStyle = state?.game?.player1_id === userId ? state?.game?.player2_card_back_style : state?.game?.player1_card_back_style;
+  const opponentCardBackColor = state?.game?.player1_id === userId ? state?.game?.player2_card_back_color : state?.game?.player1_card_back_color;
+  const opponentCardBackSecondaryColor = state?.game?.player1_id === userId ? state?.game?.player2_card_back_secondary_color : state?.game?.player1_card_back_secondary_color;
+
   const turnIndicator = (colorClass: string) => (
     <motion.div
       initial={{ scale: 0.8, opacity: 0 }}
@@ -501,7 +507,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                </div>
              )}
              <div className="card-pattern absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
-               <CardPattern backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} />
+               <CardPattern backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'} />
              </div>
              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                <div className={`text-[9px] md:text-[12px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
@@ -574,7 +580,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       key={state.game.drawn_card.id}
                       card={state.game.drawn_card}
                       index={-1}
-                      style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
+                      style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
                       className={`small md:normal !border-black ${isMyTurn ? 'ring-2 ring-ui-yellow/50 shadow-[0_0_20px_rgba(255,205,117,0.3)]' : ''}`}
                       forceFaceUp={true}
                     />
@@ -628,7 +634,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   key={state.game.discard[state.game.discard.length-1].id || 'discard'}
                   card={state.game.discard[state.game.discard.length-1]}
                   index={999}
-                  style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
+                  style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
                   className="small md:normal"
                   forceFaceUp={true}
                 />
@@ -706,15 +712,42 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="hidden md:block bg-ui-yellow/10 border-4 border-ui-yellow p-4 text-center overflow-hidden"
+                    className="bg-ui-yellow/10 border-4 border-ui-yellow p-3 md:p-4 text-center overflow-hidden w-full max-w-2xl mx-auto mt-2"
                   >
-                    <div className="flex items-center justify-center gap-4">
-                       <Info className="text-ui-yellow" size={16} />
-                       <span className="text-[12px] text-ui-yellow font-bold uppercase tracking-widest">
-                         {myCards.filter(c => c.is_face_up).length < 2 
-                           ? "Game Setup: Select 2 cards to reveal and start the game" 
-                           : "Ready: Waiting for opponent..."}
-                       </span>
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
+                       <div className="flex items-center gap-2">
+                         <Info className="text-ui-yellow" size={16} />
+                         <span className="text-[10px] md:text-[12px] text-ui-yellow font-bold uppercase tracking-widest">
+                           {myCards.filter(c => c.is_face_up).length < 2 
+                             ? "Game Setup: Select 2 cards to reveal" 
+                             : "Ready: Waiting for opponent..."}
+                         </span>
+                       </div>
+                       {myCards.filter(c => c.is_face_up).length >= 2 && !state.game.is_vs_cpu && (
+                         <button 
+                           onClick={async () => {
+                             if (nudgeCooldown) return;
+                             setNudgeCooldown(true);
+                             setTimeout(() => setNudgeCooldown(false), 5000);
+                             try {
+                               await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/messages`, {
+                                 method: 'POST',
+                                 headers: {
+                                   'Content-Type': 'application/json',
+                                   Authorization: `Bearer ${token}`
+                                 },
+                                 body: JSON.stringify({ content: '*NUDGES YOU* Please select your starting cards!' })
+                               });
+                             } catch (err) {
+                               console.error(err);
+                             }
+                           }}
+                           disabled={nudgeCooldown}
+                           className="geometric-button px-4 py-1 text-[10px] disabled:opacity-50"
+                         >
+                           {nudgeCooldown ? 'Nudged!' : 'Nudge Opponent'}
+                         </button>
+                       )}
                     </div>
                   </motion.div>
                 )}
@@ -841,7 +874,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              <CardComponent 
                                card={card}
                                index={idx}
-                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
+                               style={opponentCardStyle || 'classic'} backStyle={opponentCardBackStyle || 'classic'} backColor={opponentCardBackColor || 'ui-red'} backSecondaryColor={opponentCardBackSecondaryColor || 'white'}
                                className={`fluid ${latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]' : ''}`}
                              />
                            </div>
@@ -894,7 +927,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              <CardComponent
                                card={card}
                                index={idx}
-                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
+                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
                                onClick={() => {
                                  if (state.game.status === 'initializing') {
                                    handleReveal(idx);

@@ -188,13 +188,32 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
   if (loading) return <div className="p-12 text-center text-ui-yellow animate-pulse uppercase">Accessing Memory...</div>;
   if (!gameData) return <div className="p-12 text-center text-ui-red uppercase">Memory Corrupted</div>;
 
-  const renderCard = (card: Card, index: number) => {
+  const renderCard = (card: Card, index: number, isPlayer1?: boolean) => {
+    let cardStyle = user.card_style || 'classic';
+    let backStyle = user.card_back_style || 'classic';
+    let backColor = user.card_back_color || 'ui-red';
+    let backSecondaryColor = user.card_back_secondary_color || 'white';
+
+    if (isPlayer1 !== undefined && gameData) {
+      if (isPlayer1) {
+        cardStyle = gameData.player1_card_style || 'classic';
+        backStyle = gameData.player1_card_back_style || 'classic';
+        backColor = gameData.player1_card_back_color || 'ui-red';
+        backSecondaryColor = gameData.player1_card_back_secondary_color || 'white';
+      } else {
+        cardStyle = gameData.player2_card_style || 'classic';
+        backStyle = gameData.player2_card_back_style || 'classic';
+        backColor = gameData.player2_card_back_color || 'ui-red';
+        backSecondaryColor = gameData.player2_card_back_secondary_color || 'white';
+      }
+    }
+
     return (
       <CardComponent
         key={index}
         card={card}
         index={index}
-        style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'}
+        style={cardStyle} backStyle={backStyle} backColor={backColor} backSecondaryColor={backSecondaryColor}
         className="w-16 h-24 md:w-20 md:h-28"
       />
     );
@@ -237,7 +256,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
                 <span className="ml-2 font-bold text-ui-red">{calculateScore(displayState.p2Cards)} PTS</span>
              </div>
              <div className="grid grid-cols-3 gap-2">
-                {displayState.p2Cards.map((c, i) => renderCard(c, i))}
+                {displayState.p2Cards.map((c, i) => renderCard(c, i, false))}
              </div>
           </div>
 
@@ -256,7 +275,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
           {/* Player Area */}
           <div className="flex flex-col items-center gap-4">
              <div className="grid grid-cols-3 gap-2">
-                {displayState.p1Cards.map((c, i) => renderCard(c, i))}
+                {displayState.p1Cards.map((c, i) => renderCard(c, i, true))}
              </div>
              <div className="flex items-center gap-2 text-[10px] text-ui-gray uppercase px-4 py-1 border border-ui-gray">
                 <div className="w-3 h-3 flex items-center justify-center opacity-70">

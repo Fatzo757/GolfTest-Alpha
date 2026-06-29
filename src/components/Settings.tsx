@@ -3,6 +3,7 @@ import { Palette, Layers, X, Check, User as UserIcon, Volume2, VolumeX, Clock, C
 import { motion } from 'motion/react';
 import UserAvatar, { AVATAR_LIST } from './UserAvatar';
 import { soundService } from '../services/soundService';
+import CardComponent from './Card';
 
 interface SettingsProps {
   user: any;
@@ -57,6 +58,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [cardStyle, setCardStyle] = useState(user.card_style || 'classic');
   const [cardBackStyle, setCardBackStyle] = useState(user.card_back_style || 'classic');
   const [cardBackColor, setCardBackColor] = useState(user.card_back_color || 'ui-red');
+  const [cardBackSecondaryColor, setCardBackSecondaryColor] = useState(user.card_back_secondary_color || 'white');
   const [avatar, setAvatar] = useState(user.avatar || 'user');
   const [muteSounds, setMuteSounds] = useState(!!user.mute_sounds);
   const [soundVolume, setSoundVolume] = useState(user.sound_volume ?? 1.0);
@@ -145,6 +147,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           card_style: cardStyle,
           card_back_style: cardBackStyle,
           card_back_color: cardBackColor,
+          card_back_secondary_color: cardBackSecondaryColor,
           mute_sounds: muteSounds,
           sound_volume: soundVolume,
           sound_profile: soundProfile,
@@ -174,6 +177,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           card_style: cardStyle,
           card_back_style: cardBackStyle,
           card_back_color: cardBackColor,
+          card_back_secondary_color: cardBackSecondaryColor,
           avatar,
           mute_sounds: muteSounds ? 1 : 0,
           sound_volume: soundVolume,
@@ -508,6 +512,74 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   <span className="text-[10px] font-bold uppercase">{c.label}</span>
                 </button>
               ))}
+            </div>
+          </section>
+
+          {/* Card Back Secondary Color Section */}
+          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+            <div className="flex items-center gap-2 mb-4">
+              <Palette size={14} className="text-ui-gray" />
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Pattern Color</h3>
+            </div>
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
+              {[
+                { id: 'white', label: 'White', hex: '#ffffff' },
+                { id: 'black', label: 'Black', hex: '#000000' },
+                { id: 'red', label: 'Red', hex: '#dc2626' },
+                { id: 'blue', label: 'Blue', hex: '#2563eb' },
+                { id: 'green', label: 'Green', hex: '#16a34a' },
+                { id: 'yellow', label: 'Yellow', hex: '#eab308' },
+                { id: 'orange', label: 'Orange', hex: '#f97316' },
+                { id: 'purple', label: 'Purple', hex: '#9333ea' }
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setCardBackSecondaryColor(c.id)}
+                  className={`flex flex-col items-center justify-center p-2 border-2 transition-all ${cardBackSecondaryColor === c.id ? 'border-white scale-110 shadow-lg z-10 bg-black/20' : 'border-ui-border opacity-60 hover:opacity-100'
+                    }`}
+                >
+                  <div className="w-full h-8 border border-black mb-1" style={{ backgroundColor: c.hex }}></div>
+                  <span className="text-[9px] font-bold uppercase">{c.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Card Preview Section */}
+          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+            <div className="flex items-center gap-2 mb-4">
+              <Layers size={14} className="text-ui-gray" />
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Preview</h3>
+            </div>
+            <div className="flex justify-center gap-8 p-6 geometric-border bg-black/10">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-24 aspect-[3/4]">
+                  <CardComponent
+                    card={{ id: 'preview-front', value: 'A', suit: 'spades', is_face_up: true, player_id: 'none', game_id: 'none' }}
+                    index={0}
+                    style={cardStyle}
+                    backStyle={cardBackStyle}
+                    backColor={cardBackColor}
+                    backSecondaryColor={cardBackSecondaryColor}
+                    forceFaceUp={true}
+                  />
+                </div>
+                <span className="text-[10px] text-ui-gray uppercase font-bold mt-2">Front</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-24 aspect-[3/4]">
+                  <CardComponent
+                    card={{ id: 'preview-back', value: 'A', suit: 'spades', is_face_up: false, player_id: 'none', game_id: 'none' }}
+                    index={1}
+                    style={cardStyle}
+                    backStyle={cardBackStyle}
+                    backColor={cardBackColor}
+                    backSecondaryColor={cardBackSecondaryColor}
+                    forceFaceUp={false}
+                  />
+                </div>
+                <span className="text-[10px] text-ui-gray uppercase font-bold mt-2">Back</span>
+              </div>
             </div>
           </section>
 

@@ -29,6 +29,7 @@ db.exec(`
     card_style TEXT DEFAULT 'classic',
     card_back_style TEXT DEFAULT 'classic',
     card_back_color TEXT DEFAULT 'ui-red',
+    card_back_secondary_color TEXT DEFAULT 'white',
     avatar TEXT DEFAULT 'user',
     mute_sounds INTEGER DEFAULT 0,
     sound_volume REAL DEFAULT 1.0,
@@ -159,6 +160,7 @@ try {
   addColumn('users', 'ui_mode', "TEXT DEFAULT 'retro'");
   addColumn('users', 'card_back_style', "TEXT DEFAULT 'classic'");
   addColumn('users', 'card_back_color', "TEXT DEFAULT 'ui-red'");
+  addColumn('users', 'card_back_secondary_color', "TEXT DEFAULT 'white'");
   addColumn('users', 'sound_profile', "TEXT DEFAULT 'classic'");
 
   // If last_active_at was just added, it might be null for existing rows.

@@ -356,9 +356,9 @@ async function startServer() {
 
   // Update Preferences
   app.post("/api/auth/preferences", authenticate, (req: any, res) => {
-    const { theme, ui_mode, card_style, card_back_style, card_back_color, mute_sounds, sound_volume, time_zone, time_format, show_date, show_move_date } = req.body;
-    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, mute_sounds = ?, sound_volume = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ? WHERE id = ?")
-      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', mute_sounds ? 1 : 0, sound_volume ?? 1.0, time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, req.user.id);
+    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, time_zone, time_format, show_date, show_move_date } = req.body;
+    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ? WHERE id = ?")
+      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, req.user.id);
     res.json({ success: true });
   });
 
@@ -617,18 +617,26 @@ async function startServer() {
     const moves = db.prepare("SELECT * FROM moves WHERE game_id = ? ORDER BY timestamp ASC").all(gameId);
     
     // Fetch player info
-    const p1: any = db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player1_id);
+    const p1: any = db.prepare("SELECT username, avatar, card_style, card_back_style, card_back_color, card_back_secondary_color FROM users WHERE id = ?").get(game.player1_id);
     const p2: any = game.player2_id && game.player2_id !== 'cpu' 
-      ? db.prepare("SELECT username, avatar FROM users WHERE id = ?").get(game.player2_id)
-      : { username: game.player2_id === 'cpu' ? 'CPU' : 'Unknown', avatar: 'robot' };
+      ? db.prepare("SELECT username, avatar, card_style, card_back_style, card_back_color, card_back_secondary_color FROM users WHERE id = ?").get(game.player2_id)
+      : { username: game.player2_id === 'cpu' ? 'CPU' : 'Unknown', avatar: 'robot', card_style: 'classic', card_back_style: 'classic', card_back_color: 'ui-red', card_back_secondary_color: 'white' };
 
     res.json({ 
       game: {
         ...game,
         player1_name: p1?.username || 'Unknown',
         player1_avatar: p1?.avatar || 'user',
+        player1_card_style: p1?.card_style || 'classic',
+        player1_card_back_style: p1?.card_back_style || 'classic',
+        player1_card_back_color: p1?.card_back_color || 'ui-red',
+        player1_card_back_secondary_color: p1?.card_back_secondary_color || 'white',
         player2_name: p2?.username || (game.player2_id === 'cpu' ? 'CPU' : 'Unknown'),
-        player2_avatar: p2?.avatar || (game.player2_id === 'cpu' ? 'robot' : 'user')
+        player2_avatar: p2?.avatar || (game.player2_id === 'cpu' ? 'robot' : 'user'),
+        player2_card_style: p2?.card_style || 'classic',
+        player2_card_back_style: p2?.card_back_style || 'classic',
+        player2_card_back_color: p2?.card_back_color || 'ui-red',
+        player2_card_back_secondary_color: p2?.card_back_secondary_color || 'white'
       }, 
       moves 
     });
