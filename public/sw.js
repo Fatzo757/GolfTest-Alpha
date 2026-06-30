@@ -9,7 +9,7 @@ self.addEventListener('push', (event) => {
       url: data.url || '/'
     },
     tag: data.tag || 'golf-notification',
-    renotify: true
+    renotify: false
   };
 
   event.waitUntil(

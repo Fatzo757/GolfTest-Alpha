@@ -193,7 +193,7 @@ async function startServer() {
     return total;
   }
 
-  async function sendPushNotification(userId: string, title: string, body: string, url: string = '/') {
+  async function sendPushNotification(userId: string, title: string, body: string, url: string = '/', tag?: string) {
     try {
       const subscriptions = db.prepare("SELECT subscription FROM push_subscriptions WHERE user_id = ?").all(userId) as any[];
       
@@ -203,11 +203,15 @@ async function startServer() {
           
           if (subscriptionPayload.platform === 'android') {
              if (getApps().length > 0) {
-               await getMessaging().send({
+               const messagePayload: any = {
                  token: subscriptionPayload.token,
                  notification: { title, body },
                  data: { url }
-               });
+               };
+               if (tag) {
+                 messagePayload.android = { notification: { tag } };
+               }
+               await getMessaging().send(messagePayload);
              } else {
                console.warn("SERVER: Cannot send Android push, Firebase Admin not initialized");
              }
@@ -216,7 +220,8 @@ async function startServer() {
             await webpush.sendNotification(webSub, JSON.stringify({
               title,
               body,
-              url
+              url,
+              tag
             }));
           }
         } catch (err: any) {
@@ -288,7 +293,7 @@ async function startServer() {
       
       // Notify the starting player
       if (actualStarter && actualStarter !== 'cpu') {
-        sendPushNotification(actualStarter, "Your Turn!", "A new round of Golf has started. It's your turn!", `/game/${gameId}`);
+        sendPushNotification(actualStarter, "Your Turn!", "A new round of Golf has started. It's your turn!", `/game/${gameId}`, `your_turn_${gameId}`);
       }
     })();
   }
@@ -465,7 +470,7 @@ async function startServer() {
       setupNewRound(gameId, userId, targetUserId);
       
       // Notify target user
-      sendPushNotification(targetUserId, "New Game Started", `${req.user.username} started a new game with you!`, `/game/${gameId}`);
+      sendPushNotification(targetUserId, "New Game Started", `${req.user.username} started a new game with you!`, `/game/${gameId}`, `your_turn_${gameId}`);
 
       res.json({ success: true, gameId });
     } catch (err) {
@@ -540,13 +545,14 @@ async function startServer() {
       if (game.current_turn_player_id === userId) return res.status(400).json({ error: "It is your turn" });
       if (game.current_turn_player_id === 'cpu') return res.status(400).json({ error: "Cannot nudge CPU" });
       
-      const playerName = game.player1_id === userId ? game.player1_name : game.player2_name;
+      const playerName = req.user.username;
 
       sendPushNotification(
         game.current_turn_player_id, 
         "It's your turn!", 
         `${playerName} is waiting for you to make a move in Golf.`, 
-        `/play/${gameId}`
+        `/play/${gameId}`,
+        `your_turn_${gameId}`
       );
       
       res.json({ success: true });
