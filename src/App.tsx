@@ -251,8 +251,8 @@ export default function App() {
             )}
             
             <div>
-              <h1 className={`text-[8px] md:text-sm tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out ${currentGameId || replayGameId ? 'md:text-xs hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF</h1>
-              <div className="text-[6px] md:text-[8px] text-ui-gray uppercase tracking-widest hidden sm:block">
+              <h1 className={`text-sm md:text-xl tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out whitespace-nowrap ${currentGameId || replayGameId ? 'md:text-lg hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF CARD GAME</h1>
+              <div className="text-[8px] md:text-[10px] text-ui-gray uppercase tracking-widest whitespace-nowrap">
                 {appVersion} {(currentGameId || replayGameId) && ' • © 2026'}
               </div>
             </div>

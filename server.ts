@@ -725,6 +725,18 @@ async function startServer() {
     const messageId = nanoid();
     db.prepare("INSERT INTO messages (id, game_id, sender_id, content) VALUES (?, ?, ?, ?)")
       .run(messageId, gameId, userId, content);
+
+    try {
+      const game: any = db.prepare("SELECT player1_id, player2_id FROM games WHERE id = ?").get(gameId);
+      if (game) {
+        const opponentId = game.player1_id === userId ? game.player2_id : game.player1_id;
+        if (opponentId && opponentId !== 'cpu') {
+           sendPushNotification(opponentId, "New Message", `${req.user.username}: ${content}`, `/play/${gameId}`, `chat_${gameId}`);
+        }
+      }
+    } catch (err) {
+      console.error("SERVER: Failed to send chat notification:", err);
+    }
     
     res.json({ success: true });
   });

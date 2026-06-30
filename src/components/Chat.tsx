@@ -152,7 +152,7 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-80 bg-bg-dark border-l-4 border-ui-border z-[200] flex flex-col shadow-2xl"
+            className="fixed top-0 right-0 h-full w-full sm:w-80 bg-bg-dark border-l-4 border-ui-border z-[10000] flex flex-col shadow-2xl"
           >
             {/* Chat Header */}
             <div className="p-4 border-b-2 border-ui-border flex justify-between items-center bg-ui-blue/10">
@@ -161,8 +161,10 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
                 <span className="text-[12px] text-ui-gray uppercase tracking-widest font-bold">Game Chat</span>
               </div>
               <button
+                type="button"
+                onTouchEnd={(e) => { e.preventDefault(); setIsOpen(false); }}
                 onClick={() => setIsOpen(false)}
-                className="text-ui-gray hover:text-ui-red transition-colors p-2"
+                className="text-ui-gray hover:text-ui-red transition-colors p-3 -m-1"
               >
                 <X size={20} />
               </button>
