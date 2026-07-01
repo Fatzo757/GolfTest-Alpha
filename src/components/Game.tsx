@@ -765,7 +765,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                 <div className="pointer-events-auto flex flex-1 ml-4 items-center justify-between gap-2 md:gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-2 md:px-5 md:py-2.5 border border-ui-border rounded-xl shadow-lg">
                   <div className="flex flex-col items-center group relative cursor-help">
-                    <span className="text-[10px] md:text-[12px] text-ui-gray uppercase leading-none mb-1 flex items-center gap-1">
+                    <span className="text-[10px] md:text-[12px] text-ui-yellow uppercase leading-none mb-1 flex items-center gap-1 drop-shadow-sm">
                       <Layers size={10} className="md:w-3 md:h-3" />
                       Deck
                     </span>
