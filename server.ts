@@ -209,7 +209,14 @@ async function startServer() {
                  data: { url }
                };
                if (tag) {
-                 messagePayload.android = { notification: { tag } };
+                 messagePayload.android = { 
+                   collapseKey: tag,
+                   notification: { 
+                     title,
+                     body,
+                     tag 
+                   } 
+                 };
                }
                await getMessaging().send(messagePayload);
              } else {
