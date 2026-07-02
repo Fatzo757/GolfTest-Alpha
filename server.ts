@@ -205,7 +205,7 @@ async function startServer() {
              if (getApps().length > 0) {
                const messagePayload: any = {
                  token: subscriptionPayload.token,
-                 notification: { title, body },
+                 notification: { title, body, icon: '/notification_icon.png' },
                  data: { url }
                };
                if (tag) {
@@ -214,6 +214,7 @@ async function startServer() {
                    notification: { 
                      title,
                      body,
+                     icon: 'ic_notification',
                      tag 
                    } 
                  };
@@ -228,6 +229,7 @@ async function startServer() {
               title,
               body,
               url,
+              icon: '/notification_icon.png',
               tag
             }));
           }

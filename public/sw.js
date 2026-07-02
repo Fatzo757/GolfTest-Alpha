@@ -3,8 +3,8 @@ self.addEventListener('push', (event) => {
   
   const options = {
     body: data.body,
-    icon: '/logo192.png', // Fallback if no icon
-    badge: '/logo192.png',
+    icon: data.icon || '/notification_icon.png', // Fallback if no icon
+    badge: '/notification_icon.png',
     data: {
       url: data.url || '/'
     },
