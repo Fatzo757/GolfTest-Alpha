@@ -15,6 +15,7 @@ export interface User {
   show_move_date?: number;
   is_admin?: number;
   sound_profile?: string;
+  ui_scale?: number;
 }
 
 export interface Card {
@@ -36,6 +37,7 @@ export interface Move {
   card_value: string;
   replaced_card_suit?: string;
   replaced_card_value?: string;
+  snapshot_json?: string;
   round_number?: number;
   timestamp: string;
 }

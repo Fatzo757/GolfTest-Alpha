@@ -194,6 +194,12 @@ async function startServer() {
   }
 
   async function sendPushNotification(userId: string, title: string, body: string, url: string = '/', tag?: string) {
+    if (!tag) {
+       const match = url.match(/\/game\/([a-zA-Z0-9_-]+)/);
+       if (match) tag = `game_${match[1]}`;
+       else tag = 'golf_update';
+    }
+    
     try {
       const subscriptions = db.prepare("SELECT subscription FROM push_subscriptions WHERE user_id = ?").all(userId) as any[];
       
@@ -340,7 +346,7 @@ async function startServer() {
 
   // Get Current User
   app.get("/api/auth/me", authenticate, (req: any, res) => {
-    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin FROM users WHERE id = ?").get(req.user.id);
+    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin, ui_scale FROM users WHERE id = ?").get(req.user.id);
     res.json({ user });
   });
 
@@ -370,9 +376,9 @@ async function startServer() {
 
   // Update Preferences
   app.post("/api/auth/preferences", authenticate, (req: any, res) => {
-    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date } = req.body;
-    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ? WHERE id = ?")
-      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, sound_profile || 'classic', time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, req.user.id);
+    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale } = req.body;
+    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ? WHERE id = ?")
+      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, sound_profile || 'classic', time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, ui_scale ?? 1.0, req.user.id);
     res.json({ success: true });
   });
 
@@ -995,8 +1001,9 @@ async function startServer() {
 
         if (status === 'round_end') {
           db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
-          db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, round_number) VALUES (?, ?, ?, 'round_end', ?)").run(nanoid(), gameId, 'system', game.round_number);
           const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
+          const snapshot = JSON.stringify(cards);
+          db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, round_number, snapshot_json) VALUES (?, ?, ?, 'round_end', ?, ?)").run(nanoid(), gameId, 'system', game.round_number, snapshot);
           
           const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
           const p2Cards = cards.filter((c: any) => c.player_id === (game.player2_id || 'cpu'));
@@ -1200,8 +1207,9 @@ async function startServer() {
 
       if (status === 'round_end') {
         db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
-        db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, round_number) VALUES (?, ?, ?, 'round_end', ?)").run(nanoid(), gameId, 'system', game.round_number);
         const cards = db.prepare("SELECT * FROM game_cards WHERE game_id = ?").all(gameId);
+        const snapshot = JSON.stringify(cards);
+        db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, round_number, snapshot_json) VALUES (?, ?, ?, 'round_end', ?, ?)").run(nanoid(), gameId, 'system', game.round_number, snapshot);
         
         const p1Cards = cards.filter((c: any) => c.player_id === game.player1_id);
         const p2Cards = cards.filter((c: any) => c.player_id === (game.player2_id || 'cpu'));

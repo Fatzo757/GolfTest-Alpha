@@ -60,6 +60,14 @@ export async function subscribeUserToPush(token: string) {
         console.log('Push notification received: ', notification);
       });
       
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('Push notification action performed', action);
+        const data = action.notification.data;
+        if (data && data.url) {
+          window.location.href = data.url;
+        }
+      });
+      
       await PushNotifications.register();
       return;
     }

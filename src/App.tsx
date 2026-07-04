@@ -96,6 +96,12 @@ export default function App() {
       soundService.setMuted(!!user.mute_sounds);
       soundService.setVolume(user.sound_volume ?? 1.0);
       soundService.setProfile(user.sound_profile || 'classic');
+      
+      if (user.ui_scale) {
+        document.documentElement.style.fontSize = `${user.ui_scale * 100}%`;
+      } else {
+        document.documentElement.style.fontSize = '100%';
+      }
 
       // Check URL pathname for direct game link on load
       const match = window.location.pathname.match(/^\/game\/(.+)$/);

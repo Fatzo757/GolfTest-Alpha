@@ -67,6 +67,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [timeFormat, setTimeFormat] = useState(user.time_format || '12h');
   const [showDate, setShowDate] = useState(!!user.show_date);
   const [showMoveDate, setShowMoveDate] = useState(!!user.show_move_date);
+  const [uiScale, setUiScale] = useState(user.ui_scale || 1.0);
   const [saving, setSaving] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -154,7 +155,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           time_zone: timeZone,
           time_format: timeFormat,
           show_date: showDate,
-          show_move_date: showMoveDate
+          show_move_date: showMoveDate,
+          ui_scale: uiScale
         })
       });
 
@@ -185,7 +187,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           time_zone: timeZone,
           time_format: timeFormat,
           show_date: showDate ? 1 : 0,
-          show_move_date: showMoveDate ? 1 : 0
+          show_move_date: showMoveDate ? 1 : 0,
+          ui_scale: uiScale
         });
         onClose();
       }
@@ -224,6 +227,34 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <button onClick={() => setStatusMsg(null)} className="text-[12px]">✕</button>
             </motion.div>
           )}
+
+          {/* Display Settings */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Layers size={14} className="text-ui-gray" />
+              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Display Scale</h3>
+            </div>
+            <div className="p-4 border-2 border-ui-border flex flex-col gap-2">
+              <label className="text-[12px] font-bold text-ui-yellow uppercase">Interface Size</label>
+              <div className="bg-black/40 border-2 border-ui-border p-4 flex flex-col gap-3">
+                <div className="flex justify-between items-center text-white font-bold text-[12px]">
+                  <span className="opacity-70">50%</span>
+                  <span className="text-ui-yellow text-[14px]">{Math.round(uiScale * 100)}%</span>
+                  <span className="opacity-70">150%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="1.5"
+                  step="0.05"
+                  value={uiScale}
+                  onChange={(e) => setUiScale(parseFloat(e.target.value))}
+                  className="w-full accent-ui-yellow cursor-pointer"
+                />
+              </div>
+              <p className="text-[12px] text-gray-300">Adjust this if the interface feels too cramped or unreadable on your device.</p>
+            </div>
+          </section>
 
           {/* Audio Section */}
           <section className="space-y-4">

@@ -510,12 +510,12 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                <CardPattern backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'} />
              </div>
              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-               <div className={`text-[9px] md:text-[12px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
+               <div className={`text-[14px] md:text-[18px] font-bold drop-shadow-lg text-center transition-colors ${state?.game?.deck_count && state.game.deck_count < 10 ? 'text-ui-red animate-pulse' : 'text-ui-orange'}`}>
                  {state?.game?.deck_count}
                </div>
              </div>
            </motion.div>
-           <span className="text-[7px] md:text-[10px] text-ui-orange tracking-widest font-bold uppercase">Deck</span>
+           <span className="text-[9px] md:text-[12px] text-ui-orange tracking-widest font-bold uppercase">Deck</span>
         </motion.div>
 
         {/* Integrated Active Card Area - Fixed Width Slot */}
@@ -529,7 +529,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 exit={{ scale: 0.8, opacity: 0 }}
                 className="flex flex-col items-center gap-1"
               >
-                <span className="text-[7px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
+                <span className="text-[9px] md:text-[11px] text-ui-yellow font-black uppercase tracking-[0.2em] animate-pulse">Active</span>
                 <div className="flex items-center gap-1 relative z-50">
                   <motion.div
                     drag={isMyTurn}
@@ -645,7 +645,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               )}
              </AnimatePresence>
            </div>
-           <span className="text-[7px] md:text-[10px] text-ui-green tracking-widest font-bold uppercase">Discard</span>
+           <span className="text-[10px] md:text-[11px] text-ui-green tracking-widest font-bold uppercase">Discard</span>
         </motion.div>
       </div>
     );
@@ -765,11 +765,11 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                 <div className="pointer-events-auto flex flex-1 ml-4 items-center justify-between gap-2 md:gap-4 bg-bg-dark/40 backdrop-blur-md px-3 py-2 md:px-5 md:py-2.5 border border-ui-border rounded-xl shadow-lg">
                   <div className="flex flex-col items-center group relative cursor-help">
-                    <span className="text-[10px] md:text-[12px] text-ui-yellow uppercase leading-none mb-1 flex items-center gap-1 drop-shadow-sm">
+                    <span className="text-[12px] md:text-[14px] text-ui-yellow uppercase leading-none mb-1 flex items-center gap-1 drop-shadow-sm">
                       <Layers size={10} className="md:w-3 md:h-3" />
                       Deck
                     </span>
-                    <span className="text-[14px] md:text-[16px] text-white font-bold leading-none tracking-tighter drop-shadow-sm">
+                    <span className="text-[18px] md:text-[16px] text-white font-bold leading-none tracking-tighter drop-shadow-sm">
                       {state.game.deck_count} LEFT
                     </span>
                   </div>
@@ -799,7 +799,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   <div className="flex flex-col items-end">
                      <div className="flex items-center gap-1 md:gap-2">
                         <div className={`shrink-0 w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
-                        <span className="text-[12px] md:text-[14px] text-white/60 uppercase font-black tracking-widest max-w-[80px] md:max-w-[120px] text-right truncate">
+                        <span className="text-[14px] md:text-[16px] text-white/60 uppercase font-black tracking-widest max-w-[80px] md:max-w-[120px] text-right truncate">
                           {state.game.status === 'playing' ? (isMyTurn ? user.username : opponentName) : state.game.status}
                         </span>
                      </div>
@@ -840,7 +840,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    {/* Opponent Area (Left Column on Desktop) */}
                    <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-red/20 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
-                       <div className="absolute -top-3 left-6 bg-bg-dark text-[10px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
+                       <div className="absolute -top-3 left-6 bg-bg-dark text-[12px] md:text-[10px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
                           <div className="px-3 flex items-center gap-2 border-l border-white/10 flex-row-reverse">
                             <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
                                <UserAvatar type={(state.game as any).player2_avatar} size={10} />
@@ -885,7 +885,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                    <div className={`flex-1 w-full max-w-2xl order-4 lg:order-3 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-green/20 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
-                       <div className="absolute -top-3 left-6 bg-bg-dark text-[10px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
+                       <div className="absolute -top-3 left-6 bg-bg-dark text-[12px] md:text-[10px] tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
                          <div className="px-3 flex items-center gap-2 border-r border-white/10">
                             <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
                                <UserAvatar type={user.avatar} size={10} />
@@ -1020,26 +1020,68 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               {(movesInRound as Move[]).map((move, i) => (
-                                <div key={i} className="flex flex-col gap-2 border border-ui-border/30 bg-black/20 p-3 rounded-sm hover:border-ui-border/70 transition-colors h-full">
-                                  <div className="flex justify-between items-center text-[12px] uppercase tracking-widest w-full">
-                                    <span className={move.player_id === userId ? 'text-ui-green font-bold' : 'text-ui-red font-bold'}>
-                                      {move.player_id === userId ? 'YOU' : move.player_id === 'cpu' ? 'CPU' : 'OPPONENT'}
-                                    </span>
-                                    <span className="text-ui-gray opacity-80 text-right">{formatMatchTime(move.timestamp, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_move_date })}</span>
-                                  </div>
-                                  
-                                  <div className="flex items-center gap-3 mt-1">
-                                    <div className="w-8 h-11 border border-ui-border bg-ui-blue flex flex-col items-center justify-center text-xs shadow-sm shrink-0">
-                                      <span className={move.card_suit === 'hearts' || move.card_suit === 'diamonds' ? 'text-ui-red' : ''}>
-                                        {move.card_value}
-                                      </span>
-                                      <span className="text-xs">{move.card_suit === 'hearts' ? '♥' : move.card_suit === 'diamonds' ? '♦' : move.card_suit === 'clubs' ? '♣' : '♠'}</span>
+                                <div key={i} className={`flex flex-col gap-2 border border-ui-border/30 bg-black/20 p-3 rounded-sm transition-colors ${move.move_type === 'round_end' ? 'col-span-1 md:col-span-2 lg:col-span-3 hover:border-ui-yellow/70 border-ui-yellow/30' : 'hover:border-ui-border/70 h-full'}`}>
+                                  {move.move_type === 'round_end' ? (
+                                    <div className="w-full">
+                                      <div className="text-[12px] text-ui-yellow font-bold uppercase text-center mb-2">Round {move.round_number} Ended</div>
+                                      {move.snapshot_json && (() => {
+                                        try {
+                                          const cards = JSON.parse(move.snapshot_json);
+                                          const p1Cards = cards.filter((c: any) => c.player_id === state.game.player1_id).sort((a: any, b: any) => a.card_index - b.card_index);
+                                          const p2Cards = cards.filter((c: any) => c.player_id === (state.game.player2_id || 'cpu')).sort((a: any, b: any) => a.card_index - b.card_index);
+                                          
+                                          const renderMiniGrid = (gridCards: any[], label: string) => (
+                                            <div className="flex flex-col items-center">
+                                              <span className="text-[10px] text-ui-gray mb-1 uppercase">{label}</span>
+                                              <div className="grid grid-cols-3 gap-1">
+                                                {gridCards.map((c: any, idx: number) => {
+                                                  const isRed = c.suit === 'hearts' || c.suit === 'diamonds';
+                                                  const symbol = c.suit === 'hearts' ? '♥' : c.suit === 'diamonds' ? '♦' : c.suit === 'clubs' ? '♣' : '♠';
+                                                  return (
+                                                    <div key={idx} className={`w-8 h-10 border border-ui-border bg-white flex flex-col items-center justify-center text-[10px] shadow-sm ${isRed ? 'text-ui-red' : 'text-black'}`}>
+                                                      <span className="font-bold">{c.value}</span>
+                                                      <span className="text-[10px] leading-none">{symbol}</span>
+                                                    </div>
+                                                  );
+                                                })}
+                                              </div>
+                                            </div>
+                                          );
+
+                                          return (
+                                            <div className="flex justify-center gap-6 md:gap-12 bg-bg-dark/50 p-3 rounded border border-ui-border/20">
+                                              {renderMiniGrid(p1Cards, state.game.player1_id === user?.id ? 'YOU' : 'P1')}
+                                              {renderMiniGrid(p2Cards, state.game.player2_id === user?.id ? 'YOU' : (state.game.is_vs_cpu ? 'CPU' : 'P2'))}
+                                            </div>
+                                          );
+                                        } catch (e) {
+                                          return null;
+                                        }
+                                      })()}
                                     </div>
-                                    <div className="flex flex-col gap-0.5 min-w-0">
-                                      <span className="text-[12px] text-ui-yellow font-bold uppercase truncate">{move.move_type === 'replace' ? 'Swapped' : move.move_type === 'discard_drawn' ? 'Discarded' : move.move_type}</span>
-                                      <span className="text-[11px] text-white/80 uppercase truncate">Pos: {move.card_affected_index}</span>
-                                    </div>
-                                  </div>
+                                  ) : (
+                                    <>
+                                      <div className="flex justify-between items-center text-[12px] uppercase tracking-widest w-full">
+                                        <span className={move.player_id === userId ? 'text-ui-green font-bold' : 'text-ui-red font-bold'}>
+                                          {move.player_id === userId ? 'YOU' : move.player_id === 'cpu' ? 'CPU' : 'OPPONENT'}
+                                        </span>
+                                        <span className="text-ui-gray opacity-80 text-right">{formatMatchTime(move.timestamp, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_move_date })}</span>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-3 mt-1">
+                                        <div className="w-8 h-11 border border-ui-border bg-ui-blue flex flex-col items-center justify-center text-xs shadow-sm shrink-0">
+                                          <span className={move.card_suit === 'hearts' || move.card_suit === 'diamonds' ? 'text-ui-red' : ''}>
+                                            {move.card_value}
+                                          </span>
+                                          <span className="text-xs">{move.card_suit === 'hearts' ? '♥' : move.card_suit === 'diamonds' ? '♦' : move.card_suit === 'clubs' ? '♣' : '♠'}</span>
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 min-w-0">
+                                          <span className="text-[12px] text-ui-yellow font-bold uppercase truncate">{move.move_type === 'replace' ? 'Swapped' : move.move_type === 'discard_drawn' ? 'Discarded' : move.move_type}</span>
+                                          <span className="text-[11px] text-white/80 uppercase truncate">Pos: {move.card_affected_index}</span>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               ))}
                             </div>

@@ -39,7 +39,8 @@ db.exec(`
     show_move_date INTEGER DEFAULT 0,
     is_admin INTEGER DEFAULT 0,
     ui_mode TEXT DEFAULT 'retro',
-    sound_profile TEXT DEFAULT 'classic'
+    sound_profile TEXT DEFAULT 'classic',
+    ui_scale REAL DEFAULT 1.0
   );
 
   CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -103,6 +104,7 @@ db.exec(`
     card_value TEXT,
     replaced_card_suit TEXT,
     replaced_card_value TEXT,
+    snapshot_json TEXT,
     round_number INTEGER DEFAULT 1,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -148,6 +150,7 @@ try {
   addColumn('games', 'first_revealer_id', 'TEXT');
   addColumn('games', 'is_hidden_from_history', 'BOOLEAN DEFAULT 0');
   addColumn('games', 'next_game_id', 'TEXT');
+  addColumn('moves', 'snapshot_json', 'TEXT');
   addColumn('game_cards', 'id', 'TEXT');
   addColumn('moves', 'round_number', 'INTEGER DEFAULT 1');
   addColumn('users', 'mute_sounds', 'INTEGER DEFAULT 0');
@@ -162,6 +165,7 @@ try {
   addColumn('users', 'card_back_color', "TEXT DEFAULT 'ui-red'");
   addColumn('users', 'card_back_secondary_color', "TEXT DEFAULT 'white'");
   addColumn('users', 'sound_profile', "TEXT DEFAULT 'classic'");
+  addColumn('users', 'ui_scale', "REAL DEFAULT 1.0");
 
   // If last_active_at was just added, it might be null for existing rows.
   // We can optionally initialize it.
