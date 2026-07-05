@@ -31,7 +31,7 @@ export async function subscribeUserToPush(token: string) {
         id: 'fcm_default_channel',
         name: 'Default',
         description: 'Default notification channel',
-        importance: 3,
+        importance: 4, // HIGH importance for heads-up
         visibility: 1,
         sound: 'beep.wav',
       });

@@ -207,24 +207,38 @@ async function startServer() {
         try {
           const subscriptionPayload = JSON.parse(row.subscription);
           
-          if (subscriptionPayload.platform === 'android') {
+          let platform = subscriptionPayload.platform;
+          if (!platform) {
+            // Infer platform if missing from old app versions
+            if (subscriptionPayload.token && typeof subscriptionPayload.token === 'string') {
+              platform = 'android';
+            } else if (subscriptionPayload.endpoint) {
+              platform = 'web';
+            }
+          }
+          
+          if (platform === 'android') {
              if (getApps().length > 0) {
                const messagePayload: any = {
                  token: subscriptionPayload.token,
-                 notification: { title, body, icon: '/notification_icon.png' },
-                 data: { url }
-               };
-               if (tag) {
-                 messagePayload.android = { 
-                   collapseKey: tag,
-                   notification: { 
+                 notification: { title, body },
+                 data: { url },
+                 android: {
+                   notification: {
                      title,
                      body,
-                     tag 
-                   } 
-                 };
-               }
-               await getMessaging().send(messagePayload);
+                     channelId: 'fcm_default_channel',
+                     icon: 'ic_launcher', // Use launcher icon as fallback
+                     color: '#29366f',
+                     tag: tag || 'golf_update',
+                     sound: 'default',
+                     notificationCount: 1
+                   }
+                 }
+               };
+               console.log(`SERVER: Sending FCM message to token: ${subscriptionPayload.token.substring(0, 10)}...`);
+               const response = await getMessaging().send(messagePayload);
+               console.log(`SERVER: FCM message sent successfully, response: ${response}`);
              } else {
                console.warn("SERVER: Cannot send Android push, Firebase Admin not initialized");
              }
@@ -692,10 +706,12 @@ async function startServer() {
     
     try {
       const subStr = JSON.stringify(subscription);
+      console.log(`SERVER: Registering push subscription for user ${req.user.username}: ${subscription.platform}`);
       db.prepare("INSERT OR IGNORE INTO push_subscriptions (user_id, subscription) VALUES (?, ?)")
         .run(req.user.id, subStr);
       res.json({ success: true });
     } catch (err) {
+      console.error("SERVER: Subscription error:", err);
       res.status(500).json({ error: "Failed to store subscription" });
     }
   });
@@ -1406,19 +1422,23 @@ async function startServer() {
     }
   });
 
-  app.get("/api/admin/summary", authenticate, isAdmin, (req, res) => {
-    const userCount = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
-    const gameCount = db.prepare("SELECT COUNT(*) as count FROM games").get() as { count: number };
-    const activeGames = db.prepare("SELECT COUNT(*) as count FROM games WHERE status != 'finished'").get() as { count: number };
-    const messagesCount = db.prepare("SELECT COUNT(*) as count FROM messages").get() as { count: number };
-    
-    res.json({
-      users: userCount.count,
-      games: gameCount.count,
-      activeGames: activeGames.count,
-      messages: messagesCount.count,
-      timestamp: new Date().toISOString()
-    });
+  app.get("/api/admin/push-check", authenticate, isAdmin, (req, res) => {
+    try {
+      const subs = db.prepare("SELECT user_id, subscription FROM push_subscriptions").all() as any[];
+      const stats = subs.reduce((acc: any, s: any) => {
+        const p = JSON.parse(s.subscription).platform || 'unknown';
+        acc[p] = (acc[p] || 0) + 1;
+        return acc;
+      }, {});
+      res.json({
+        firebaseInitialized: getApps().length > 0,
+        credentialEnvSet: !!process.env.GOOGLE_APPLICATION_CREDENTIALS,
+        subscriptionsCount: subs.length,
+        platformStats: stats
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   app.get("/api/admin/users", authenticate, isAdmin, (req, res) => {
