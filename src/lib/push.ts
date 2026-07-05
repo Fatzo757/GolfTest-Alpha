@@ -127,11 +127,15 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export async function resetPushSubscription(token: string) {
   try {
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
-    if (subscription) {
-      await subscription.unsubscribe();
-      console.log('Successfully unsubscribed from old push notifications.');
+    if (!Capacitor.isNativePlatform()) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        await subscription.unsubscribe();
+        console.log('Successfully unsubscribed from old push notifications.');
+      }
+    } else {
+      await PushNotifications.removeAllListeners();
     }
     // Now subscribe again
     await subscribeUserToPush(token);
