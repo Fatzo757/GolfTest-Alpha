@@ -981,7 +981,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   <div className="flex items-center justify-between border-b border-ui-border pb-3 mb-4 w-full">
                     <button 
                       onClick={() => setHistoryCollapsed(!historyCollapsed)}
-                      className="text-xs text-white uppercase tracking-widest flex items-center gap-2 hover:text-ui-yellow transition-colors"
+                      className="text-xs text-ui-yellow uppercase tracking-widest flex items-center gap-2 hover:text-white transition-colors"
                     >
                       <History size={12} /> Recent Moves {historyCollapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
                     </button>
@@ -1006,9 +1006,11 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     <div className="max-h-[300px] overflow-y-auto space-y-6 pr-2 custom-scrollbar">
                       {(() => {
                         const filteredMoves = state.moves.filter(m => {
-                          if (m.move_type === 'initial_card' || m.move_type === 'initial_discard' || m.move_type === 'round_start' || m.move_type === 'round_end') return false;
-                          if (moveFilter === 'ME' && m.player_id !== userId) return false;
-                          if (moveFilter === 'OPPONENT' && m.player_id === userId) return false;
+                          if (m.move_type === 'initial_card' || m.move_type === 'initial_discard' || m.move_type === 'round_start') return false;
+                          if (m.move_type !== 'round_end') {
+                            if (moveFilter === 'ME' && m.player_id !== userId) return false;
+                            if (moveFilter === 'OPPONENT' && m.player_id === userId) return false;
+                          }
                           return true;
                         });
                         
@@ -1018,6 +1020,14 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                           acc[round].push(move);
                           return acc;
                         }, {} as Record<number, Move[]>);
+
+                        Object.keys(grouped).forEach(roundStr => {
+                          const roundNum = Number(roundStr);
+                          const roundEndMove = grouped[roundNum].find(m => m.move_type === 'round_end');
+                          if (roundEndMove) {
+                            grouped[roundNum] = [roundEndMove];
+                          }
+                        });
 
                         const sortedRounds = Object.entries(grouped).sort((a, b) => Number(b[0]) - Number(a[0]));
                         
