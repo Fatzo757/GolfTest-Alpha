@@ -220,7 +220,6 @@ async function startServer() {
                    notification: { 
                      title,
                      body,
-                     icon: 'ic_notification',
                      tag 
                    } 
                  };
