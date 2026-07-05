@@ -228,7 +228,7 @@ async function startServer() {
                      title,
                      body,
                      channelId: 'fcm_default_channel',
-                     icon: 'ic_launcher', // Use launcher icon as fallback
+                     icon: 'ic_stat_golf',
                      color: '#29366f',
                      tag: tag || 'golf_update',
                      sound: 'default',
