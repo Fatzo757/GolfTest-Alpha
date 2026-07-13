@@ -121,7 +121,14 @@ async function startServer() {
   try {
      console.log("SERVER: Verifying database schema...");
      const cols = db.pragma("table_info(users)") as any[];
-     console.log("SERVER: users table columns:", cols.map(c => c.name).join(", "));
+     const colNames = cols.map(c => c.name);
+     console.log("SERVER: users table columns:", colNames.join(", "));
+     if (!colNames.includes("push_game_invites")) {
+       db.prepare("ALTER TABLE users ADD COLUMN push_game_invites INTEGER DEFAULT 1").run();
+     }
+     if (!colNames.includes("push_turn_reminders")) {
+       db.prepare("ALTER TABLE users ADD COLUMN push_turn_reminders INTEGER DEFAULT 1").run();
+     }
   } catch (e) {
      console.error("SERVER: Failed to verify schema:", e);
   }
@@ -201,6 +208,13 @@ async function startServer() {
     }
     
     try {
+      // Check user preferences
+      const userPrefs: any = db.prepare("SELECT push_game_invites, push_turn_reminders FROM users WHERE id = ?").get(userId);
+      if (userPrefs) {
+        if (tag.startsWith('game_') && !userPrefs.push_game_invites) return;
+        if (tag.startsWith('your_turn_') && !userPrefs.push_turn_reminders) return;
+      }
+
       const subscriptions = db.prepare("SELECT subscription FROM push_subscriptions WHERE user_id = ?").all(userId) as any[];
       
       for (const row of subscriptions) {
@@ -359,7 +373,7 @@ async function startServer() {
 
   // Get Current User
   app.get("/api/auth/me", authenticate, (req: any, res) => {
-    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin, ui_scale, card_scale FROM users WHERE id = ?").get(req.user.id);
+    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin, ui_scale, card_scale, push_game_invites, push_turn_reminders FROM users WHERE id = ?").get(req.user.id);
     res.json({ user });
   });
 
@@ -389,9 +403,9 @@ async function startServer() {
 
   // Update Preferences
   app.post("/api/auth/preferences", authenticate, (req: any, res) => {
-    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale, card_scale } = req.body;
-    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ?, card_scale = ? WHERE id = ?")
-      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, sound_profile || 'classic', time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, ui_scale ?? 1.0, card_scale ?? 1.0, req.user.id);
+    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale, card_scale, push_game_invites, push_turn_reminders } = req.body;
+    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ?, card_scale = ?, push_game_invites = ?, push_turn_reminders = ? WHERE id = ?")
+      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, sound_profile || 'classic', time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, ui_scale ?? 1.0, card_scale ?? 1.0, push_game_invites === false ? 0 : 1, push_turn_reminders === false ? 0 : 1, req.user.id);
     res.json({ success: true });
   });
 
@@ -713,6 +727,16 @@ async function startServer() {
     } catch (err) {
       console.error("SERVER: Subscription error:", err);
       res.status(500).json({ error: "Failed to store subscription" });
+    }
+  });
+
+  app.post("/api/push/unsubscribe", authenticate, (req: any, res) => {
+    try {
+      db.prepare("DELETE FROM push_subscriptions WHERE user_id = ?").run(req.user.id);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("SERVER: Unsubscribe error:", err);
+      res.status(500).json({ error: "Failed to remove subscription" });
     }
   });
 

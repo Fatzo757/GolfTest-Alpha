@@ -1,17 +1,52 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { Badge } from '@capawesome/capacitor-badge';
+
+export async function clearAppBadge() {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await Badge.clear();
+    } catch(e) {
+      console.error('Failed to clear badge:', e);
+    }
+  }
+}
 
 export async function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
       console.log('Service Worker registered with scope:', registration.scope);
+      
+      registration.onupdatefound = () => {
+        const installingWorker = registration.installing;
+        if (installingWorker == null) return;
+        installingWorker.onstatechange = () => {
+          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+             window.dispatchEvent(new CustomEvent('sw-update'));
+          }
+        };
+      };
+
       return registration;
     } catch (error) {
       console.error('Service Worker registration failed:', error);
     }
   }
 }
+
+const fetchWithRetry = async (url: string, options: RequestInit, retries = 3, delay = 1000): Promise<Response> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (res.ok) return res;
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise(r => setTimeout(r, delay * Math.pow(2, i)));
+    }
+  }
+  throw new Error("Failed after retries");
+};
 
 export async function subscribeUserToPush(token: string) {
   try {
@@ -38,7 +73,7 @@ export async function subscribeUserToPush(token: string) {
 
       PushNotifications.addListener('registration', async (tokenObj) => {
         try {
-          await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
+          await fetchWithRetry(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -56,15 +91,21 @@ export async function subscribeUserToPush(token: string) {
         console.error('Error on native registration:', error);
       });
       
-      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
         console.log('Push notification received: ', notification);
+        window.dispatchEvent(new CustomEvent('push-received', { detail: notification }));
+        try {
+          const res = await Badge.get();
+          await Badge.set({ count: (res.count || 0) + 1 });
+        } catch(e) {}
       });
       
       PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
         console.log('Push notification action performed', action);
+        clearAppBadge();
         const data = action.notification.data;
         if (data && data.url) {
-          window.location.href = data.url;
+          window.dispatchEvent(new CustomEvent('push-navigate', { detail: data.url }));
         }
       });
       
@@ -93,7 +134,7 @@ export async function subscribeUserToPush(token: string) {
         applicationServerKey: urlBase64ToUint8Array(publicKey)
       });
 
-      await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
+      await fetchWithRetry(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,6 +196,30 @@ export async function testPushNotification(token: string) {
     return res.ok;
   } catch (err) {
     console.error('Failed to send test notification:', err);
+    return false;
+  }
+}
+
+export async function unsubscribeFromPush(token: string) {
+  try {
+    if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        await subscription.unsubscribe();
+      }
+    } else if (Capacitor.isNativePlatform()) {
+      await PushNotifications.removeAllListeners();
+    }
+    
+    await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/unsubscribe`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    console.log('Successfully unsubscribed from push notifications.');
+    return true;
+  } catch (err) {
+    console.error('Failed to unsubscribe from push:', err);
     return false;
   }
 }

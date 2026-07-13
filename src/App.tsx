@@ -9,6 +9,7 @@ import AdminDashboard from './components/AdminDashboard.tsx';
 import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X } from 'lucide-react';
 import { soundService } from './services/soundService';
+import { unsubscribeFromPush, clearAppBadge } from './lib/push.ts';
 
 const getThemeClasses = (themeId?: string) => {
   return `theme-${themeId || 'default'}`;
@@ -36,6 +37,8 @@ export default function App() {
 
   const [lobbyView, setLobbyView] = useState<'lobby' | 'online' | 'history' | 'rules' | 'stats'>('lobby');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [pushToast, setPushToast] = useState<{title: string, body: string, url: string} | null>(null);
+  const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
 
   const isAdmin = user && (user.is_admin === 1 || user.username === 'fatzo757@gmail.com' || user.username === 'admin' || user.username === 'system');
 
@@ -45,6 +48,10 @@ export default function App() {
     setReplayGameId(null);
     setIsMenuOpen(false);
   };
+
+  useEffect(() => {
+    clearAppBadge();
+  }, []);
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/settings`)
@@ -130,10 +137,40 @@ export default function App() {
         }
       }
     };
+
+    const handlePushNavigate = (e: any) => {
+      if (e.detail) {
+        const urlObj = new URL(e.detail, window.location.origin);
+        const match = urlObj.pathname.match(/^\/game\/(.+)$/);
+        if (match) setCurrentGameId(match[1]);
+      }
+    };
+
+    const handlePushReceived = (e: any) => {
+      if (e.detail && e.detail.title) {
+        setPushToast({
+          title: e.detail.title,
+          body: e.detail.body,
+          url: e.detail.data?.url || '/'
+        });
+        setTimeout(() => setPushToast(null), 5000);
+      }
+    };
+
+    const handleSwUpdate = () => {
+      setSwUpdateAvailable(true);
+    };
+
     navigator.serviceWorker?.addEventListener('message', handleMessage);
+    window.addEventListener('push-navigate', handlePushNavigate);
+    window.addEventListener('push-received', handlePushReceived);
+    window.addEventListener('sw-update', handleSwUpdate);
     
     return () => {
       navigator.serviceWorker?.removeEventListener('message', handleMessage);
+      window.removeEventListener('push-navigate', handlePushNavigate);
+      window.removeEventListener('push-received', handlePushReceived);
+      window.removeEventListener('sw-update', handleSwUpdate);
     };
   }, [user]);
 
@@ -194,7 +231,10 @@ export default function App() {
     localStorage.setItem('golf_token', newToken);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (token) {
+      await unsubscribeFromPush(token);
+    }
     setToken(null);
     setUser(null);
     try {
@@ -314,6 +354,45 @@ export default function App() {
           )}
         </header>
       </div>
+
+      <AnimatePresence>
+        {pushToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            onClick={() => {
+               const urlObj = new URL(pushToast.url, window.location.origin);
+               const match = urlObj.pathname.match(/^\/game\/(.+)$/);
+               if (match) setCurrentGameId(match[1]);
+               setPushToast(null);
+            }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-bg-dark border-2 border-ui-green text-ui-green shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm"
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-[12px] uppercase font-bold">{pushToast.title}</span>
+              <button onClick={(e) => { e.stopPropagation(); setPushToast(null); }} className="text-[12px] hover:opacity-70">✕</button>
+            </div>
+            <span className="text-[10px] opacity-80">{pushToast.body}</span>
+          </motion.div>
+        )}
+
+        {swUpdateAvailable && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-ui-blue border-2 border-ui-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-4 w-11/12 max-w-sm"
+          >
+             <span className="text-[10px] text-white uppercase font-bold">New update available!</span>
+             <button 
+               onClick={() => window.location.reload()}
+               className="px-3 py-2 bg-ui-yellow text-bg-dark text-[10px] font-bold uppercase hover:bg-white transition-all"
+             >
+               Refresh
+             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className={`flex-1 overflow-y-auto w-full ${currentGameId || replayGameId ? 'max-w-7xl pb-4' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500`}>
         {!user ? (

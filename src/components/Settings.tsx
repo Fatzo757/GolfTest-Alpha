@@ -67,6 +67,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [timeFormat, setTimeFormat] = useState(user.time_format || '12h');
   const [showDate, setShowDate] = useState(!!user.show_date);
   const [showMoveDate, setShowMoveDate] = useState(!!user.show_move_date);
+  const [pushGameInvites, setPushGameInvites] = useState(user.push_game_invites !== 0);
+  const [pushTurnReminders, setPushTurnReminders] = useState(user.push_turn_reminders !== 0);
   const [uiScale, setUiScale] = useState(user.ui_scale || 1.0);
   const [cardScale, setCardScale] = useState(user.card_scale || 1.0);
   const [saving, setSaving] = useState(false);
@@ -157,6 +159,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           time_format: timeFormat,
           show_date: showDate,
           show_move_date: showMoveDate,
+          push_game_invites: pushGameInvites,
+          push_turn_reminders: pushTurnReminders,
           ui_scale: uiScale,
           card_scale: cardScale
         }),
@@ -190,6 +194,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           time_format: timeFormat,
           show_date: showDate ? 1 : 0,
           show_move_date: showMoveDate ? 1 : 0,
+          push_game_invites: pushGameInvites ? 1 : 0,
+          push_turn_reminders: pushTurnReminders ? 1 : 0,
           ui_scale: uiScale,
           card_scale: cardScale
         });
@@ -673,6 +679,32 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <span className="text-ui-gray text-[14px]">🔔</span>
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Push Notifications</h3>
             </div>
+            <div className="grid grid-cols-1 gap-2 mb-4">
+              <button
+                onClick={() => setPushGameInvites(!pushGameInvites)}
+                className={`w-full p-4 border-4 flex items-center justify-between transition-all ${pushGameInvites ? 'border-ui-blue bg-ui-blue/5' : 'border-ui-border'}`}
+              >
+                <div className="flex items-center gap-4">
+                  <span className={`text-[12px] font-bold uppercase ${pushGameInvites ? 'text-ui-blue' : 'text-text-main'}`}>
+                    Game Invites
+                  </span>
+                </div>
+                <Check size={16} className={pushGameInvites ? 'text-ui-blue opacity-100' : 'opacity-0'} />
+              </button>
+              
+              <button
+                onClick={() => setPushTurnReminders(!pushTurnReminders)}
+                className={`w-full p-4 border-4 flex items-center justify-between transition-all ${pushTurnReminders ? 'border-ui-green bg-ui-green/5' : 'border-ui-border'}`}
+              >
+                <div className="flex items-center gap-4">
+                  <span className={`text-[12px] font-bold uppercase ${pushTurnReminders ? 'text-ui-green' : 'text-text-main'}`}>
+                    Turn Reminders & Nudges
+                  </span>
+                </div>
+                <Check size={16} className={pushTurnReminders ? 'text-ui-green opacity-100' : 'opacity-0'} />
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={async () => {
