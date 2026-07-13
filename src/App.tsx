@@ -232,11 +232,14 @@ export default function App() {
   }
 
   return (
-    <div className={`h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}>
+    <div 
+      className={`h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       {/* Header Container */}
       <div
         className={`sticky top-0 z-[9000] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'}`}
-        style={{ paddingTop: 'calc(var(--safe-area-inset-top, 0px) + 0.25rem)' }}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.25rem)' }}
       >
         <header className={`p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'}`}>
           <div className="flex items-center gap-2 md:gap-4 relative">

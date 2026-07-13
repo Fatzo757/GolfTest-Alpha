@@ -22,6 +22,10 @@ body {
   color: var(--color-text-main);
   image-rendering: pixelated;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior-y: none;
+  touch-action: manipulation;
 }
 
 /* Add retro text-shadow to colored text for readability on any background */
