@@ -10,6 +10,7 @@ import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X } from 'lucide-react';
 import { soundService } from './services/soundService';
 import { unsubscribeFromPush, clearAppBadge } from './lib/push.ts';
+import { motion, AnimatePresence } from 'motion/react';
 
 const getThemeClasses = (themeId?: string) => {
   return `theme-${themeId || 'default'}`;
