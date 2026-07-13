@@ -359,7 +359,7 @@ async function startServer() {
 
   // Get Current User
   app.get("/api/auth/me", authenticate, (req: any, res) => {
-    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin, ui_scale FROM users WHERE id = ?").get(req.user.id);
+    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin, ui_scale, card_scale FROM users WHERE id = ?").get(req.user.id);
     res.json({ user });
   });
 
@@ -389,9 +389,9 @@ async function startServer() {
 
   // Update Preferences
   app.post("/api/auth/preferences", authenticate, (req: any, res) => {
-    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale } = req.body;
-    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ? WHERE id = ?")
-      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, sound_profile || 'classic', time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, ui_scale ?? 1.0, req.user.id);
+    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale, card_scale } = req.body;
+    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ?, card_scale = ? WHERE id = ?")
+      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, sound_profile || 'classic', time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, ui_scale ?? 1.0, card_scale ?? 1.0, req.user.id);
     res.json({ success: true });
   });
 

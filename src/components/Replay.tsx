@@ -255,7 +255,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
                 {gameData.player2_name}
                 <span className="ml-2 font-bold text-ui-red">{calculateScore(displayState.p2Cards)} PTS</span>
              </div>
-             <div className="grid grid-cols-3 gap-2">
+             <div className="grid grid-cols-3 gap-2" style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}>
                 {displayState.p2Cards.map((c, i) => renderCard(c, i, false))}
              </div>
           </div>
@@ -274,7 +274,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
 
           {/* Player Area */}
           <div className="flex flex-col items-center gap-4">
-             <div className="grid grid-cols-3 gap-2">
+             <div className="grid grid-cols-3 gap-2" style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}>
                 {displayState.p1Cards.map((c, i) => renderCard(c, i, true))}
              </div>
              <div className="flex items-center gap-2 text-[10px] text-ui-gray uppercase px-4 py-1 border border-ui-gray">

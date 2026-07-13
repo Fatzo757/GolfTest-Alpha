@@ -868,6 +868,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                          initial="hidden"
                          animate="visible"
                          className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center opacity-80"
+                         style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
                        >
                          {opponentCards.map((card, idx) => (
                            <div key={card.id || idx} className="relative w-full">
@@ -917,6 +918,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                          initial="hidden"
                          animate="visible"
                          className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center"
+                         style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
                        >
                          {myCards.map((card, idx) => (
                            <div 

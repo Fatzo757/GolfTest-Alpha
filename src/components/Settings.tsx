@@ -68,6 +68,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [showDate, setShowDate] = useState(!!user.show_date);
   const [showMoveDate, setShowMoveDate] = useState(!!user.show_move_date);
   const [uiScale, setUiScale] = useState(user.ui_scale || 1.0);
+  const [cardScale, setCardScale] = useState(user.card_scale || 1.0);
   const [saving, setSaving] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -156,8 +157,9 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           time_format: timeFormat,
           show_date: showDate,
           show_move_date: showMoveDate,
-          ui_scale: uiScale
-        })
+          ui_scale: uiScale,
+          card_scale: cardScale
+        }),
       });
 
       const avatarRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/avatar`, {
@@ -188,7 +190,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           time_format: timeFormat,
           show_date: showDate ? 1 : 0,
           show_move_date: showMoveDate ? 1 : 0,
-          ui_scale: uiScale
+          ui_scale: uiScale,
+          card_scale: cardScale
         });
         onClose();
       }
@@ -234,26 +237,47 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Display Scale</h3>
             </div>
-            <div className="p-4 border-2 border-ui-border flex flex-col gap-2">
-              <label className="text-[12px] font-bold text-ui-yellow uppercase">Interface Size</label>
-              <div className="bg-black/40 border-2 border-ui-border p-4 flex flex-col gap-3">
-                <div className="flex justify-between items-center text-white font-bold text-[12px]">
-                  <span className="opacity-70">50%</span>
-                  <span className="text-ui-yellow text-[14px]">{Math.round(uiScale * 100)}%</span>
-                  <span className="opacity-70">150%</span>
+            <div className="p-4 border-2 border-ui-border flex flex-col gap-4 md:gap-2 md:flex-row">
+              <div className="flex-1 flex flex-col gap-2">
+                <label className="text-[12px] font-bold text-ui-yellow uppercase">Font Size</label>
+                <div className="bg-black/40 border-2 border-ui-border p-4 flex flex-col gap-3">
+                  <div className="flex justify-between items-center text-white font-bold text-[12px]">
+                    <span className="opacity-70">50%</span>
+                    <span className="text-ui-yellow text-[14px]">{Math.round(uiScale * 100)}%</span>
+                    <span className="opacity-70">150%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="1.5"
+                    step="0.05"
+                    value={uiScale}
+                    onChange={(e) => setUiScale(parseFloat(e.target.value))}
+                    className="w-full accent-ui-yellow cursor-pointer"
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="1.5"
-                  step="0.05"
-                  value={uiScale}
-                  onChange={(e) => setUiScale(parseFloat(e.target.value))}
-                  className="w-full accent-ui-yellow cursor-pointer"
-                />
               </div>
-              <p className="text-[12px] text-gray-300">Adjust this if the interface feels too cramped or unreadable on your device.</p>
+              <div className="flex-1 flex flex-col gap-2">
+                <label className="text-[12px] font-bold text-ui-yellow uppercase">Card Size</label>
+                <div className="bg-black/40 border-2 border-ui-border p-4 flex flex-col gap-3">
+                  <div className="flex justify-between items-center text-white font-bold text-[12px]">
+                    <span className="opacity-70">50%</span>
+                    <span className="text-ui-yellow text-[14px]">{Math.round(cardScale * 100)}%</span>
+                    <span className="opacity-70">150%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="1.5"
+                    step="0.05"
+                    value={cardScale}
+                    onChange={(e) => setCardScale(parseFloat(e.target.value))}
+                    className="w-full accent-ui-yellow cursor-pointer"
+                  />
+                </div>
+              </div>
             </div>
+            <p className="text-[12px] text-gray-300">Adjust these sizes to optimize the game for your mobile device display.</p>
           </section>
 
           {/* Audio Section */}
@@ -586,7 +610,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <div className="flex flex-col items-center gap-2">
                 <div className="w-24 aspect-[3/4]">
                   <CardComponent
-                    card={{ id: 'preview-front', value: 'A', suit: 'spades', is_face_up: true, player_id: 'none', game_id: 'none' }}
+                    card={{ id: 'preview-front', value: 'A', suit: 'spades', is_face_up: true, player_id: 'none' }}
                     index={0}
                     style={cardStyle}
                     backStyle={cardBackStyle}
@@ -600,7 +624,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <div className="flex flex-col items-center gap-2">
                 <div className="w-24 aspect-[3/4]">
                   <CardComponent
-                    card={{ id: 'preview-back', value: 'A', suit: 'spades', is_face_up: false, player_id: 'none', game_id: 'none' }}
+                    card={{ id: 'preview-back', value: 'A', suit: 'spades', is_face_up: false, player_id: 'none' }}
                     index={1}
                     style={cardStyle}
                     backStyle={cardBackStyle}

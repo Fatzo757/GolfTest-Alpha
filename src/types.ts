@@ -16,6 +16,7 @@ export interface User {
   is_admin?: number;
   sound_profile?: string;
   ui_scale?: number;
+  card_scale?: number;
 }
 
 export interface Card {

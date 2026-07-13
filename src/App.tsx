@@ -103,6 +103,12 @@ export default function App() {
         document.documentElement.style.fontSize = '100%';
       }
 
+      if (user.card_scale) {
+        document.documentElement.style.setProperty('--card-scale', user.card_scale.toString());
+      } else {
+        document.documentElement.style.setProperty('--card-scale', '1');
+      }
+
       // Check URL pathname for direct game link on load
       const match = window.location.pathname.match(/^\/game\/(.+)$/);
       if (match) {

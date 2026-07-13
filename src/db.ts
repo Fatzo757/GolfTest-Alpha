@@ -40,7 +40,8 @@ db.exec(`
     is_admin INTEGER DEFAULT 0,
     ui_mode TEXT DEFAULT 'retro',
     sound_profile TEXT DEFAULT 'classic',
-    ui_scale REAL DEFAULT 1.0
+    ui_scale REAL DEFAULT 1.0,
+    card_scale REAL DEFAULT 1.0
   );
 
   CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -166,6 +167,7 @@ try {
   addColumn('users', 'card_back_secondary_color', "TEXT DEFAULT 'white'");
   addColumn('users', 'sound_profile', "TEXT DEFAULT 'classic'");
   addColumn('users', 'ui_scale', "REAL DEFAULT 1.0");
+  addColumn('users', 'card_scale', "REAL DEFAULT 1.0");
 
   // If last_active_at was just added, it might be null for existing rows.
   // We can optionally initialize it.
