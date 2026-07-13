@@ -274,171 +274,190 @@ export default function App() {
 
   return (
     <div 
-      className={`h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ui-mode-${user?.ui_mode || 'retro'}`}
+      className={`h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'}`}
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {/* Header Container */}
-      <div
-        className={`sticky top-0 z-[9000] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'}`}
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.25rem)' }}
-      >
-        <header className={`p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'}`}>
-          <div className="flex items-center gap-2 md:gap-4 relative">
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`secondary-button w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}
-            >
-              {isMenuOpen ? <X className="text-white" size={16} /> : <Menu className="text-ui-orange group-hover:text-white" size={currentGameId || replayGameId ? 12 : 16} />}
-            </button>
-            
-            {/* Dropdown Menu */}
-            {isMenuOpen && (
-              <div className="absolute top-full left-0 mt-2 w-56 md:w-64 bg-bg-dark border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] z-[9999] flex flex-col">
-                {(['lobby', 'online', 'history', 'stats', 'rules'] as const).map(view => (
-                  <button
-                    key={view}
-                    onClick={() => handleNavClick(view)}
-                    className={`px-4 py-4 md:py-5 text-xs md:text-sm uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${lobbyView === view && !currentGameId && !replayGameId ? 'text-ui-yellow bg-ui-blue/20' : 'text-text-main opacity-70 hover:opacity-100'}`}
-                  >
-                    {view === 'history' ? 'Match History' : view}
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            <div>
-              <h1 className={`text-sm md:text-xl tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out whitespace-nowrap ${currentGameId || replayGameId ? 'md:text-lg hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF CARD GAME</h1>
-              <div className="text-[8px] md:text-[10px] text-ui-gray uppercase tracking-widest whitespace-nowrap">
-                {appVersion} {(currentGameId || replayGameId) && ' • © 2026'}
-              </div>
-            </div>
-            {/* Online Status Indicator */}
-            <div className="hidden sm:flex items-center gap-1.5 ml-2 md:ml-4 border border-ui-border bg-black/40 px-2 py-1 rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
-              <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-ui-green shadow-[0_0_3px_rgba(50,255,100,0.8)] animate-[pulse_2s_ease-in-out_infinite]' : 'bg-ui-red shadow-[0_0_3px_rgba(255,50,50,0.8)]'}`}></div>
-              <span className={`text-[6px] md:text-[8px] uppercase tracking-widest ${isOnline ? 'text-ui-green' : 'text-ui-red'}`}>
-                {isOnline ? 'ONLINE' : 'OFFLINE'}
-              </span>
-            </div>
-          </div>
-          
-          {user && (
-            <div className="flex items-center gap-2 md:gap-4">
+      <div className={`absolute inset-0 z-0 flex flex-col overflow-hidden ui-mode-${user?.ui_mode || 'retro'}`}>
+        {/* CRT Scanline Overlay (Retro/Classic modes) */}
+        {(!user?.ui_mode || user.ui_mode === 'retro' || user.ui_mode === 'classic') && (
+          <div className="crt-overlay pointer-events-none fixed inset-0 z-[99999]"></div>
+        )}
+        
+        {/* Header Container */}
+        <div
+          className={`sticky top-0 z-[9000] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'}`}
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.25rem)' }}
+        >
+          <header className={`p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'}`}>
+            <div className="flex items-center gap-2 md:gap-4 relative">
               <button 
-                onClick={() => setShowSettings(true)}
-                className="secondary-button flex items-center gap-2 md:gap-4 hover:opacity-80 transition-all p-1 md:p-2 bg-black/40 border-2 border-ui-border rounded-sm group cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`secondary-button w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}
               >
-                <div className="w-6 h-6 md:w-8 md:h-8 bg-black/60 border-2 border-ui-green flex items-center justify-center group-hover:bg-ui-green group-hover:text-black transition-all">
-                  <UserAvatar type={user.avatar} size={14} />
-                </div>
-                <div className="hidden md:flex flex-col items-start text-left bg-black/20 px-2 py-1 rounded">
-                  <span className="text-[10px] text-ui-green font-bold truncate max-w-[80px]">{user.username}</span>
-                </div>
+                {isMenuOpen ? <X className="text-white" size={16} /> : <Menu className="text-ui-orange group-hover:text-white" size={currentGameId || replayGameId ? 12 : 16} />}
               </button>
               
-              <div className="flex gap-1 md:gap-2">
-                {isAdmin && (
-                  <button 
-                    onClick={() => setShowAdmin(true)}
-                    className="secondary-button p-2 md:p-3 bg-red-900 border-b-4 border-ui-red text-xs hover:bg-opacity-80 transition-all flex items-center gap-2"
-                  >
-                    <ShieldAlert size={16} className="text-white" />
-                  </button>
-                )}
-                <button 
-                  onClick={handleLogout}
-                  className="secondary-button p-2 md:p-3 bg-ui-red border-b-4 border-ui-purple text-xs hover:bg-red-600 transition-all"
-                >
-                  <LogOut size={16} />
-                </button>
+              {/* Dropdown Menu */}
+              {isMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-56 md:w-64 bg-bg-dark border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] z-[9999] flex flex-col">
+                  {(['lobby', 'online', 'history', 'stats', 'rules'] as const).map(view => (
+                    <button
+                      key={view}
+                      onClick={() => handleNavClick(view)}
+                      className={`px-4 py-4 md:py-5 text-xs md:text-sm uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${lobbyView === view && !currentGameId && !replayGameId ? 'text-ui-yellow bg-ui-blue/20' : 'text-text-main opacity-70 hover:opacity-100'}`}
+                    >
+                      {view === 'history' ? 'Match History' : view}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              <div>
+                <h1 className={`text-sm md:text-xl tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out whitespace-nowrap ${currentGameId || replayGameId ? 'md:text-lg hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF CARD GAME</h1>
+                <div className="text-[8px] md:text-[10px] text-ui-gray uppercase tracking-widest whitespace-nowrap">
+                  {appVersion} {(currentGameId || replayGameId) && ' • © 2026'}
+                </div>
+              </div>
+              {/* Online Status Indicator */}
+              <div className="hidden sm:flex items-center gap-1.5 ml-2 md:ml-4 border border-ui-border bg-black/40 px-2 py-1 rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
+                <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-ui-green shadow-[0_0_3px_rgba(50,255,100,0.8)] animate-[pulse_2s_ease-in-out_infinite]' : 'bg-ui-red shadow-[0_0_3px_rgba(255,50,50,0.8)]'}`}></div>
+                <span className={`text-[6px] md:text-[8px] uppercase tracking-widest ${isOnline ? 'text-ui-green' : 'text-ui-red'}`}>
+                  {isOnline ? 'ONLINE' : 'OFFLINE'}
+                </span>
               </div>
             </div>
+            
+            {user && (
+              <div className="flex items-center gap-2 md:gap-4">
+                <button 
+                  onClick={() => setShowSettings(true)}
+                  className="secondary-button flex items-center gap-2 md:gap-4 hover:opacity-80 transition-all p-1 md:p-2 bg-black/40 border-2 border-ui-border rounded-sm group cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
+                >
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-black/60 border-2 border-ui-green flex items-center justify-center group-hover:bg-ui-green group-hover:text-black transition-all">
+                    <UserAvatar type={user.avatar} size={14} />
+                  </div>
+                  <div className="hidden md:flex flex-col items-start text-left bg-black/20 px-2 py-1 rounded">
+                    <span className="text-[10px] text-ui-green font-bold truncate max-w-[80px]">{user.username}</span>
+                  </div>
+                </button>
+                
+                <div className="flex gap-1 md:gap-2">
+                  {isAdmin && (
+                    <button 
+                      onClick={() => setShowAdmin(true)}
+                      className="secondary-button p-2 md:p-3 bg-red-900 border-b-4 border-ui-red text-xs hover:bg-opacity-80 transition-all flex items-center gap-2"
+                    >
+                      <ShieldAlert size={16} className="text-white" />
+                    </button>
+                  )}
+                  <button 
+                    onClick={handleLogout}
+                    className="secondary-button p-2 md:p-3 bg-ui-red border-b-4 border-ui-purple text-xs hover:bg-red-600 transition-all"
+                  >
+                    <LogOut size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </header>
+        </div>
+
+        <AnimatePresence>
+          {pushToast && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              onClick={() => {
+                 const urlObj = new URL(pushToast.url, window.location.origin);
+                 const match = urlObj.pathname.match(/^\/game\/(.+)$/);
+                 if (match) setCurrentGameId(match[1]);
+                 setPushToast(null);
+              }}
+              className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-bg-dark border-2 border-ui-green text-ui-green shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm"
+            >
+              <div className="flex justify-between items-center">
+                <span className="text-[12px] uppercase font-bold">{pushToast.title}</span>
+                <button onClick={(e) => { e.stopPropagation(); setPushToast(null); }} className="text-[12px] hover:opacity-70">✕</button>
+              </div>
+              <span className="text-[10px] opacity-80">{pushToast.body}</span>
+            </motion.div>
           )}
-        </header>
+
+          {swUpdateAvailable && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-ui-blue border-2 border-ui-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-4 w-11/12 max-w-sm"
+            >
+               <span className="text-[10px] text-white uppercase font-bold">New update available!</span>
+               <button 
+                 onClick={() => window.location.reload()}
+                 className="px-3 py-2 bg-ui-yellow text-bg-dark text-[10px] font-bold uppercase hover:bg-white transition-all"
+               >
+                 Refresh
+               </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <main className={`flex-1 overflow-y-auto w-full ${currentGameId || replayGameId ? 'max-w-7xl pb-4' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500`}>
+          <AnimatePresence mode="wait">
+            {!user ? (
+              <motion.div key="auth" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="h-full">
+                <Auth onLogin={handleLogin} />
+              </motion.div>
+            ) : currentGameId ? (
+              <motion.div key="game" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="h-full">
+                <Game 
+                  gameId={currentGameId} 
+                  token={token!} 
+                  user={user} 
+                  onExit={() => setCurrentGameId(null)} 
+                  onRematch={setCurrentGameId}
+                />
+              </motion.div>
+            ) : replayGameId ? (
+              <motion.div key="replay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
+                <Replay 
+                  gameId={replayGameId} 
+                  token={token!} 
+                  user={user}
+                  onExit={() => setReplayGameId(null)} 
+                />
+              </motion.div>
+            ) : (
+              <motion.div key="lobby" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full">
+                <Lobby 
+                  token={token!} 
+                  user={user}
+                  onJoinGame={setCurrentGameId} 
+                  onViewReplay={setReplayGameId}
+                  currentView={lobbyView}
+                  onViewChange={setLobbyView}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Integrated Footer to reduce scroll depth */}
+          {!(currentGameId || replayGameId) && (
+            <div className="mt-12 text-[10px] text-center text-neutral-500/40 uppercase tracking-widest">
+              © 2026 GOLF CARD GAME - {appVersion}
+            </div>
+          )}
+        </main>
       </div>
 
-      <AnimatePresence>
-        {pushToast && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            onClick={() => {
-               const urlObj = new URL(pushToast.url, window.location.origin);
-               const match = urlObj.pathname.match(/^\/game\/(.+)$/);
-               if (match) setCurrentGameId(match[1]);
-               setPushToast(null);
-            }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-bg-dark border-2 border-ui-green text-ui-green shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm"
-          >
-            <div className="flex justify-between items-center">
-              <span className="text-[12px] uppercase font-bold">{pushToast.title}</span>
-              <button onClick={(e) => { e.stopPropagation(); setPushToast(null); }} className="text-[12px] hover:opacity-70">✕</button>
-            </div>
-            <span className="text-[10px] opacity-80">{pushToast.body}</span>
-          </motion.div>
-        )}
-
-        {swUpdateAvailable && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-ui-blue border-2 border-ui-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-4 w-11/12 max-w-sm"
-          >
-             <span className="text-[10px] text-white uppercase font-bold">New update available!</span>
-             <button 
-               onClick={() => window.location.reload()}
-               className="px-3 py-2 bg-ui-yellow text-bg-dark text-[10px] font-bold uppercase hover:bg-white transition-all"
-             >
-               Refresh
-             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <main className={`flex-1 overflow-y-auto w-full ${currentGameId || replayGameId ? 'max-w-7xl pb-4' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500`}>
-        {!user ? (
-          <Auth onLogin={handleLogin} />
-        ) : currentGameId ? (
-          <Game 
-            gameId={currentGameId} 
-            token={token!} 
-            user={user} 
-            onExit={() => setCurrentGameId(null)} 
-            onRematch={setCurrentGameId}
-          />
-        ) : replayGameId ? (
-          <Replay 
-            gameId={replayGameId} 
-            token={token!} 
-            user={user}
-            onExit={() => setReplayGameId(null)} 
-          />
-        ) : (
-          <Lobby 
-            token={token!} 
-            user={user}
-            onJoinGame={setCurrentGameId} 
-            onViewReplay={setReplayGameId}
-            currentView={lobbyView}
-            onViewChange={setLobbyView}
-          />
-        )}
-
-        {/* Integrated Footer to reduce scroll depth */}
-        {!(currentGameId || replayGameId) && (
-          <div className="mt-12 text-[10px] text-center text-neutral-500/40 uppercase tracking-widest">
-            © 2026 GOLF CARD GAME - {appVersion}
-          </div>
-        )}
-      </main>
-
       {showSettings && user && (
-        <Settings 
-          user={user} 
-          token={token!} 
-          onUpdate={setUser} 
-          onClose={() => setShowSettings(false)} 
-        />
+        <div className="relative z-[99999]">
+          <Settings 
+            user={user} 
+            token={token!} 
+            onUpdate={setUser} 
+            onClose={() => setShowSettings(false)} 
+          />
+        </div>
       )}
 
       {showAdmin && user && isAdmin && (

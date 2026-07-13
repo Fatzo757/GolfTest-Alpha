@@ -53,6 +53,7 @@ const TIMEZONES = [
 ];
 
 export default function Settings({ user, token, onUpdate, onClose }: SettingsProps) {
+  const [activeTab, setActiveTab] = useState<'display' | 'audio' | 'preferences' | 'account'>('display');
   const [theme, setTheme] = useState(user.theme || 'default');
   const [uiMode, setUiMode] = useState(user.ui_mode || 'retro');
   const [cardStyle, setCardStyle] = useState(user.card_style || 'classic');
@@ -213,9 +214,9 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className={`w-full max-w-2xl bg-bg-dark border-4 border-ui-border shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden flex flex-col max-h-[90vh] theme-${theme}`}
+        className={`w-full max-w-2xl bg-bg-dark border-4 border-ui-border shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden flex flex-col max-h-[90vh] theme-${user.theme || 'default'}`}
       >
-        <div className="p-6 border-b-4 border-ui-border flex justify-between items-center bg-ui-blue flex-shrink-0">
+        <div className={`p-6 border-b-4 border-ui-border flex justify-between items-center bg-ui-blue flex-shrink-0 ui-mode-${user.ui_mode || 'retro'}`}>
           <div className="flex items-center gap-3">
             <Palette className="text-ui-yellow" size={20} />
             <h2 className="text-sm font-bold text-ui-yellow uppercase tracking-widest">System Settings</h2>
@@ -225,12 +226,23 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           </button>
         </div>
 
+        <div className={`flex border-b-4 border-ui-border bg-bg-dark flex-shrink-0 sticky top-0 z-10 ui-mode-${user.ui_mode || 'retro'}`}>
+          {(['display', 'audio', 'preferences', 'account'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-4 text-[10px] md:text-[12px] uppercase font-bold border-b-4 transition-all ${activeTab === tab ? 'border-ui-yellow text-ui-yellow bg-ui-yellow/5' : 'border-transparent text-ui-gray hover:text-white'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
         <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-grow relative">
           {statusMsg && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`p-4 border-2 mb-6 flex justify-between items-center ${statusMsg.type === 'success' ? 'bg-ui-green/10 border-ui-green text-ui-green' : 'bg-ui-red/10 border-ui-red text-ui-red'}`}
+              className={`p-4 border-2 mb-6 flex justify-between items-center ui-mode-${user.ui_mode || 'retro'} ${statusMsg.type === 'success' ? 'bg-ui-green/10 border-ui-green text-ui-green' : 'bg-ui-red/10 border-ui-red text-ui-red'}`}
             >
               <span className="text-[12px] uppercase font-bold">{statusMsg.text}</span>
               <button onClick={() => setStatusMsg(null)} className="text-[12px]">✕</button>
@@ -238,7 +250,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           )}
 
           {/* Display Settings */}
-          <section className="space-y-4">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Display Scale</h3>
@@ -285,9 +298,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             </div>
             <p className="text-[12px] text-gray-300">Adjust these sizes to optimize the game for your mobile device display.</p>
           </section>
+          )}
 
           {/* Audio Section */}
-          <section className="space-y-4">
+          {activeTab === 'audio' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Volume2 size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Audio Control</h3>
@@ -359,9 +374,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </div>
             </div>
           </section>
+          )}
 
           {/* Time & Locale Section */}
-          <section className="space-y-4">
+          {activeTab === 'preferences' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Clock size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Time & Regional</h3>
@@ -423,9 +440,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <Check size={16} className={showMoveDate ? 'text-ui-yellow opacity-100' : 'opacity-0'} />
             </button>
           </section>
+          )}
 
           {/* Theme Section */}
-          <section className="space-y-4">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Palette size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Visual Theme</h3>
@@ -452,9 +471,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               ))}
             </div>
           </section>
+          )}
 
           {/* UI Mode Section */}
-          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Layout Style</h3>
@@ -497,10 +518,26 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 {uiMode === 'modern_win32' && <Check size={16} className="text-ui-blue mt-2" />}
               </button>
             </div>
+
+            <div className="mt-6 border-2 border-ui-border p-4 bg-black/20">
+              <h4 className="text-[10px] text-ui-gray uppercase font-bold tracking-widest mb-4">Live Preview</h4>
+              <div className={`p-8 border-4 border-ui-border flex flex-col items-center justify-center transition-all min-h-[200px] bg-bg-dark text-text-main font-press-start ui-mode-${uiMode} theme-${theme}`}>
+                <div className="geometric-card w-full max-w-sm p-6 text-center shadow-lg">
+                  <div className="geometric-border mb-6 p-4 bg-bg-dark/30">
+                    <span className="text-[12px] font-bold uppercase text-text-main">Component Preview</span>
+                  </div>
+                  <button className="geometric-button w-full py-4 text-[12px] font-bold flex items-center justify-center gap-2">
+                    <Check size={14} /> Interactive Element
+                  </button>
+                </div>
+              </div>
+            </div>
           </section>
+          )}
 
           {/* Card Graphics Section */}
-          <section className="space-y-4">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Graphics</h3>
@@ -524,9 +561,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               ))}
             </div>
           </section>
+          )}
 
           {/* Card Back Pattern Section */}
-          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Back Pattern</h3>
@@ -547,9 +586,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               ))}
             </div>
           </section>
+          )}
 
           {/* Card Back Color Section */}
-          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Palette size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Back Color</h3>
@@ -575,9 +616,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               ))}
             </div>
           </section>
+          )}
 
           {/* Card Back Secondary Color Section */}
-          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Palette size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Pattern Color</h3>
@@ -605,9 +648,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               ))}
             </div>
           </section>
+          )}
 
           {/* Card Preview Section */}
-          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+          {activeTab === 'display' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Layers size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Preview</h3>
@@ -643,9 +688,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </div>
             </div>
           </section>
+          )}
 
           {/* Avatar Section */}
-          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+          {activeTab === 'account' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <UserIcon size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Player Icon</h3>
@@ -664,17 +711,21 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               ))}
             </div>
           </section>
+          )}
 
           {/* Security Section */}
-          <section className="space-y-4 pt-4 border-t border-ui-border/20">
+          {activeTab === 'account' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <Key size={14} className="text-ui-gray" />
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Security</h3>
             </div>
           </section>
+          )}
 
           {/* Notifications Section */}
-          <section className="space-y-4">
+          {activeTab === 'preferences' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
               <span className="text-ui-gray text-[14px]">🔔</span>
               <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Push Notifications</h3>
@@ -728,9 +779,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </button>
             </div>
           </section>
+          )}
 
           {/* Password Change Section */}
-          <section className="space-y-4">
+          {activeTab === 'account' && (
+          <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             {!showPasswordChange ? (
               <button
                 onClick={() => setShowPasswordChange(true)}
@@ -800,9 +853,11 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </form>
             )}
           </section>
+          )}
 
           {/* Danger Zone */}
-          <section className="pt-8 border-t-2 border-ui-red/20 space-y-4">
+          {activeTab === 'account' && (
+          <section className={`pt-8 border-t-2 border-ui-red/20 space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="text-[12px] text-ui-red uppercase font-bold tracking-widest">Danger Zone</div>
 
             {!showConfirmReset ? (
@@ -859,9 +914,10 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </div>
             )}
           </section>
+          )}
         </div>
 
-        <div className="p-6 border-t-4 border-ui-border bg-bg-dark flex gap-4 flex-shrink-0">
+        <div className={`p-6 border-t-4 border-ui-border bg-bg-dark flex gap-4 flex-shrink-0 ui-mode-${user.ui_mode || 'retro'}`}>
           <button
             onClick={saveSettings}
             disabled={saving}

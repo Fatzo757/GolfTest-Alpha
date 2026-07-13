@@ -305,9 +305,12 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {activeMatches.map((game) => (
+        {activeMatches.map((game, index) => (
           <motion.div 
             key={game.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
             whileHover={{ scale: 1.01 }}
             className="theme-panel p-4 border-2 border-ui-green bg-bg-dark flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 h-full"
           >
@@ -431,7 +434,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
       {activeMatches.length > 0 && activeMatchesSection}
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {confirmClearAction && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -465,7 +468,9 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
             </div>
           </motion.div>
         )}
+      </AnimatePresence>
 
+      <AnimatePresence mode="wait">
         {currentView === 'lobby' ? (
           <motion.div 
             key="lobby"
@@ -574,9 +579,12 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {joinableGames.map((game) => (
+                  {joinableGames.map((game, index) => (
                     <motion.div 
                       key={game.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
                       whileHover={{ scale: 1.02 }}
                       className="theme-panel p-4 border-2 border-ui-yellow bg-bg-dark flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full group"
                     >
@@ -640,12 +648,22 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {searchQuery.length >= 2 ? (
                   searchResults.length === 0 ? (
-                    <div className="col-span-full py-8 text-center text-[12px] uppercase text-ui-gray opacity-40 italic tracking-widest">
-                      No users found matching "{searchQuery}"
+                    <div className="col-span-full py-12 geometric-border text-center flex flex-col items-center justify-center">
+                      <motion.div 
+                        animate={{ rotate: [0, 10, -10, 0] }} 
+                        transition={{ repeat: Infinity, duration: 2 }}
+                        className="w-16 h-16 border-4 border-ui-gray border-dashed flex items-center justify-center mb-6"
+                      >
+                        <Search className="text-ui-gray opacity-50" size={24} />
+                      </motion.div>
+                      <div className="text-[12px] uppercase text-ui-gray opacity-40 italic tracking-widest font-bold">
+                        No users found matching "{searchQuery}"
+                      </div>
                     </div>
                   ) : (
-                    searchResults.map((u) => (
+                    searchResults.map((u, index) => (
                       <PlayerCard 
+                        delay={index * 0.05}
                         key={u.id} 
                         u={u} 
                         onInvite={inviteUser} 
@@ -654,12 +672,25 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     ))
                   )
                 ) : onlineUsers.length === 0 ? (
-                  <div className="col-span-full py-8 text-center text-[12px] uppercase text-ui-gray opacity-40 italic tracking-widest">
-                    No other players currently online. Use search to find friends.
+                  <div className="col-span-full py-12 geometric-border text-center flex flex-col items-center justify-center">
+                    <motion.div 
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }} 
+                      transition={{ repeat: Infinity, duration: 3 }}
+                      className="w-16 h-16 border-4 border-ui-gray border-dashed rounded-full flex items-center justify-center mb-6"
+                    >
+                      <Users className="text-ui-gray opacity-50" size={24} />
+                    </motion.div>
+                    <div className="text-[12px] uppercase text-ui-gray opacity-40 italic tracking-widest font-bold">
+                      No other players currently online
+                    </div>
+                    <div className="text-[9px] uppercase text-ui-gray opacity-30 tracking-widest mt-2">
+                      Use search to find friends
+                    </div>
                   </div>
                 ) : (
-                  onlineUsers.map((u) => (
+                  onlineUsers.map((u, index) => (
                     <PlayerCard 
+                      delay={index * 0.05}
                       key={u.id} 
                       u={u} 
                       onInvite={inviteUser} 
@@ -699,14 +730,26 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
             </div>
 
             {history.length === 0 ? (
-              <div className="p-12 geometric-border text-center text-ui-gray opacity-40 text-[12px]">
-                NO MATCHES FOUND IN MEMORY
+              <div className="p-12 geometric-border text-center flex flex-col items-center justify-center min-h-[300px]">
+                <motion.div 
+                  animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }} 
+                  transition={{ repeat: Infinity, duration: 3 }}
+                  className="w-16 h-16 border-4 border-ui-gray border-dashed rounded-full flex items-center justify-center mb-6"
+                >
+                  <History className="text-ui-gray opacity-50" size={24} />
+                </motion.div>
+                <div className="text-ui-gray opacity-60 text-[12px] tracking-widest uppercase font-bold">
+                  NO MATCHES FOUND IN MEMORY
+                </div>
               </div>
             ) : (
               <div className="grid gap-4">
-                {history.map((game) => (
+                {history.map((game, index) => (
                   <motion.div 
                     key={game.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     whileHover={{ scale: 1.01 }}
                     className="p-6 geometric-border bg-ui-blue/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 h-full group"
                   >
@@ -867,11 +910,14 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
   );
 }
 
-const PlayerCard: React.FC<{ u: any, onInvite: (id: string) => any, isLoading: boolean }> = ({ u, onInvite, isLoading }) => {
+const PlayerCard: React.FC<{ u: any, onInvite: (id: string) => any, isLoading: boolean, delay?: number }> = ({ u, onInvite, isLoading, delay = 0 }) => {
   const isOnline = u.last_active_at && (new Date().getTime() - new Date(u.last_active_at).getTime() < 5 * 60 * 1000);
 
   return (
     <motion.div 
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay }}
       whileHover={{ scale: 1.02 }}
       className="p-3 border-2 border-ui-border bg-bg-dark flex items-center justify-between h-full"
     >
