@@ -1429,6 +1429,26 @@ async function startServer() {
   });
 
   // --- Admin Routes ---
+  app.get("/api/admin/summary", authenticate, isAdmin, (req, res) => {
+    try {
+      const users = (db.prepare("SELECT COUNT(*) as c FROM users").get() as any).c;
+      const games = (db.prepare("SELECT COUNT(*) as c FROM games").get() as any).c;
+      const activeGames = (db.prepare("SELECT COUNT(*) as c FROM games WHERE status = 'active'").get() as any).c;
+      const messages = (db.prepare("SELECT COUNT(*) as c FROM messages").get() as any).c;
+      
+      res.json({
+        users,
+        games,
+        activeGames,
+        messages,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      console.error("Admin summary error:", err);
+      res.status(500).json({ error: "Failed to fetch summary" });
+    }
+  });
+
   app.put("/api/admin/settings", authenticate, isAdmin, (req, res) => {
     const { key, value } = req.body;
     if (!key || typeof value !== 'string') {
