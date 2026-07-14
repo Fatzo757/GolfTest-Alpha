@@ -316,7 +316,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
           >
             <div className="flex flex-col gap-2">
               <div className="text-[11px] uppercase font-bold flex items-center gap-2">
-                <span className="text-ui-gray">VS</span>
+                <span className="opacity-70">VS</span>
                 <div className="flex items-center gap-2">
                   <span className="text-ui-green truncate max-w-[150px]">
                     {game.player1_id === user.id ? (game.player2_name || (game.is_vs_cpu ? 'CPU' : 'WAITING ROOM')) : (game.player1_name || 'OPPONENT')}
@@ -346,7 +346,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     </span>
                   )}
               </div>
-              <div className="text-[9px] text-ui-gray uppercase flex font-mono bg-transparent">
+              <div className="text-[9px] opacity-70 uppercase flex font-mono bg-transparent">
                   Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
               </div>
             </div>
