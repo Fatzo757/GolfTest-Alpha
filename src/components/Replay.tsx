@@ -226,7 +226,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
           <Clock className="text-ui-yellow" />
           <div>
             <h2 className="text-sm font-bold text-ui-yellow uppercase tracking-widest">Match Record: {gameId.substring(0,8)}</h2>
-            <div className="text-[10px] text-ui-gray uppercase flex items-center gap-1">
+            <div className="text-xs text-ui-gray uppercase flex items-center gap-1">
               <div className="w-3 h-3 flex items-center justify-center opacity-60">
                  <UserAvatar type={gameData.player1_avatar} size={10} />
               </div>
@@ -239,7 +239,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
             </div>
           </div>
         </div>
-        <button onClick={onExit} className="secondary-button p-2 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all flex items-center justify-center">
+        <button onClick={onExit} className="secondary-button p-3 bg-bg-dark border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all flex items-center justify-center">
           <X size={20} />
         </button>
       </div>
@@ -248,7 +248,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
         <div className="space-y-12 bg-black/20 p-8 geometric-border">
           {/* Opponent Area */}
           <div className="flex flex-col items-center gap-4">
-             <div className="flex items-center gap-2 text-[10px] text-ui-gray uppercase px-4 py-1 border border-ui-gray">
+             <div className="flex items-center gap-2 text-xs text-ui-gray uppercase px-4 py-2 border border-ui-gray">
                 <div className="w-3 h-3 flex items-center justify-center opacity-70">
                    <UserAvatar type={gameData.player2_avatar} size={10} />
                 </div>
@@ -263,7 +263,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
           {/* Central Discard Pile */}
           <div className="flex justify-center">
             <div className="relative">
-              <div className="absolute -left-12 top-1/2 -translate-y-1/2 text-[12px] text-ui-yellow font-bold uppercase rotate-90 origin-center whitespace-nowrap opacity-50 tracking-widest">Discard Pile</div>
+              <div className="absolute -left-12 top-1/2 -translate-y-1/2 text-xs text-ui-yellow font-bold uppercase rotate-90 origin-center whitespace-nowrap opacity-50 tracking-widest">Discard Pile</div>
               {displayState.discard.length > 0 ? renderCard(displayState.discard[displayState.discard.length - 1], 999) : (
                 <div className="w-20 h-28 border-2 border-dashed border-black flex items-center justify-center opacity-40">
                   <X />
@@ -277,7 +277,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
              <div className="grid grid-cols-3 gap-2" style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}>
                 {displayState.p1Cards.map((c, i) => renderCard(c, i, true))}
              </div>
-             <div className="flex items-center gap-2 text-[10px] text-ui-gray uppercase px-4 py-1 border border-ui-gray">
+             <div className="flex items-center gap-2 text-xs text-ui-gray uppercase px-4 py-2 border border-ui-gray">
                 <div className="w-3 h-3 flex items-center justify-center opacity-70">
                    <UserAvatar type={gameData.player1_avatar} size={10} />
                 </div>
@@ -290,14 +290,14 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
         {/* Playback Controls */}
         <div className="space-y-6">
           <div className="p-6 bg-bg-dark border-4 border-ui-border space-y-6">
-            <div className="text-[12px] text-ui-yellow uppercase font-bold border-b border-ui-yellow/20 pb-2 flex justify-between">
+            <div className="text-xs text-ui-yellow uppercase font-bold border-b border-ui-yellow/20 pb-2 flex justify-between">
               <span>Playback Status</span>
               <span>{Math.max(0, currentIdx + 1)} / {moves.length}</span>
             </div>
             
             <div className="h-24 bg-black/40 p-4 border-2 border-ui-border flex flex-col justify-center">
-              <div className="text-[10px] text-ui-orange uppercase font-bold mb-2">Last Action:</div>
-              <div className="text-[12px] text-white uppercase leading-tight italic">
+              <div className="text-xs text-ui-orange uppercase font-bold mb-2">Last Action:</div>
+              <div className="text-xs text-white uppercase leading-tight italic">
                 {displayState.lastMove}
               </div>
             </div>
@@ -305,13 +305,13 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
             <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={() => setCurrentIdx(prev => Math.max(-1, prev - 1))}
-                className="geometric-button py-3 text-[10px] uppercase flex items-center justify-center gap-2"
+                className="geometric-button py-3 px-2 text-xs uppercase flex items-center justify-center gap-2"
               >
                 <ChevronLeft size={14} /> Back
               </button>
               <button 
                 onClick={() => setCurrentIdx(prev => Math.min(moves.length - 1, prev + 1))}
-                className="geometric-button py-3 text-[10px] uppercase flex items-center justify-center gap-2"
+                className="geometric-button py-3 px-2 text-xs uppercase flex items-center justify-center gap-2"
               >
                 Next <ChevronRight size={14} />
               </button>
@@ -319,7 +319,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
 
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
-              className={`w-full py-4 text-[12px] uppercase font-bold border-4 transition-all flex items-center justify-center gap-3 ${
+              className={`w-full py-4 text-xs uppercase font-bold border-4 transition-all flex items-center justify-center gap-3 ${
                 isPlaying ? 'border-ui-orange text-ui-orange bg-ui-orange/10' : 'border-ui-green text-ui-green bg-ui-green/10'
               }`}
             >
@@ -332,7 +332,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
                 <button
                   key={speed}
                   onClick={() => setPlaybackSpeed(speed as 1 | 2 | 4)}
-                  className={`py-2 text-[10px] uppercase font-bold border-2 transition-all flex items-center justify-center gap-1 ${
+                  className={`py-3 text-xs uppercase font-bold border-2 transition-all flex items-center justify-center gap-1 ${
                     playbackSpeed === speed ? 'border-ui-yellow text-ui-yellow bg-ui-yellow/10' : 'border-ui-border text-ui-gray hover:bg-white/5'
                   }`}
                 >

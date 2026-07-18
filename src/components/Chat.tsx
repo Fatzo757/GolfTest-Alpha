@@ -148,11 +148,11 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-80 bg-bg-dark border-l-4 border-ui-border z-[10000] flex flex-col shadow-2xl"
+            className="fixed bottom-0 right-0 h-[85vh] sm:h-full w-full sm:w-80 bg-bg-dark border-t-4 sm:border-t-0 sm:border-l-4 border-ui-border z-[10000] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)] rounded-t-2xl sm:rounded-none"
           >
             {/* Chat Header */}
             <div className="p-4 border-b-2 border-ui-border flex justify-between items-center bg-ui-blue/10">
@@ -225,26 +225,36 @@ export function Chat({ gameId, userId, user, token }: ChatProps) {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 min-w-0 bg-bg-dark border-2 border-ui-border p-2 text-xs focus:border-ui-yellow outline-none"
+                  className="flex-1 min-w-0 bg-bg-dark border-2 border-ui-border p-3 text-xs focus:border-ui-yellow outline-none"
                 />
                 <button
                   type="submit"
                   disabled={loading || !newMessage.trim() || cooldown > 0}
-                  className="bg-ui-yellow text-bg-dark p-2 border-2 border-black shrink-0 disabled:opacity-50 relative group"
+                  className="bg-ui-yellow text-bg-dark p-3 border-2 border-black shrink-0 disabled:opacity-50 relative group flex items-center justify-center"
                 >
                   {cooldown > 0 ? (
-                    <span className="text-[12px] font-bold">{cooldown}s</span>
+                    <span className="text-xs font-bold">{cooldown}s</span>
                   ) : (
-                    <Send size={16} />
+                    <Send size={18} />
                   )}
                   {cooldown > 0 && (
-                    <div className="absolute -top-8 right-0 bg-ui-red text-white text-[9px] px-1.5 py-0.5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold">
+                    <div className="absolute -top-8 right-0 bg-ui-red text-white text-[10px] px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity font-bold border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                       Wait {cooldown}s
                     </div>
                   )}
                 </button>
               </div>
             </form>
+            
+            {/* Bottom Close Button */}
+            <div className="p-4 bg-bg-dark border-t-2 border-ui-border pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-full secondary-button py-3 text-xs uppercase font-bold border-2 border-ui-red text-ui-red hover:bg-ui-red hover:text-white transition-all flex items-center justify-center gap-2"
+              >
+                <X size={16} /> Close Chat
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

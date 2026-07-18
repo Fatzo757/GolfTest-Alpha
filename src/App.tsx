@@ -249,7 +249,7 @@ export default function App() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-4">
         <div className="animate-pulse text-ui-yellow mb-4">LOADING...</div>
-        <div className="text-[8px] text-ui-gray uppercase tracking-widest">Verifying Sector Integrity</div>
+        <div className="text-xs text-ui-gray uppercase tracking-widest">Verifying Sector Integrity</div>
       </div>
     );
   }
@@ -260,10 +260,10 @@ export default function App() {
         <div className="p-8 geometric-border border-ui-red max-w-md w-full">
            <ShieldAlert className="mx-auto text-ui-red mb-6" size={48} />
            <h2 className="text-sm text-ui-red font-bold mb-4 uppercase">System Error</h2>
-           <p className="text-[8px] text-ui-gray leading-loose mb-8 uppercase tracking-tighter">{error}</p>
+           <p className="text-xs text-ui-gray leading-loose mb-8 uppercase tracking-tighter">{error}</p>
            <button 
              onClick={() => window.location.reload()}
-             className="geometric-button text-[10px] w-full"
+             className="geometric-button text-xs w-full"
            >
              REBOOT SYSTEM
            </button>
@@ -292,7 +292,7 @@ export default function App() {
             <div className="flex items-center gap-2 md:gap-4 relative">
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`secondary-button w-8 h-8 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}
+                className={`secondary-button w-11 h-11 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''}`}
               >
                 {isMenuOpen ? <X className="text-white" size={16} /> : <Menu className="text-ui-orange group-hover:text-white" size={currentGameId || replayGameId ? 12 : 16} />}
               </button>
@@ -314,14 +314,14 @@ export default function App() {
               
               <div>
                 <h1 className={`text-sm md:text-xl tracking-tighter text-ui-yellow mb-0.5 md:mb-1 font-bold italic transition-all duration-300 ease-in-out whitespace-nowrap ${currentGameId || replayGameId ? 'md:text-lg hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,205,117,0.8)] cursor-default hover:text-white' : ''}`}>GOLF CARD GAME</h1>
-                <div className="text-[8px] md:text-[10px] text-ui-gray uppercase tracking-widest whitespace-nowrap">
+                <div className="text-xs text-ui-gray uppercase tracking-widest whitespace-nowrap">
                   {appVersion} {(currentGameId || replayGameId) && ' • © 2026'}
                 </div>
               </div>
               {/* Online Status Indicator */}
               <div className="hidden sm:flex items-center gap-1.5 ml-2 md:ml-4 border border-ui-border bg-black/40 px-2 py-1 rounded-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
                 <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-ui-green shadow-[0_0_3px_rgba(50,255,100,0.8)] animate-[pulse_2s_ease-in-out_infinite]' : 'bg-ui-red shadow-[0_0_3px_rgba(255,50,50,0.8)]'}`}></div>
-                <span className={`text-[6px] md:text-[8px] uppercase tracking-widest ${isOnline ? 'text-ui-green' : 'text-ui-red'}`}>
+                <span className={`text-[10px] md:text-xs uppercase tracking-widest ${isOnline ? 'text-ui-green' : 'text-ui-red'}`}>
                   {isOnline ? 'ONLINE' : 'OFFLINE'}
                 </span>
               </div>
@@ -337,7 +337,7 @@ export default function App() {
                     <UserAvatar type={user.avatar} size={14} />
                   </div>
                   <div className="hidden md:flex flex-col items-start text-left bg-black/20 px-2 py-1 rounded">
-                    <span className="text-[10px] text-ui-green font-bold truncate max-w-[80px]">{user.username}</span>
+                    <span className="text-xs text-ui-green font-bold truncate max-w-[80px]">{user.username}</span>
                   </div>
                 </button>
                 
@@ -377,10 +377,10 @@ export default function App() {
               className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-bg-dark border-2 border-ui-green text-ui-green shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm"
             >
               <div className="flex justify-between items-center">
-                <span className="text-[12px] uppercase font-bold">{pushToast.title}</span>
-                <button onClick={(e) => { e.stopPropagation(); setPushToast(null); }} className="text-[12px] hover:opacity-70">✕</button>
+                <span className="text-xs uppercase font-bold">{pushToast.title}</span>
+                <button onClick={(e) => { e.stopPropagation(); setPushToast(null); }} className="text-xs hover:opacity-70">✕</button>
               </div>
-              <span className="text-[10px] opacity-80">{pushToast.body}</span>
+              <span className="text-xs opacity-80">{pushToast.body}</span>
             </motion.div>
           )}
 
@@ -390,10 +390,10 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-ui-blue border-2 border-ui-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-between gap-4 w-11/12 max-w-sm"
             >
-               <span className="text-[10px] text-white uppercase font-bold">New update available!</span>
+               <span className="text-xs text-white uppercase font-bold">New update available!</span>
                <button 
                  onClick={() => window.location.reload()}
-                 className="px-3 py-2 bg-ui-yellow text-bg-dark text-[10px] font-bold uppercase hover:bg-white transition-all"
+                 className="px-3 py-2 bg-ui-yellow text-bg-dark text-xs font-bold uppercase hover:bg-white transition-all"
                >
                  Refresh
                </button>
@@ -442,7 +442,7 @@ export default function App() {
 
           {/* Integrated Footer to reduce scroll depth */}
           {!(currentGameId || replayGameId) && (
-            <div className="mt-12 text-[10px] text-center text-neutral-500/40 uppercase tracking-widest">
+            <div className="mt-12 text-xs text-center text-neutral-500/40 uppercase tracking-widest">
               © 2026 GOLF CARD GAME - {appVersion}
             </div>
           )}
