@@ -274,10 +274,10 @@ export default function App() {
 
   return (
     <div 
-      className={`w-full flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ${currentGameId || replayGameId ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh] overflow-x-hidden'}`}
+      className={`w-full flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ${currentGameId || replayGameId ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh] overflow-x-hidden relative'}`}
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className={`absolute inset-0 z-0 flex flex-col overflow-hidden pointer-events-none ui-mode-${user?.ui_mode || 'retro'}`}>
+      <div className={`flex flex-col flex-1 z-0 ui-mode-${user?.ui_mode || 'retro'} ${currentGameId || replayGameId ? 'absolute inset-0 overflow-hidden' : 'relative'}`}>
         {/* CRT Scanline Overlay (Retro/Classic modes) */}
         {(!user?.ui_mode || user.ui_mode === 'retro' || user.ui_mode === 'classic') && (
           <div className="crt-overlay pointer-events-none fixed inset-0 z-[99999]"></div>
