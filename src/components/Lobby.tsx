@@ -312,7 +312,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             whileHover={{ scale: 1.01 }}
-            className="theme-panel p-4 border-2 border-ui-green bg-[#111111] flex flex-col justify-between gap-4 h-full"
+            className="theme-panel p-4 border-2 border-ui-green bg-[#111111] flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 h-full"
           >
             <div className="flex flex-col gap-2">
               <div className="text-xs uppercase font-bold flex items-center gap-2">
@@ -350,14 +350,14 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                   Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
               </div>
             </div>
-            <div className="w-full mt-2">
+            <div className="w-full xl:w-auto mt-2 xl:mt-0 xl:min-w-[280px]">
               <AnimatePresence mode="wait">
                 {confirmDeleteId === game.id ? (
                   <motion.div 
                     key="confirm"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col sm:flex-row gap-2 w-full"
+                    className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto"
                   >
                     <button
                       onClick={() => abandonGame(game.id)}
@@ -377,7 +377,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     key="actions"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex flex-col sm:flex-row gap-2 w-full"
+                    className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto"
                   >
                     <button
                       onClick={() => setConfirmDeleteId(game.id)}
