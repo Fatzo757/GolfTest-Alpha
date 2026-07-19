@@ -73,6 +73,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [uiScale, setUiScale] = useState(user.ui_scale || 1.0);
   const [cardScale, setCardScale] = useState(user.card_scale || 1.0);
   const [scanlinesEnabled, setScanlinesEnabled] = useState(user.scanlines_enabled !== 0);
+  const [showCardPoints, setShowCardPoints] = useState(user.show_card_points !== 0);
   const [saving, setSaving] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -165,7 +166,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           push_turn_reminders: pushTurnReminders,
           ui_scale: uiScale,
           card_scale: cardScale,
-          scanlines_enabled: scanlinesEnabled ? 1 : 0
+          scanlines_enabled: scanlinesEnabled ? 1 : 0,
+          show_card_points: showCardPoints ? 1 : 0
         }),
       });
 
@@ -201,7 +203,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           push_turn_reminders: pushTurnReminders ? 1 : 0,
           ui_scale: uiScale,
           card_scale: cardScale,
-          scanlines_enabled: scanlinesEnabled ? 1 : 0
+          scanlines_enabled: scanlinesEnabled ? 1 : 0,
+          show_card_points: showCardPoints ? 1 : 0
         });
         onClose();
       }
@@ -234,7 +237,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-4 text-xs uppercase font-bold border-b-4 transition-all ${activeTab === tab ? 'border-ui-yellow text-ui-yellow bg-ui-yellow/5' : 'border-transparent text-ui-gray hover:text-white'}`}
+              className={`flex-1 py-4 text-xs uppercase font-bold border-b-4 transition-all ${activeTab === tab ? 'border-ui-yellow text-ui-yellow bg-ui-yellow/5' : 'border-transparent text-white/70 hover:text-white'}`}
             >
               {tab}
             </button>
@@ -256,8 +259,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Display Scale</h3>
+              <Layers size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Display Scale</h3>
             </div>
             <div className="p-4 border-2 border-ui-border flex flex-col gap-4 md:gap-2 md:flex-row">
               <div className="flex-1 flex flex-col gap-2">
@@ -307,8 +310,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'audio' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Volume2 size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Audio Control</h3>
+              <Volume2 size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Audio Control</h3>
             </div>
             <button
               onClick={() => setMuteSounds(!muteSounds)}
@@ -328,7 +331,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
             <div className={`w-full p-4 flex flex-col gap-2 transition-all ${muteSounds ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold uppercase text-ui-gray">Volume</span>
+                <span className="text-[12px] font-bold uppercase text-white/70">Volume</span>
                 <span className="text-[12px] font-bold uppercase text-ui-yellow">{Math.round(soundVolume * 100)}%</span>
               </div>
               <input
@@ -349,7 +352,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               />
               
               <div className="mt-4 space-y-2">
-                <span className="text-[12px] font-bold uppercase text-ui-gray">Sound Profile</span>
+                <span className="text-[12px] font-bold uppercase text-white/70">Sound Profile</span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {SOUND_PROFILES.map((profile) => (
                     <button
@@ -383,12 +386,12 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'preferences' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Clock size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Time & Regional</h3>
+              <Clock size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Time & Regional</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-xs text-ui-gray uppercase font-bold">Time Zone Selection</label>
+                <label className="text-xs text-white/70 uppercase font-bold">Time Zone Selection</label>
                 <select
                   value={timeZone}
                   onChange={(e) => setTimeZone(e.target.value)}
@@ -398,7 +401,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-xs text-ui-gray uppercase font-bold">Time Format</label>
+                <label className="text-xs text-white/70 uppercase font-bold">Time Format</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setTimeFormat('12h')}
@@ -442,6 +445,20 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </div>
               <Check size={16} className={showMoveDate ? 'text-ui-yellow opacity-100' : 'opacity-0'} />
             </button>
+
+            <button
+              onClick={() => setShowCardPoints(!showCardPoints)}
+              className={`w-full p-4 border-4 flex items-center justify-between transition-all ${showCardPoints ? 'border-ui-green bg-ui-green/5' : 'border-ui-border'
+                }`}
+            >
+              <div className="flex items-center gap-4">
+                <Layers className={showCardPoints ? 'text-ui-green' : 'text-text-main'} size={20} />
+                <span className={`text-[12px] font-bold uppercase ${showCardPoints ? 'text-ui-green' : 'text-text-main'}`}>
+                  {showCardPoints ? 'Show Card Point Values' : 'Hide Card Point Values'}
+                </span>
+              </div>
+              <Check size={16} className={showCardPoints ? 'text-ui-green opacity-100' : 'opacity-0'} />
+            </button>
           </section>
           )}
 
@@ -449,8 +466,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Palette size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Visual Theme</h3>
+              <Palette size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Visual Theme</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeThemes.map((t) => (
@@ -480,8 +497,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Layout Style</h3>
+              <Layers size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Layout Style</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
@@ -531,7 +548,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   <span className={`text-[12px] font-bold uppercase ${scanlinesEnabled ? 'text-ui-blue' : 'text-text-main'}`}>
                     CRT Scanline Overlay
                   </span>
-                  <span className="text-[10px] text-ui-gray uppercase">
+                  <span className="text-[10px] text-white/70 uppercase">
                     {scanlinesEnabled ? 'Scanlines Enabled' : 'Scanlines Disabled'}
                   </span>
                 </div>
@@ -540,7 +557,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             </div>
 
             <div className="mt-6 border-2 border-ui-border p-4 bg-black/20">
-              <h4 className="text-xs text-ui-gray uppercase font-bold tracking-widest mb-4">Live Preview</h4>
+              <h4 className="text-xs text-white/70 uppercase font-bold tracking-widest mb-4">Live Preview</h4>
               <div className={`p-8 border-4 border-ui-border flex flex-col items-center justify-center transition-all min-h-[200px] bg-bg-dark text-text-main font-press-start ui-mode-${uiMode} theme-${theme}`}>
                 <div className="geometric-card w-full max-w-sm p-6 text-center shadow-lg">
                   <div className="geometric-border mb-6 p-4 bg-bg-dark/30">
@@ -559,8 +576,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Graphics</h3>
+              <Layers size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Card Graphics</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {CARD_STYLES.map((s) => (
@@ -587,8 +604,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Back Pattern</h3>
+              <Layers size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Card Back Pattern</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {CARD_STYLES.map((s) => (
@@ -612,8 +629,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Palette size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Back Color</h3>
+              <Palette size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Card Back Color</h3>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
               {[
@@ -642,8 +659,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Palette size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Pattern Color</h3>
+              <Palette size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Card Pattern Color</h3>
             </div>
             <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
               {[
@@ -674,8 +691,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'display' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Layers size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Card Preview</h3>
+              <Layers size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Card Preview</h3>
             </div>
             <div className="flex justify-center gap-8 p-6 geometric-border bg-black/10">
               <div className="flex flex-col items-center gap-2">
@@ -690,7 +707,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     forceFaceUp={true}
                   />
                 </div>
-                <span className="text-xs text-ui-gray uppercase font-bold mt-2">Front</span>
+                <span className="text-xs text-white/70 uppercase font-bold mt-2">Front</span>
               </div>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-24 aspect-[3/4]">
@@ -704,7 +721,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     forceFaceUp={false}
                   />
                 </div>
-                <span className="text-xs text-ui-gray uppercase font-bold mt-2">Back</span>
+                <span className="text-xs text-white/70 uppercase font-bold mt-2">Back</span>
               </div>
             </div>
           </section>
@@ -714,8 +731,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'account' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <UserIcon size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Player Icon</h3>
+              <UserIcon size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Player Icon</h3>
             </div>
             <div className="grid grid-cols-5 gap-2">
               {AVATAR_LIST.map((a) => (
@@ -737,8 +754,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'account' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Key size={14} className="text-ui-gray" />
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Security</h3>
+              <Key size={14} className="text-white/70" />
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Security</h3>
             </div>
           </section>
           )}
@@ -747,8 +764,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           {activeTab === 'preferences' && (
           <section className={`space-y-4 ui-mode-${user.ui_mode || 'retro'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-ui-gray text-[14px]">🔔</span>
-              <h3 className="text-[12px] text-ui-gray uppercase font-bold tracking-widest">Push Notifications</h3>
+              <span className="text-white/70 text-[14px]">🔔</span>
+              <h3 className="text-[12px] text-white/70 uppercase font-bold tracking-widest">Push Notifications</h3>
             </div>
             <div className="grid grid-cols-1 gap-2 mb-4">
               <button
@@ -783,7 +800,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   const success = await resetPushSubscription(token);
                   alert(success ? "Notifications reset and re-subscribed successfully." : "Failed to reset notifications.");
                 }}
-                className="w-full py-3 border-2 border-ui-border text-[12px] uppercase font-bold text-ui-gray hover:text-white hover:border-white transition-all"
+                className="w-full py-3 border-2 border-ui-border text-[12px] uppercase font-bold text-white/70 hover:text-white hover:border-white transition-all"
               >
                 Reset Subscription
               </button>
@@ -807,14 +824,14 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             {!showPasswordChange ? (
               <button
                 onClick={() => setShowPasswordChange(true)}
-                className="w-full py-3 border-2 border-ui-border text-[12px] uppercase font-bold text-ui-gray hover:text-white hover:border-white transition-all"
+                className="w-full py-3 border-2 border-ui-border text-[12px] uppercase font-bold text-white/70 hover:text-white hover:border-white transition-all"
               >
                 Change Account Password
               </button>
             ) : (
               <form onSubmit={handlePasswordChange} className="p-4 border-2 border-ui-border bg-white/5 space-y-4">
                 <div className="space-y-2">
-                  <label className="text-xs text-ui-gray uppercase font-bold">Current Password</label>
+                  <label className="text-xs text-white/70 uppercase font-bold">Current Password</label>
                   <input
                     type="password"
                     required
@@ -824,7 +841,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-ui-gray uppercase font-bold">New Password (MIN 6)</label>
+                  <label className="text-xs text-white/70 uppercase font-bold">New Password (MIN 6)</label>
                   <input
                     type="password"
                     required
@@ -834,7 +851,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs text-ui-gray uppercase font-bold">Confirm New Password</label>
+                  <label className="text-xs text-white/70 uppercase font-bold">Confirm New Password</label>
                   <input
                     type="password"
                     required
@@ -865,7 +882,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                       setShowPasswordChange(false);
                       setPassError(null);
                     }}
-                    className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-xs font-bold uppercase"
+                    className="flex-1 py-3 border-2 border-ui-gray text-white/70 text-xs font-bold uppercase"
                   >
                     CANCEL
                   </button>
@@ -926,7 +943,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                   <button
                     onClick={() => setShowConfirmReset(false)}
                     disabled={saving}
-                    className="flex-1 py-3 border-2 border-ui-gray text-ui-gray text-xs uppercase font-bold hover:bg-ui-gray hover:text-white transition-all disabled:opacity-50"
+                    className="flex-1 py-3 border-2 border-ui-gray text-white/70 text-xs uppercase font-bold hover:bg-ui-gray hover:text-white transition-all disabled:opacity-50"
                   >
                     CANCEL
                   </button>

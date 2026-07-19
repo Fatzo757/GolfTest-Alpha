@@ -13,6 +13,7 @@ interface CardProps {
   className?: string;
   isDragging?: boolean;
   forceFaceUp?: boolean;
+  showPoints?: boolean;
   key?: any;
 }
 
@@ -113,7 +114,7 @@ export const CardPattern = ({ backStyle, backColor, backSecondaryColor = 'white'
   );
 };
 
-export default function Card({ card, index, style, backStyle = 'classic', backColor = 'ui-red', backSecondaryColor = 'white', onClick, className = '', isDragging = false, forceFaceUp = false }: CardProps) {
+export default function Card({ card, index, style, backStyle = 'classic', backColor = 'ui-red', backSecondaryColor = 'white', onClick, className = '', isDragging = false, forceFaceUp = false, showPoints = true }: CardProps) {
   const isRed = card.suit === 'hearts' || card.suit === 'diamonds';
   const symbol = card.suit === 'hearts' ? '♥' : card.suit === 'diamonds' ? '♦' : card.suit === 'clubs' ? '♣' : '♠';
   const isFaceUp = card.is_face_up || forceFaceUp;
@@ -181,7 +182,7 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
             </div>
             
             <div className="w-full flex justify-between items-center mt-auto">
-               <span className={`${style === 'modern' ? 'text-xs sm:text-[0.625rem]' : 'text-[0.625rem] sm:text-[0.5rem]'} opacity-30 ${style === 'sketch' ? 'font-handdrawn' : ''}`}>{getPoints(card.value)} PT</span>
+               <span className={`${style === 'modern' ? 'text-xs sm:text-[0.625rem]' : 'text-[0.625rem] sm:text-[0.5rem]'} opacity-30 ${style === 'sketch' ? 'font-handdrawn' : ''}`}>{showPoints ? `${getPoints(card.value)} PT` : ''}</span>
                <span className={`${style === 'modern' ? 'text-sm sm:text-xs' : 'text-xs sm:text-[0.625rem]'} font-bold self-end rotate-180 opacity-20 ${isRed ? 'text-ui-red' : 'text-black'}`}>{card.value}</span>
             </div>
           </motion.div>

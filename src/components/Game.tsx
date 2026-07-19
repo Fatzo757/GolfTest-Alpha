@@ -590,7 +590,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                       key={state.game.drawn_card.id}
                       card={state.game.drawn_card}
                       index={-1}
-                      style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
+                      style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'} showPoints={user.show_card_points !== 0}
                       className={`small md:normal !border-black ${isMyTurn ? 'ring-2 ring-ui-yellow/50 shadow-[0_0_20px_rgba(255,205,117,0.3)]' : ''}`}
                       forceFaceUp={true}
                     />
@@ -644,7 +644,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   key={state.game.discard[state.game.discard.length-1].id || 'discard'}
                   card={state.game.discard[state.game.discard.length-1]}
                   index={999}
-                  style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
+                  style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'} showPoints={user.show_card_points !== 0}
                   className="small md:normal"
                   forceFaceUp={true}
                 />
@@ -888,7 +888,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              <CardComponent 
                                card={card}
                                index={idx}
-                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
+                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'} showPoints={user.show_card_points !== 0}
                                className={`fluid ${latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]' : ''}`}
                              />
                            </div>
@@ -945,7 +945,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              <CardComponent
                                card={card}
                                index={idx}
-                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
+                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'} showPoints={user.show_card_points !== 0}
                                onClick={() => {
                                  if (state.game.status === 'initializing') {
                                    handleReveal(idx);

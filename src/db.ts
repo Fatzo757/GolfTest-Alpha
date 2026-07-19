@@ -17,6 +17,10 @@ try {
   // Column might already exist
 }
 
+try {
+  db.exec("ALTER TABLE users ADD COLUMN show_card_points INTEGER DEFAULT 1");
+} catch (e) {}
+
 // Initialize schema
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -42,7 +46,8 @@ db.exec(`
     sound_profile TEXT DEFAULT 'classic',
     ui_scale REAL DEFAULT 1.0,
     card_scale REAL DEFAULT 1.0,
-    scanlines_enabled INTEGER DEFAULT 1
+    scanlines_enabled INTEGER DEFAULT 1,
+    show_card_points INTEGER DEFAULT 1
   );
 
   CREATE TABLE IF NOT EXISTS push_subscriptions (
