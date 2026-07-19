@@ -274,10 +274,10 @@ export default function App() {
 
   return (
     <div 
-      className={`h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'}`}
+      className={`w-full flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ${currentGameId || replayGameId ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh] overflow-x-hidden'}`}
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <div className={`absolute inset-0 z-0 flex flex-col overflow-hidden ui-mode-${user?.ui_mode || 'retro'}`}>
+      <div className={`absolute inset-0 z-0 flex flex-col overflow-hidden pointer-events-none ui-mode-${user?.ui_mode || 'retro'}`}>
         {/* CRT Scanline Overlay (Retro/Classic modes) */}
         {(!user?.ui_mode || user.ui_mode === 'retro' || user.ui_mode === 'classic') && (
           <div className="crt-overlay pointer-events-none fixed inset-0 z-[99999]"></div>
@@ -401,7 +401,7 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <main className={`flex-1 overflow-y-auto w-full ${currentGameId || replayGameId ? 'max-w-7xl pb-4' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500`}>
+        <main className={`flex-1 w-full ${currentGameId || replayGameId ? 'max-w-7xl pb-4 overflow-y-auto' : 'max-w-5xl pb-32'} mx-auto p-2 md:p-8 transition-all duration-500 relative z-10`}>
           <AnimatePresence mode="wait">
             {!user ? (
               <motion.div key="auth" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="h-full">
