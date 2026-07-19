@@ -278,8 +278,8 @@ export default function App() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className={`flex flex-col flex-1 z-0 ui-mode-${user?.ui_mode || 'retro'} ${currentGameId || replayGameId ? 'absolute inset-0 overflow-hidden' : 'relative'}`}>
-        {/* CRT Scanline Overlay (Retro/Classic modes) */}
-        {(!user?.ui_mode || user.ui_mode === 'retro' || user.ui_mode === 'classic') && (
+        {/* CRT Scanline Overlay */}
+        {user?.scanlines_enabled !== 0 && (
           <div className="crt-overlay pointer-events-none fixed inset-0 z-[99999]"></div>
         )}
         

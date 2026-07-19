@@ -17,6 +17,7 @@ export interface User {
   sound_profile?: string;
   ui_scale?: number;
   card_scale?: number;
+  scanlines_enabled?: number;
 }
 
 export interface Card {

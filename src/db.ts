@@ -25,7 +25,7 @@ db.exec(`
     password_hash TEXT,
     last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    theme TEXT DEFAULT 'default',
+    theme TEXT DEFAULT 'win_green',
     card_style TEXT DEFAULT 'classic',
     card_back_style TEXT DEFAULT 'classic',
     card_back_color TEXT DEFAULT 'ui-red',
@@ -38,10 +38,11 @@ db.exec(`
     show_date INTEGER DEFAULT 1,
     show_move_date INTEGER DEFAULT 0,
     is_admin INTEGER DEFAULT 0,
-    ui_mode TEXT DEFAULT 'retro',
+    ui_mode TEXT DEFAULT 'modern_win32',
     sound_profile TEXT DEFAULT 'classic',
     ui_scale REAL DEFAULT 1.0,
-    card_scale REAL DEFAULT 1.0
+    card_scale REAL DEFAULT 1.0,
+    scanlines_enabled INTEGER DEFAULT 1
   );
 
   CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -143,7 +144,7 @@ try {
   };
 
   addColumn('users', 'last_active_at', 'DATETIME');
-  addColumn('users', 'theme', "TEXT DEFAULT 'default'");
+  addColumn('users', 'theme', "TEXT DEFAULT 'win_green'");
   addColumn('users', 'card_style', "TEXT DEFAULT 'classic'");
   addColumn('users', 'avatar', "TEXT DEFAULT 'user'");
   addColumn('games', 'drawn_card_json', 'TEXT');
@@ -161,13 +162,14 @@ try {
   addColumn('users', 'show_date', "INTEGER DEFAULT 1");
   addColumn('users', 'show_move_date', "INTEGER DEFAULT 0");
   addColumn('users', 'is_admin', "INTEGER DEFAULT 0");
-  addColumn('users', 'ui_mode', "TEXT DEFAULT 'retro'");
+  addColumn('users', 'ui_mode', "TEXT DEFAULT 'modern_win32'");
   addColumn('users', 'card_back_style', "TEXT DEFAULT 'classic'");
   addColumn('users', 'card_back_color', "TEXT DEFAULT 'ui-red'");
   addColumn('users', 'card_back_secondary_color', "TEXT DEFAULT 'white'");
   addColumn('users', 'sound_profile', "TEXT DEFAULT 'classic'");
   addColumn('users', 'ui_scale', "REAL DEFAULT 1.0");
   addColumn('users', 'card_scale', "REAL DEFAULT 1.0");
+  addColumn('users', 'scanlines_enabled', "INTEGER DEFAULT 1");
 
   // If last_active_at was just added, it might be null for existing rows.
   // We can optionally initialize it.

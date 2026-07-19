@@ -441,19 +441,19 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   const opponentCardBackColor = state?.game?.player1_id === userId ? state?.game?.player2_card_back_color : state?.game?.player1_card_back_color;
   const opponentCardBackSecondaryColor = state?.game?.player1_id === userId ? state?.game?.player2_card_back_secondary_color : state?.game?.player1_card_back_secondary_color;
 
-  const turnIndicator = (colorClass: string) => (
-    <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className={`flex items-center gap-1 font-bold ${colorClass} px-2 h-full border-l border-white/10`}
+  const turnIndicator = (color: string) => (
+    <motion.div 
+      initial={{ width: 0, opacity: 0 }}
+      animate={{ width: 'auto', opacity: 1 }}
+      className={`px-2 md:px-3 py-1 flex items-center h-full gap-1.5 ${color} shrink-0`}
     >
       <motion.div
         animate={{ x: [0, 4, 0] }}
         transition={{ repeat: Infinity, duration: 0.6 }}
       >
-        <ChevronRight size={10} strokeWidth={3} />
+        <ChevronRight size={12} strokeWidth={3} />
       </motion.div>
-      <span className="text-xs tracking-[0.2em] animate-pulse whitespace-nowrap">ACTIVE_TURN</span>
+      <span className="text-[0.6rem] sm:text-xs tracking-[0.2em] animate-pulse whitespace-nowrap">ACTIVE_TURN</span>
     </motion.div>
   );
 
@@ -518,7 +518,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                  {latestMove.player_id === "cpu" ? "CPU" : "OPPONENT"}
                </div>
              )}
-             <div className="card-pattern absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
+             <div className={`card-pattern absolute inset-0 z-0 overflow-hidden rounded-[inherit] border-2 ${getCardBackColors(user.card_back_color || 'ui-red').border} bg-transparent`}>
                <CardPattern backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'} />
              </div>
              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
@@ -827,7 +827,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col lg:flex-row gap-4 md:gap-6 items-start justify-center px-4">
                    {/* Center Column: Deck & Discard (Desktop Middle, Mobile Bottom) */}
-                   <div className="w-full lg:w-48 xl:w-64 order-last lg:order-2 mt-2 lg:mt-0 relative z-40">
+                   <div className="w-full lg:w-36 xl:w-48 2xl:w-64 order-last lg:order-2 mt-2 lg:mt-0 relative z-40">
                      {DeckAndDiscard}
                    </div>
 
@@ -856,18 +856,21 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    {/* Opponent Area (Left Column on Desktop) */}
                    <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-red/20 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
-                       <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark text-[0.65rem] sm:text-xs md:text-sm lg:text-base tracking-widest uppercase flex items-center overflow-hidden border-2 border-ui-red z-10">
-                          <div className="px-2 md:px-4 py-1 md:py-1.5 flex items-center gap-1.5 md:gap-3 border-l border-white/10 flex-row-reverse min-w-0">
-                            <div className="flex items-center justify-center opacity-60 text-ui-red shrink-0">
-                               <UserAvatar type={(state.game as any).player2_avatar} size={14} className="hidden md:block" />
-                               <UserAvatar type={(state.game as any).player2_avatar} size={10} className="md:hidden" />
+                       <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-red z-10">
+                          <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
+                            <div className="flex items-center gap-1.5 text-ui-red">
+                               <UserAvatar type={(state.game as any).player2_avatar} size={14} className="hidden md:block shrink-0" />
+                               <UserAvatar type={(state.game as any).player2_avatar} size={10} className="md:hidden shrink-0" />
+                               <span className="text-[0.65rem] sm:text-xs md:text-sm lg:text-base font-bold truncate block max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px]">{opponentName || 'OPPONENT'}</span>
                             </div>
-                            <span className="text-ui-red font-bold truncate block min-w-0 max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[280px]">{opponentName}</span>
-                            <span className="opacity-50 shrink-0">::</span>
-                            <span className="whitespace-nowrap shrink-0">{calculateScore(opponentId || 'cpu')} Pts</span>
+                            <div className="text-[0.55rem] sm:text-[0.65rem] md:text-xs text-white/70 font-black mt-0.5">
+                              {calculateScore(opponentId || 'cpu')} PTS
+                            </div>
                          </div>
                          {!isMyTurn && state.game.status === 'playing' && (
-                           <div className="shrink-0">{turnIndicator('text-ui-orange')}</div>
+                           <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-red/10">
+                             {turnIndicator('text-ui-orange')}
+                           </div>
                          )}
                        </div>
                        <motion.div 
@@ -905,18 +908,21 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                    <div className={`flex-1 w-full max-w-2xl order-4 lg:order-3 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-green/20 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
-                       <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark text-[0.65rem] sm:text-xs md:text-sm lg:text-base tracking-widest uppercase flex items-center overflow-hidden border-2 border-ui-green z-10">
-                         <div className="px-2 md:px-4 py-1 md:py-1.5 flex items-center gap-1.5 md:gap-3 border-r border-white/10 min-w-0">
-                            <div className="flex items-center justify-center opacity-60 text-ui-green shrink-0">
-                               <UserAvatar type={user.avatar} size={14} className="hidden md:block" />
-                               <UserAvatar type={user.avatar} size={10} className="md:hidden" />
+                       <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-green z-10">
+                         <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
+                            <div className="flex items-center gap-1.5 text-ui-green">
+                               <UserAvatar type={user.avatar} size={14} className="hidden md:block shrink-0" />
+                               <UserAvatar type={user.avatar} size={10} className="md:hidden shrink-0" />
+                               <span className="text-[0.65rem] sm:text-xs md:text-sm lg:text-base font-bold truncate block max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px]">{myName}</span>
                             </div>
-                            <span className="text-ui-green font-bold truncate block min-w-0 max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[280px]">{myName}</span>
-                            <span className="opacity-50 shrink-0">::</span>
-                           <span className="whitespace-nowrap shrink-0">{calculateScore(userId)} Pts</span>
+                            <div className="text-[0.55rem] sm:text-[0.65rem] md:text-xs text-white/70 font-black mt-0.5">
+                              {calculateScore(userId)} PTS
+                            </div>
                          </div>
                          {isMyTurn && state.game.status === 'playing' && (
-                           <div className="shrink-0">{turnIndicator('text-ui-yellow')}</div>
+                           <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-green/10">
+                             {turnIndicator('text-ui-yellow')}
+                           </div>
                          )}
                        </div>
                        

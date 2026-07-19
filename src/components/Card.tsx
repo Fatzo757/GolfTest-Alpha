@@ -147,7 +147,7 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
             animate={{ rotateY: 0, opacity: 1, scale: 1 }}
             exit={{ rotateY: -180, opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="card-pattern w-full h-full relative"
+            className={`card-pattern w-full h-full relative border-2 ${cMap.border} bg-transparent`}
           >
             <CardPattern backStyle={backStyle} backColor={backColor} backSecondaryColor={backSecondaryColor} />
           </motion.div>

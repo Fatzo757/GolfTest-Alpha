@@ -72,6 +72,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [pushTurnReminders, setPushTurnReminders] = useState(user.push_turn_reminders !== 0);
   const [uiScale, setUiScale] = useState(user.ui_scale || 1.0);
   const [cardScale, setCardScale] = useState(user.card_scale || 1.0);
+  const [scanlinesEnabled, setScanlinesEnabled] = useState(user.scanlines_enabled !== 0);
   const [saving, setSaving] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -163,7 +164,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           push_game_invites: pushGameInvites,
           push_turn_reminders: pushTurnReminders,
           ui_scale: uiScale,
-          card_scale: cardScale
+          card_scale: cardScale,
+          scanlines_enabled: scanlinesEnabled ? 1 : 0
         }),
       });
 
@@ -516,6 +518,23 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 <div className="text-[12px] font-bold uppercase text-ui-blue text-center">Modern Win32</div>
                 <div className="text-xs text-white/80 text-center uppercase">Soft Shadows & Flat</div>
                 {uiMode === 'modern_win32' && <Check size={16} className="text-ui-blue mt-2" />}
+              </button>
+            </div>
+            
+            <div className="mt-4 border-2 border-ui-border p-4 bg-black/20">
+              <button
+                onClick={() => setScanlinesEnabled(!scanlinesEnabled)}
+                className={`w-full p-4 border-4 flex items-center justify-between transition-all ${scanlinesEnabled ? 'border-ui-blue bg-ui-blue/5' : 'border-ui-border hover:border-ui-gray'}`}
+              >
+                <div className="flex flex-col items-start gap-1">
+                  <span className={`text-[12px] font-bold uppercase ${scanlinesEnabled ? 'text-ui-blue' : 'text-text-main'}`}>
+                    CRT Scanline Overlay
+                  </span>
+                  <span className="text-[10px] text-ui-gray uppercase">
+                    {scanlinesEnabled ? 'Scanlines Enabled' : 'Scanlines Disabled'}
+                  </span>
+                </div>
+                <Check size={16} className={scanlinesEnabled ? 'text-ui-blue opacity-100' : 'opacity-0'} />
               </button>
             </div>
 

@@ -645,7 +645,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
                 {searchQuery.length >= 2 ? (
                   searchResults.length === 0 ? (
                     <div className="col-span-full py-12 geometric-border text-center flex flex-col items-center justify-center">
@@ -919,13 +919,13 @@ const PlayerCard: React.FC<{ u: any, onInvite: (id: string) => any, isLoading: b
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay }}
       whileHover={{ scale: 1.02 }}
-      className="p-3 border-2 border-ui-border bg-bg-dark flex items-center justify-between h-full"
+      className="p-3 border-2 border-ui-border bg-bg-dark flex items-center justify-between h-full gap-2"
     >
-      <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 flex items-center justify-center border ${isOnline ? 'border-ui-green/30 bg-ui-green/10 text-ui-green' : 'border-ui-gray/30 bg-ui-gray/10 text-ui-gray opacity-50'}`}>
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={`shrink-0 w-8 h-8 flex items-center justify-center border ${isOnline ? 'border-ui-green/30 bg-ui-green/10 text-ui-green' : 'border-ui-gray/30 bg-ui-gray/10 text-ui-gray opacity-50'}`}>
           <UserAvatar type={u.avatar} size={16} />
         </div>
-        <div className={`text-xs uppercase font-bold truncate max-w-[80px] ${isOnline ? 'text-text-main' : 'text-ui-gray'}`}>
+        <div className={`text-xs uppercase font-bold truncate ${isOnline ? 'text-text-main' : 'text-ui-gray'}`}>
           {u.username}
           <div className="text-[10px] opacity-40 lowercase">
             {isOnline ? 'online' : 'offline'}
@@ -935,7 +935,7 @@ const PlayerCard: React.FC<{ u: any, onInvite: (id: string) => any, isLoading: b
       <button
         onClick={() => onInvite(u.id)}
         disabled={isLoading}
-        className="px-3 py-2 border border-ui-yellow text-xs font-black text-ui-yellow hover:bg-ui-yellow hover:text-bg-dark transition-all disabled:opacity-30"
+        className="shrink-0 px-3 py-2 border border-ui-yellow text-xs font-black text-ui-yellow hover:bg-ui-yellow hover:text-bg-dark transition-all disabled:opacity-30"
       >
         {isLoading ? 'INVITING...' : 'INVITE'}
       </button>
