@@ -312,7 +312,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             whileHover={{ scale: 1.01 }}
-            className="theme-panel p-4 border-2 border-ui-green bg-[#111111] flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 h-full"
+            className="theme-panel p-4 border-2 border-ui-green bg-[#111111] flex flex-col justify-between gap-4 h-full"
           >
             <div className="flex flex-col gap-2">
               <div className="text-xs uppercase font-bold flex items-center gap-2">
@@ -350,24 +350,24 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                   Started {formatMatchTime(game.created_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
               </div>
             </div>
-            <div className="w-full xl:w-auto mt-2 xl:mt-0">
+            <div className="w-full mt-2">
               <AnimatePresence mode="wait">
                 {confirmDeleteId === game.id ? (
                   <motion.div 
                     key="confirm"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="grid grid-cols-[1fr_auto] gap-2 w-full"
+                    className="flex flex-col sm:flex-row gap-2 w-full"
                   >
                     <button
                       onClick={() => abandonGame(game.id)}
-                      className="geometric-button p-3 bg-ui-red text-white text-xs font-black uppercase hover:bg-white hover:text-ui-red transition-all w-full h-full flex items-center justify-center"
+                      className="geometric-button p-3 bg-ui-red text-white text-xs font-black uppercase hover:bg-white hover:text-ui-red transition-all flex-1 flex items-center justify-center"
                     >
                       CONFIRM DELETE
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(null)}
-                      className="geometric-button p-3 border-2 border-ui-border text-ui-gray hover:text-white transition-all h-full flex items-center justify-center"
+                      className="geometric-button p-3 border-2 border-ui-border text-ui-gray hover:text-white transition-all flex-none flex items-center justify-center"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -377,11 +377,11 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     key="actions"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_auto_1fr] gap-2 w-full"
+                    className="flex flex-col sm:flex-row gap-2 w-full"
                   >
                     <button
                       onClick={() => setConfirmDeleteId(game.id)}
-                      className="geometric-button p-3 border-2 border-ui-border text-ui-gray hover:text-ui-red hover:border-ui-red transition-all flex items-center justify-center"
+                      className="geometric-button p-3 border-2 border-ui-border text-ui-gray hover:text-ui-red hover:border-ui-red transition-all flex-none flex items-center justify-center"
                       title="Abandon Match"
                     >
                       <Trash2 size={16} />
@@ -389,7 +389,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     {game.status === 'playing' && game.current_turn_player_id !== user.id && !game.is_vs_cpu && (
                       <button
                         onClick={() => remindOpponent(game.id)}
-                        className="geometric-button p-3 border-2 border-ui-yellow text-ui-yellow text-xs font-black hover:bg-ui-yellow hover:text-bg-dark transition-all whitespace-nowrap col-span-2 sm:col-span-1"
+                        className="geometric-button p-3 border-2 border-ui-yellow text-ui-yellow text-xs font-black hover:bg-ui-yellow hover:text-bg-dark transition-all whitespace-nowrap flex-1"
                         title="Send Nudge"
                       >
                         NUDGE
@@ -397,7 +397,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     )}
                     <button
                       onClick={() => onJoinGame(game.id)}
-                      className={`geometric-button p-3 bg-ui-green text-bg-dark text-xs font-black hover:bg-white transition-all whitespace-nowrap w-full ${(!game.is_vs_cpu && game.status === 'playing' && game.current_turn_player_id !== user.id) ? 'col-span-2 sm:col-span-1' : ''}`}
+                      className="geometric-button p-3 bg-ui-green text-bg-dark text-xs font-black hover:bg-white transition-all whitespace-nowrap flex-1"
                     >
                       {game.status === 'playing' ? 'RESUME' : 'VIEW'}
                     </button>
