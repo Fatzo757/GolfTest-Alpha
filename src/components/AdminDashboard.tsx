@@ -262,7 +262,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-6 py-4 text-[11px] font-bold uppercase transition-all whitespace-nowrap ${
-                activeTab === tab.id ? 'bg-white/10 text-ui-yellow border-b-4 border-ui-yellow' : 'text-ui-gray hover:text-white'
+                activeTab === tab.id ? 'bg-white/10 text-ui-yellow border-b-4 border-ui-yellow' : 'text-gray-300 hover:text-white'
               }`}
             >
               <tab.icon size={14} />
@@ -374,7 +374,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                     { label: 'MSG_TRAFFIC', value: summary.messages, color: 'text-ui-purple' }
                   ].map(stat => (
                     <div key={stat.label} className="bg-white/5 border-2 border-white/10 p-4 h-full">
-                      <div className="text-ui-gray text-[10px] mb-2">{stat.label}</div>
+                      <div className="text-gray-300 text-[10px] mb-2">{stat.label}</div>
                       <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
                     </div>
                   ))}
@@ -398,7 +398,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                   </div>
                   
                   <div className="pt-4 border-t border-white/10">
-                    <div className="text-ui-gray text-[10px] mb-2 uppercase">System Status Label (Version)</div>
+                    <div className="text-gray-300 text-[10px] mb-2 uppercase">System Status Label (Version)</div>
                     <div className="flex max-w-sm gap-2">
                       <input 
                         type="text" 
@@ -416,7 +416,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                     </div>
                   </div>
 
-                  <p className="text-ui-gray text-[10px] italic">* Actions logged to system monitoring.</p>
+                  <p className="text-gray-300 text-[10px] italic">* Actions logged to system monitoring.</p>
                 </div>
               </motion.div>
             )}
@@ -431,7 +431,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-white/5 uppercase tracking-widest text-ui-gray text-[10px]">
+                    <thead className="bg-white/5 uppercase tracking-widest text-gray-300 text-[10px]">
                       <tr>
                         <th className="p-3">User</th>
                         <th className="p-3">ID</th>
@@ -450,7 +450,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                               )}
                             </div>
                           </td>
-                          <td className="p-3 text-ui-gray font-mono">{u.id.substring(0, 8)}...</td>
+                          <td className="p-3 text-gray-300 font-mono">{u.id.substring(0, 8)}...</td>
                           <td className="p-3 text-[11px]">{new Date(u.last_active_at + 'Z').toLocaleString()}</td>
                           <td className="p-3 flex gap-2">
                             <button 
@@ -473,7 +473,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                             </button>
                             <button 
                               onClick={() => handleKickUser(u.id)}
-                              className="p-2 bg-bg-dark text-ui-gray border border-ui-gray hover:bg-white hover:text-black"
+                              className="p-2 bg-bg-dark text-gray-300 border border-ui-gray hover:bg-white hover:text-black"
                               title="Kick User"
                             >
                               <UserMinus size={12} />
@@ -504,7 +504,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
               >
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-white/5 uppercase tracking-widest text-ui-gray text-[10px]">
+                    <thead className="bg-white/5 uppercase tracking-widest text-gray-300 text-[10px]">
                       <tr>
                         <th className="p-3">Game ID</th>
                         <th className="p-3">Players</th>
@@ -519,14 +519,14 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                           <td className="p-3 font-mono">{g.id.substring(0, 8)}</td>
                           <td className="p-3 text-[11px]">
                             <span className="text-ui-blue font-bold">{g.player1_name || '???'}</span>
-                            <span className="text-ui-gray mx-1">vs</span>
+                            <span className="text-gray-300 mx-1">vs</span>
                             <span className="text-ui-orange font-bold">{g.player2_name || (g.player2_id === 'cpu' ? 'CPU' : 'WAITING')}</span>
                           </td>
                           <td className="p-3 capitalize tracking-widest text-[10px]">
                             <span className={`px-2 py-0.5 border ${
                               g.status === 'playing' ? 'border-ui-yellow text-ui-yellow' : 
                               g.status === 'finished' ? 'border-ui-green text-ui-green' : 
-                              'border-ui-gray text-ui-gray'
+                              'border-ui-gray text-gray-300'
                             }`}>
                               {g.status}
                             </span>
@@ -552,7 +552,7 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
         </div>
 
         {/* Footer */}
-        <div className="bg-black/60 p-3 border-t-2 border-white/10 flex justify-between items-center font-mono text-[10px] text-ui-gray uppercase tracking-widest">
+        <div className="bg-black/60 p-3 border-t-2 border-white/10 flex justify-between items-center font-mono text-[10px] text-gray-300 uppercase tracking-widest">
           <div>Root Terminal Access Granted</div>
           <div>{new Date().toISOString()}</div>
         </div>

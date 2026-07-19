@@ -827,7 +827,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col lg:flex-row gap-4 md:gap-6 items-start justify-center px-4">
                    {/* Center Column: Deck & Discard (Desktop Middle, Mobile Bottom) */}
-                   <div className="w-full lg:w-48 xl:w-64 order-last lg:order-2 mt-2 lg:mt-0 relative z-[200]">
+                   <div className="w-full lg:w-48 xl:w-64 order-last lg:order-2 mt-2 lg:mt-0 relative z-40">
                      {DeckAndDiscard}
                    </div>
 
@@ -856,14 +856,15 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    {/* Opponent Area (Left Column on Desktop) */}
                    <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-red/20 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
-                       <div className="absolute -top-3 left-6 bg-bg-dark text-xs md:text-sm tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-red">
-                          <div className="px-3 flex items-center gap-2 border-l border-white/10 flex-row-reverse">
-                            <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-red">
-                               <UserAvatar type={(state.game as any).player2_avatar} size={10} />
+                       <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 bg-bg-dark text-[0.65rem] sm:text-xs md:text-sm lg:text-base tracking-widest uppercase flex items-center overflow-hidden border-2 border-ui-red z-10">
+                          <div className="px-2 md:px-4 py-1 md:py-1.5 flex items-center gap-1.5 md:gap-3 border-l border-white/10 flex-row-reverse">
+                            <div className="flex items-center justify-center opacity-60 text-ui-red">
+                               <UserAvatar type={(state.game as any).player2_avatar} size={14} className="hidden md:block" />
+                               <UserAvatar type={(state.game as any).player2_avatar} size={10} className="md:hidden" />
                             </div>
-                            <span className="text-ui-red font-bold truncate max-w-[80px] md:max-w-[120px]">{opponentName}</span>
+                            <span className="text-ui-red font-bold truncate max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[280px]">{opponentName}</span>
                             <span className="opacity-50">::</span>
-                            <span>{calculateScore(opponentId || 'cpu')} Pts</span>
+                            <span className="whitespace-nowrap">{calculateScore(opponentId || 'cpu')} Pts</span>
                          </div>
                          {!isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-orange')}
                        </div>
@@ -902,14 +903,15 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                    <div className={`flex-1 w-full max-w-2xl order-4 lg:order-3 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
                      <div className={`relative p-4 md:p-6 bg-ui-green/20 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
-                       <div className="absolute -top-3 left-6 bg-bg-dark text-xs md:text-sm tracking-widest uppercase flex items-center overflow-hidden h-6 border-2 border-ui-green">
-                         <div className="px-3 flex items-center gap-2 border-r border-white/10">
-                            <div className="w-3 h-3 flex items-center justify-center opacity-60 text-ui-green">
-                               <UserAvatar type={user.avatar} size={10} />
+                       <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 bg-bg-dark text-[0.65rem] sm:text-xs md:text-sm lg:text-base tracking-widest uppercase flex items-center overflow-hidden border-2 border-ui-green z-10">
+                         <div className="px-2 md:px-4 py-1 md:py-1.5 flex items-center gap-1.5 md:gap-3 border-r border-white/10">
+                            <div className="flex items-center justify-center opacity-60 text-ui-green">
+                               <UserAvatar type={user.avatar} size={14} className="hidden md:block" />
+                               <UserAvatar type={user.avatar} size={10} className="md:hidden" />
                             </div>
-                            <span className="text-ui-green font-bold truncate max-w-[80px] md:max-w-[120px]">{myName}</span>
+                            <span className="text-ui-green font-bold truncate max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px] xl:max-w-[280px]">{myName}</span>
                             <span className="opacity-50">::</span>
-                           <span>{calculateScore(userId)} Pts</span>
+                           <span className="whitespace-nowrap">{calculateScore(userId)} Pts</span>
                          </div>
                          {isMyTurn && state.game.status === 'playing' && turnIndicator('text-ui-yellow')}
                        </div>
