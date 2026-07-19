@@ -894,6 +894,10 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
               <div className="p-4 bg-ui-purple/10 border border-ui-purple text-xs leading-tight">
                  <span className="font-bold text-ui-purple">INFO:</span> THE PLAYER WITH THE LOWEST TOTAL SCORE WINS THE GAME.
               </div>
+
+              <div className="p-4 bg-ui-green/10 border border-ui-green text-xs leading-tight">
+                 <span className="font-bold text-ui-green">NEW FEATURE:</span> CRT SCANLINES CAN NOW BE TOGGLED IN SETTINGS FOR ALL THEMES!
+              </div>
             </div>
           </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GameState, Card, Move, User } from '../types.ts';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
-import { RefreshCw, ArrowLeft, History, Info, ChevronRight, X, ChevronDown, ChevronUp, Layers } from 'lucide-react';
+import { RefreshCw, ArrowLeft, History, Info, ChevronRight, X, ChevronDown, ChevronUp, Layers, Star } from 'lucide-react';
 import { Chat } from './Chat';
 import { soundService } from '../services/soundService';
 import UserAvatar from './UserAvatar.tsx';
@@ -435,12 +435,6 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     if (state?.game?.is_vs_cpu) return c.player_id === 'cpu';
     return c.player_id === opponentId;
   }).sort((a,b) => (a.card_index || 0) - (b.card_index || 0)) || [];
-
-  const opponentCardStyle = state?.game?.player1_id === userId ? state?.game?.player2_card_style : state?.game?.player1_card_style;
-  const opponentCardBackStyle = state?.game?.player1_id === userId ? state?.game?.player2_card_back_style : state?.game?.player1_card_back_style;
-  const opponentCardBackColor = state?.game?.player1_id === userId ? state?.game?.player2_card_back_color : state?.game?.player1_card_back_color;
-  const opponentCardBackSecondaryColor = state?.game?.player1_id === userId ? state?.game?.player2_card_back_secondary_color : state?.game?.player1_card_back_secondary_color;
-
   const turnIndicator = (color: string) => (
     <motion.div 
       initial={{ width: 0, opacity: 0 }}
@@ -815,7 +809,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   <div className="flex flex-col items-end">
                      <div className="flex items-center gap-1 md:gap-2">
                         <div className={`shrink-0 w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${state.game.status === 'playing' ? 'bg-ui-green animate-pulse' : 'bg-ui-orange'}`} />
-                        <span className="text-[0.875rem] md:text-[1rem] text-white/60 uppercase font-black tracking-widest max-w-[80px] md:max-w-[120px] text-right truncate">
+                        <span className="text-[0.875rem] md:text-[1rem] text-white/60 uppercase font-black tracking-widest max-w-[80px] sm:max-w-[200px] md:max-w-none text-right truncate sm:whitespace-normal">
                           {state.game.status === 'playing' ? (isMyTurn ? user.username : opponentName) : state.game.status}
                         </span>
                      </div>
@@ -855,7 +849,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                    {/* Opponent Area (Left Column on Desktop) */}
                    <div className={`flex-1 w-full max-w-2xl order-3 lg:order-1 transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
-                     <div className={`relative p-4 md:p-6 bg-ui-red/20 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
+                     <div className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-12 bg-ui-red/20 border-4 transition-all duration-500 ${!isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(255,82,82,0.2)]' : 'border-dashed border-ui-purple/30'}`}>
                        <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-red z-10">
                           <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
                             <div className="flex items-center gap-1.5 text-ui-red">
@@ -883,21 +877,18 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                          {opponentCards.map((card, idx) => (
                            <div key={card.id || idx} className="relative w-full">
                              {latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx && (
-                               <motion.div 
-                                 initial={{ opacity: 0, y: -10 }}
-                                 animate={{ opacity: 1, y: 0 }}
-                                 className="absolute -top-6 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap pointer-events-none"
+                               <motion.div
+                                 initial={{ opacity: 0, scale: 0, rotate: -45 }}
+                                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                 className="absolute -top-3 -right-3 text-ui-yellow drop-shadow-[0_0_5px_rgba(255,205,117,0.8)] z-30"
                                >
-                                 <div className="bg-ui-yellow text-bg-dark text-xs font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 bg-bg-dark/50 animate-pulse rounded-full inline-block" />
-                                    Last Move
-                                 </div>
+                                 <Star size={24} fill="currentColor" />
                                </motion.div>
                              )}
                              <CardComponent 
                                card={card}
                                index={idx}
-                               style={opponentCardStyle || 'classic'} backStyle={opponentCardBackStyle || 'classic'} backColor={opponentCardBackColor || 'ui-red'} backSecondaryColor={opponentCardBackSecondaryColor || 'white'}
+                               style={user.card_style || 'classic'} backStyle={user.card_back_style || 'classic'} backColor={user.card_back_color || 'ui-red'} backSecondaryColor={user.card_back_secondary_color || 'white'}
                                className={`fluid ${latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]' : ''}`}
                              />
                            </div>
@@ -907,7 +898,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                    </div>
 
                    <div className={`flex-1 w-full max-w-2xl order-4 lg:order-3 transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
-                     <div className={`relative p-4 md:p-6 bg-ui-green/20 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
+                     <div className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-green/20 border-4 transition-all duration-500 ${isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'}`}>
                        <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-green z-10">
                          <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
                             <div className="flex items-center gap-1.5 text-ui-green">
@@ -943,15 +934,12 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                              className="relative group w-full"
                            >
                              {latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx && (
-                               <motion.div 
-                                 initial={{ opacity: 0, y: -10 }}
-                                 animate={{ opacity: 1, y: 0 }}
-                                 className="absolute -top-6 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap pointer-events-none"
+                               <motion.div
+                                 initial={{ opacity: 0, scale: 0, rotate: -45 }}
+                                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                                 className="absolute -top-3 -right-3 text-ui-yellow drop-shadow-[0_0_5px_rgba(255,205,117,0.8)] z-30"
                                >
-                                 <div className="bg-ui-yellow text-bg-dark text-xs font-black px-2 py-1 border border-bg-dark shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest flex items-center gap-1">
-                                   <span className="w-1.5 h-1.5 bg-bg-dark/50 animate-pulse rounded-full inline-block" />
-                                   Last Move
-                                 </div>
+                                 <Star size={24} fill="currentColor" />
                                </motion.div>
                              )}
                              <CardComponent
