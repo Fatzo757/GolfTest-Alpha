@@ -200,7 +200,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           push_game_invites: pushGameInvites ? 1 : 0,
           push_turn_reminders: pushTurnReminders ? 1 : 0,
           ui_scale: uiScale,
-          card_scale: cardScale
+          card_scale: cardScale,
+          scanlines_enabled: scanlinesEnabled ? 1 : 0
         });
         onClose();
       }
