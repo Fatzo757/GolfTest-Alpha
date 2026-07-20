@@ -1,33 +1,58 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Golf Card Game (Multiplayer)
 
-# Run and deploy your AI Studio app
+A multiplayer web and mobile implementation of the classic "Golf" card game. Play against friends in real-time or against a CPU opponent.
 
-This contains everything you need to run your app locally.
+## Tech Stack
 
-View your app in AI Studio: https://ai.studio/apps/0c43a272-9206-4831-a7d5-63b8185ecc98
+**Frontend:**
+- [React 19](https://react.dev/) - UI framework
+- [Vite](https://vitejs.dev/) - Frontend tooling
+- [TailwindCSS v4](https://tailwindcss.com/) - Styling
+- [Framer Motion](https://motion.dev/) - Animations
+- [Lucide React](https://lucide.dev/) - Icons
 
-## Run Locally
+**Backend:**
+- [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/) - API Server
+- [SQLite](https://sqlite.org/) (`better-sqlite3`) - Database
+- JWT Authentication (`jsonwebtoken`, `bcryptjs`)
+- Push Notifications (`web-push`, `firebase-admin`)
+- AI Features (`@google/genai`)
 
-**Prerequisites:**  Node.js
+**Mobile:**
+- [Capacitor](https://capacitorjs.com/) - Native Android wrapper
 
+##  Local Development
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+**Prerequisites:**
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Environment Setup
+Copy the example environment file and fill in the necessary values. If you are using AI features, set your `GEMINI_API_KEY`.
+```bash
+cp .env.example .env
+```
+*(Note: Push notification VAPID keys will be automatically generated into `vapid.json` on the first run if not provided in `.env`).*
+
+### 3. Run the App
+```bash
+npm run dev
+```
+This single command uses `tsx` to start the backend Express server, which concurrently serves the Vite frontend. Open your browser to the local URL provided in the terminal (typically `http://localhost:3000`).
 
 ## Android Setup & Build
 
-This project uses [Capacitor](https://capacitorjs.com/) to wrap the web application into a native Android project.
+This project uses **Capacitor** to wrap the web application into a native Android app.
 
 **Prerequisites:** [Android Studio](https://developer.android.com/studio) installed on your machine.
 
-### How to build and sync changes to Android
+### Syncing Changes to Android
 
-Whenever you make changes to the React web app and want to see them on Android, follow these steps:
+Whenever you make changes to the React web app and want to update the Android build, follow these steps:
 
 1. **Build the Web Assets**
    Compile your React code into the `dist` folder:
@@ -42,11 +67,11 @@ Whenever you make changes to the React web app and want to see them on Android, 
    ```
 
 3. **Open in Android Studio**
-   Open the generated Android project in Android Studio to build the final APK, or run it on an emulator/device:
+   Launch Android Studio to build the final APK, or run it on an emulator/device:
    ```bash
    npx cap open android
    ```
-   *(Alternatively, you can manually open Android Studio, select "Open", and choose the `android` folder located in the root of this project.)*
+   *(Alternatively, you can manually open Android Studio and choose the `android` folder located in the root of this project.)*
 
 4. **Run the App**
-   In Android Studio, click the green "Play" button at the top to compile and launch the app on your connected device or emulator!
+   In Android Studio, click the green "Play" button at the top to compile and launch the app!
