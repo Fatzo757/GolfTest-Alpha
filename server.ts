@@ -636,12 +636,14 @@ async function startServer() {
       SELECT g.*, 
              u1.username as player1_name, 
              u1.avatar as player1_avatar,
-             u2.username as player2_name,
-             u2.avatar as player2_avatar
+             COALESCE(u2.username, 'CPU') as player2_name,
+             COALESCE(u2.avatar, 'bot') as player2_avatar
       FROM games g
       LEFT JOIN users u1 ON g.player1_id = u1.id
       LEFT JOIN users u2 ON g.player2_id = u2.id
-      WHERE (g.player1_id = ? OR g.player2_id = ?) AND g.status = 'finished' AND g.is_hidden_from_history = 0
+      WHERE (g.player1_id = ? OR g.player2_id = ?) 
+        AND g.status = 'finished' 
+        AND (g.is_hidden_from_history IS NULL OR g.is_hidden_from_history = 0)
       ORDER BY g.updated_at DESC
       LIMIT 100
     `).all(userId, userId);
