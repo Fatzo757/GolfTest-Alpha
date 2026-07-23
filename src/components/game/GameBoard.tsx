@@ -268,15 +268,15 @@ export default function GameBoard({
       <div className={`w-full max-w-2xl mx-auto transition-all duration-500 mt-4 ${mobileTab === 'history' ? 'block' : 'hidden lg:block'}`}>
         <div className="p-4 md:p-6 bg-bg-dark/95 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
           <div className="flex items-center justify-between border-b-2 border-ui-border pb-3">
-            <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
+            <h3 className="text-[0.65rem] sm:text-xs md:text-sm font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
               <History size={16} /> MATCH MOVE HISTORY
             </h3>
-            <span className="text-[10px] text-ui-gray font-mono">{state.moves?.length || 0} MOVES</span>
+            <span className="text-[0.55rem] sm:text-[0.65rem] text-ui-gray font-bold tracking-wider">{state.moves?.length || 0} MOVES</span>
           </div>
 
-          <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 font-mono text-[10px] md:text-xs">
+          <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 text-[0.6rem] sm:text-xs">
             {!state.moves || state.moves.length === 0 ? (
-              <div className="text-center text-ui-gray py-6 uppercase">No moves recorded yet</div>
+              <div className="text-center text-ui-gray py-6 uppercase tracking-widest text-[0.6rem] sm:text-xs">No moves recorded yet</div>
             ) : (
               [...state.moves].reverse().map((m: any, idx: number) => {
                 const isMe = m.player_id === userId;
@@ -299,15 +299,15 @@ export default function GameBoard({
                       key={m.id || idx}
                       className="p-3 bg-ui-yellow/10 border-2 border-ui-yellow rounded flex flex-col gap-2"
                     >
-                      <div className="flex items-center justify-between font-bold text-ui-yellow text-xs uppercase tracking-widest">
+                      <div className="flex items-center justify-between font-bold text-ui-yellow text-[0.6rem] sm:text-xs uppercase tracking-widest">
                         <span>🏆 END OF ROUND {m.round_number || 1}</span>
-                        <span className="text-[10px] opacity-70">FINAL BOARD</span>
+                        <span className="text-[0.55rem] opacity-80">FINAL BOARD</span>
                       </div>
 
                       {snapshotCards.length > 0 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-ui-yellow/30">
                           <div>
-                            <div className="text-[10px] font-bold text-ui-green uppercase mb-1">{myName}</div>
+                            <div className="text-[0.55rem] sm:text-[0.65rem] font-bold text-ui-green uppercase tracking-wider mb-1">{myName}</div>
                             <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-2 border border-ui-border rounded">
                               {p1Cards.map((c: any, cIdx: number) => (
                                 <div key={c.id || cIdx}>
@@ -317,7 +317,7 @@ export default function GameBoard({
                             </div>
                           </div>
                           <div>
-                            <div className="text-[10px] font-bold text-ui-red uppercase mb-1">{opponentName}</div>
+                            <div className="text-[0.55rem] sm:text-[0.65rem] font-bold text-ui-red uppercase tracking-wider mb-1">{opponentName}</div>
                             <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-2 border border-ui-border rounded">
                               {p2Cards.map((c: any, cIdx: number) => (
                                 <div key={c.id || cIdx}>
@@ -342,14 +342,14 @@ export default function GameBoard({
                     className="p-2.5 bg-black/60 border border-ui-border/80 rounded flex items-center justify-between gap-3 transition-all hover:border-ui-yellow/50"
                   >
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-ui-gray font-bold text-[9px]">R{m.round_number || 1}</span>
-                      <span className={`font-bold truncate max-w-[100px] ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
+                      <span className="text-ui-gray font-bold text-[0.55rem] tracking-wider">R{m.round_number || 1}</span>
+                      <span className={`font-bold truncate max-w-[100px] text-[0.6rem] sm:text-xs ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
                         {senderName}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap justify-end">
-                      <span className="text-[10px] text-ui-gray uppercase font-semibold">
+                      <span className="text-[0.55rem] sm:text-[0.65rem] text-ui-gray uppercase font-bold tracking-wider">
                         {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : isInitial ? 'REVEALED' : 'PLAYED'}
                       </span>
 
@@ -357,7 +357,7 @@ export default function GameBoard({
 
                       {m.replaced_card_value && (
                         <>
-                          <span className="text-ui-gray text-[10px]">➔</span>
+                          <span className="text-ui-gray text-[0.6rem]">➔</span>
                           <MiniCard suit={m.replaced_card_suit} value={m.replaced_card_value} />
                         </>
                       )}
@@ -389,12 +389,12 @@ const MiniCard = ({ suit, value }: { suit?: string; value?: string }) => {
 
   return (
     <div
-      className={`inline-flex items-center justify-center gap-1 px-1.5 py-0.5 border-2 rounded font-bold text-xs shadow-sm bg-white shrink-0 ${
+      className={`inline-flex items-center justify-center gap-1 px-1.5 py-0.5 border-2 rounded font-bold text-[0.65rem] sm:text-xs shadow-sm bg-white shrink-0 ${
         isRed ? 'text-ui-red border-red-400' : 'text-black border-gray-400'
       }`}
     >
       <span>{value}</span>
-      <span className="text-xs">{symbol}</span>
+      <span className="text-[0.7rem] sm:text-xs">{symbol}</span>
     </div>
   );
 };
