@@ -55,6 +55,11 @@ webpush.setVapidDetails(
   vapidKeys.privateKey
 );
 
+if (process.env.NODE_ENV === "production" && (!process.env.JWT_SECRET || process.env.JWT_SECRET === "default-secret-key-123")) {
+  console.error("FATAL SECURITY ERROR: JWT_SECRET must be explicitly set to a secure string in production mode!");
+  process.exit(1);
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || "default-secret-key-123";
 
 declare global {
@@ -63,6 +68,10 @@ declare global {
       user?: { id: string; username: string };
     }
   }
+}
+
+interface ActiveWebSocket extends WebSocket {
+  isAlive?: boolean;
 }
 
 async function startServer() {
@@ -79,8 +88,28 @@ async function startServer() {
   const wss = new WebSocketServer({ server, path: '/ws' });
   const gameSockets = new Map<string, Set<WebSocket>>();
 
-  wss.on('connection', (ws: WebSocket, req: any) => {
+  // 30-Second Ping/Pong Heartbeat to prune dropped connections
+  const pingInterval = setInterval(() => {
+    wss.clients.forEach((ws: ActiveWebSocket) => {
+      if (ws.isAlive === false) {
+        return ws.terminate();
+      }
+      ws.isAlive = false;
+      ws.ping();
+    });
+  }, 30000);
+
+  wss.on('close', () => {
+    clearInterval(pingInterval);
+  });
+
+  wss.on('connection', (ws: ActiveWebSocket, req: any) => {
     try {
+      ws.isAlive = true;
+      ws.on('pong', () => {
+        ws.isAlive = true;
+      });
+
       const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
       const gameId = url.searchParams.get('gameId');
 
