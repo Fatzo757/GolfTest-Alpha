@@ -6,7 +6,7 @@ import Replay from './components/Replay.tsx';
 import Settings from './components/Settings.tsx';
 import AdminDashboard from './components/AdminDashboard.tsx';
 import UserAvatar from './components/UserAvatar.tsx';
-import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X } from 'lucide-react';
+import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X, WifiOff } from 'lucide-react';
 import { soundService } from './services/soundService';
 import { clearAppBadge } from './lib/push';
 import { motion, AnimatePresence } from 'motion/react';
@@ -231,6 +231,21 @@ export default function App() {
           currentGameId || replayGameId ? 'absolute inset-0 overflow-hidden' : 'relative'
         )}
       >
+        {/* Offline Network Banner */}
+        <AnimatePresence>
+          {!isOnline && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-ui-red text-white py-1 px-4 text-center text-[10px] uppercase font-bold flex items-center justify-center gap-2 z-[999999] border-b-2 border-black"
+            >
+              <WifiOff size={14} className="animate-pulse" />
+              <span>Network Offline - Retrying connection...</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* CRT Scanline Overlay */}
         {user?.scanlines_enabled !== 0 && (
           <div className="crt-overlay pointer-events-none fixed inset-0 z-[99999]"></div>

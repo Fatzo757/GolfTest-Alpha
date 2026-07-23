@@ -50,7 +50,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 }
 
 webpush.setVapidDetails(
-  'mailto:fatzo757@gmail.com',
+  process.env.VAPID_EMAIL || 'mailto:admin@example.com',
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
@@ -1657,6 +1657,18 @@ async function startServer() {
     // Effectively log them out by setting last active to long ago
     db.prepare("UPDATE users SET last_active_at = datetime('now', '-1 day') WHERE id = ?").run(userId);
     res.json({ success: true });
+  });
+
+  // --- Centralized Express Error Handling Middleware ---
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error("SERVER UNHANDLED ERROR:", err);
+    if (res.headersSent) {
+      return next(err);
+    }
+    const statusCode = err.status || err.statusCode || 500;
+    res.status(statusCode).json({
+      error: process.env.NODE_ENV === "production" ? "Internal server error" : (err.message || "Unknown error"),
+    });
   });
 
   // --- Vite Middleware ---
