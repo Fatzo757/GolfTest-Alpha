@@ -8,20 +8,11 @@ const __dirname = path.dirname(__filename);
 const dbPath = process.env.USE_MEMORY_DB === 'true' ? ':memory:' : (process.env.DB_PATH || path.resolve(__dirname, '../golf.db'));
 const db = new Database(dbPath);
 
-// Enable foreign keys
+// Enable foreign keys & WAL (Write-Ahead Logging) mode for concurrent read/write performance
 db.pragma('foreign_keys = ON');
+db.pragma('journal_mode = WAL');
 
-try {
-  db.exec("ALTER TABLE games ADD COLUMN round_number INTEGER DEFAULT 1");
-} catch (e) {
-  // Column might already exist
-}
-
-try {
-  db.exec("ALTER TABLE users ADD COLUMN show_card_points INTEGER DEFAULT 1");
-} catch (e) {}
-
-// Initialize schema
+// Initialize schema idempotently without data loss
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -125,16 +116,23 @@ db.exec(`
     WHERE id = NEW.id;
   END;
 
-
   CREATE TABLE IF NOT EXISTS system_settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   INSERT OR IGNORE INTO system_settings (key, value) VALUES ('app_version', 'V0.1-Alpha');
+
+  -- Non-destructive performance indexes for high-volume lookup queries
+  CREATE INDEX IF NOT EXISTS idx_games_player1 ON games(player1_id);
+  CREATE INDEX IF NOT EXISTS idx_games_player2 ON games(player2_id);
+  CREATE INDEX IF NOT EXISTS idx_games_status ON games(status);
+  CREATE INDEX IF NOT EXISTS idx_moves_game_id ON moves(game_id);
+  CREATE INDEX IF NOT EXISTS idx_messages_game_id ON messages(game_id);
+  CREATE INDEX IF NOT EXISTS idx_push_user_id ON push_subscriptions(user_id);
 `);
 
-// Simple migration: check if columns exist in existing tables
+// Safe non-destructive column migration utility
 try {
   const addColumn = (table: string, column: string, type: string) => {
     try {
@@ -152,14 +150,7 @@ try {
   addColumn('users', 'theme', "TEXT DEFAULT 'win_green'");
   addColumn('users', 'card_style', "TEXT DEFAULT 'classic'");
   addColumn('users', 'avatar', "TEXT DEFAULT 'user'");
-  addColumn('games', 'drawn_card_json', 'TEXT');
-  addColumn('games', 'cpu_difficulty', "TEXT DEFAULT 'normal'");
-  addColumn('games', 'first_revealer_id', 'TEXT');
-  addColumn('games', 'is_hidden_from_history', 'BOOLEAN DEFAULT 0');
-  addColumn('games', 'next_game_id', 'TEXT');
-  addColumn('moves', 'snapshot_json', 'TEXT');
-  addColumn('game_cards', 'id', 'TEXT');
-  addColumn('moves', 'round_number', 'INTEGER DEFAULT 1');
+  addColumn('users', 'show_card_points', 'INTEGER DEFAULT 1');
   addColumn('users', 'mute_sounds', 'INTEGER DEFAULT 0');
   addColumn('users', 'sound_volume', 'REAL DEFAULT 1.0');
   addColumn('users', 'time_zone', "TEXT DEFAULT 'UTC'");
@@ -176,13 +167,21 @@ try {
   addColumn('users', 'card_scale', "REAL DEFAULT 1.0");
   addColumn('users', 'scanlines_enabled', "INTEGER DEFAULT 1");
 
-  // If last_active_at was just added, it might be null for existing rows.
-  // We can optionally initialize it.
+  addColumn('games', 'drawn_card_json', 'TEXT');
+  addColumn('games', 'cpu_difficulty', "TEXT DEFAULT 'normal'");
+  addColumn('games', 'first_revealer_id', 'TEXT');
+  addColumn('games', 'is_hidden_from_history', 'BOOLEAN DEFAULT 0');
+  addColumn('games', 'round_number', 'INTEGER DEFAULT 1');
+  addColumn('games', 'next_game_id', 'TEXT');
+
+  addColumn('moves', 'snapshot_json', 'TEXT');
+  addColumn('moves', 'round_number', 'INTEGER DEFAULT 1');
+
+  addColumn('game_cards', 'id', 'TEXT');
+
   try {
     db.exec("UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE last_active_at IS NULL");
-  } catch (err) {
-    // Ignore error if column doesn't exist yet (though it should by now)
-  }
+  } catch (err) {}
 } catch (err) {
   console.error("Migration fatal error:", err);
 }
