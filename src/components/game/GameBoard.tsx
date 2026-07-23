@@ -266,7 +266,7 @@ export default function GameBoard({
 
       {/* Move History Panel (Rendered when mobileTab === 'history' on mobile, or in desktop layout) */}
       <div className={`w-full max-w-2xl mx-auto transition-all duration-500 mt-4 ${mobileTab === 'history' ? 'block' : 'hidden lg:block'}`}>
-        <div className="p-4 md:p-6 bg-bg-dark/90 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
+        <div className="p-4 md:p-6 bg-bg-dark/95 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
           <div className="flex items-center justify-between border-b-2 border-ui-border pb-3">
             <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
               <History size={16} /> MATCH MOVE HISTORY
@@ -274,26 +274,94 @@ export default function GameBoard({
             <span className="text-[10px] text-ui-gray font-mono">{state.moves?.length || 0} MOVES</span>
           </div>
 
-          <div className="max-h-[260px] overflow-y-auto space-y-2 pr-1 font-mono text-[10px] md:text-xs">
+          <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 font-mono text-[10px] md:text-xs">
             {!state.moves || state.moves.length === 0 ? (
               <div className="text-center text-ui-gray py-6 uppercase">No moves recorded yet</div>
             ) : (
               [...state.moves].reverse().map((m: any, idx: number) => {
                 const isMe = m.player_id === userId;
                 const senderName = isMe ? myName : m.player_id === (opponentId || 'cpu') ? opponentName : m.player_id;
+                const isRoundEnd = m.move_type === 'round_end';
+
+                if (isRoundEnd) {
+                  let snapshotCards: any[] = [];
+                  if (m.snapshot_json) {
+                    try {
+                      snapshotCards = JSON.parse(m.snapshot_json);
+                    } catch (e) {}
+                  }
+
+                  const p1Cards = snapshotCards.filter((c) => c.player_id === userId);
+                  const p2Cards = snapshotCards.filter((c) => c.player_id !== userId);
+
+                  return (
+                    <div
+                      key={m.id || idx}
+                      className="p-3 bg-ui-yellow/10 border-2 border-ui-yellow rounded flex flex-col gap-2"
+                    >
+                      <div className="flex items-center justify-between font-bold text-ui-yellow text-xs uppercase tracking-widest">
+                        <span>🏆 END OF ROUND {m.round_number || 1}</span>
+                        <span className="text-[10px] opacity-70">FINAL BOARD</span>
+                      </div>
+
+                      {snapshotCards.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-ui-yellow/30">
+                          <div>
+                            <div className="text-[10px] font-bold text-ui-green uppercase mb-1">{myName}</div>
+                            <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-2 border border-ui-border rounded">
+                              {p1Cards.map((c: any, cIdx: number) => (
+                                <div key={c.id || cIdx}>
+                                  <MiniCard suit={c.suit} value={c.value} />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-bold text-ui-red uppercase mb-1">{opponentName}</div>
+                            <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-2 border border-ui-border rounded">
+                              {p2Cards.map((c: any, cIdx: number) => (
+                                <div key={c.id || cIdx}>
+                                  <MiniCard suit={c.suit} value={c.value} />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                const isSwap = m.move_type && (m.move_type.includes('replace') || m.move_type.includes('swap'));
+                const isDiscard = m.move_type && m.move_type.includes('discard');
+                const isInitial = m.move_type && m.move_type.includes('initial');
+
                 return (
                   <div
                     key={m.id || idx}
-                    className="p-2.5 bg-black/50 border border-ui-border flex items-center justify-between gap-2 transition-all hover:border-ui-yellow/50"
+                    className="p-2.5 bg-black/60 border border-ui-border/80 rounded flex items-center justify-between gap-3 transition-all hover:border-ui-yellow/50"
                   >
-                    <span className="text-ui-gray shrink-0 font-bold">R{m.round_number || 1}</span>
-                    <span className={`font-bold truncate max-w-[110px] ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
-                      {senderName}
-                    </span>
-                    <span className="text-ui-yellow shrink-0 uppercase">
-                      {m.move_type ? m.move_type.replace('_', ' ') : 'MOVE'}
-                      {m.card_value ? ` (${m.card_suit || ''}${m.card_value})` : ''}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-ui-gray font-bold text-[9px]">R{m.round_number || 1}</span>
+                      <span className={`font-bold truncate max-w-[100px] ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
+                        {senderName}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <span className="text-[10px] text-ui-gray uppercase font-semibold">
+                        {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : isInitial ? 'REVEALED' : 'PLAYED'}
+                      </span>
+
+                      <MiniCard suit={m.card_suit} value={m.card_value} />
+
+                      {m.replaced_card_value && (
+                        <>
+                          <span className="text-ui-gray text-[10px]">➔</span>
+                          <MiniCard suit={m.replaced_card_suit} value={m.replaced_card_value} />
+                        </>
+                      )}
+                    </div>
                   </div>
                 );
               })
@@ -304,3 +372,29 @@ export default function GameBoard({
     </div>
   );
 }
+
+const MiniCard = ({ suit, value }: { suit?: string; value?: string }) => {
+  if (!suit || !value) return null;
+  const isRed = suit === 'hearts' || suit === 'diamonds' || suit === 'H' || suit === 'D' || suit === '♥' || suit === '♦';
+  const symbol =
+    suit === 'hearts' || suit === 'H'
+      ? '♥'
+      : suit === 'diamonds' || suit === 'D'
+      ? '♦'
+      : suit === 'clubs' || suit === 'C'
+      ? '♣'
+      : suit === 'spades' || suit === 'S'
+      ? '♠'
+      : suit;
+
+  return (
+    <div
+      className={`inline-flex items-center justify-center gap-1 px-1.5 py-0.5 border-2 rounded font-bold text-xs shadow-sm bg-white shrink-0 ${
+        isRed ? 'text-ui-red border-red-400' : 'text-black border-gray-400'
+      }`}
+    >
+      <span>{value}</span>
+      <span className="text-xs">{symbol}</span>
+    </div>
+  );
+};
