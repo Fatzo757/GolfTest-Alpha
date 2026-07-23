@@ -73,6 +73,9 @@ export interface GameState {
     player2_card_back_style?: string;
     player2_card_back_color?: string;
     player2_card_back_secondary_color?: string;
+    drawn_card?: Card | null;
+    round_number?: number;
+    next_game_id?: string | null;
   };
   cards: Card[];
   moves: Move[];

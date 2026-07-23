@@ -8,6 +8,9 @@ import UserAvatar from './UserAvatar.tsx';
 import CardComponent, { CardPattern, getCardBackColors } from './Card.tsx';
 import { formatMatchTime } from '../lib/timeUtils';
 import Confetti from './Confetti';
+import useSWR from 'swr';
+import { fetcher } from '../lib/fetcher';
+import { useGameSocket } from '../hooks/useGameSocket';
 
 interface GameProps {
   gameId: string;
@@ -19,10 +22,18 @@ interface GameProps {
 
 export default function Game({ gameId, token, user, onExit, onRematch }: GameProps) {
   const userId = user.id;
-  const [state, setState] = useState<GameState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const loadingStateRef = useRef(false);
+  
+  // Attach WebSocket connection for real-time room updates
+  useGameSocket(gameId);
+
+  // SWR data fetching with fallback refresh interval
+  const { data: state, error: swrError, isLoading: loading, mutate: revalidateState } = useSWR<GameState>(
+    gameId && token ? `/api/games/${gameId}` : null,
+    fetcher,
+    { refreshInterval: 10000 /* 10s fallback */ }
+  );
+
+  const error = swrError ? (swrError.status === 404 ? "Match not found or has been archived." : swrError.message) : null;
   const [isOpponentOnline, setIsOpponentOnline] = useState(true);
   const [notification, setNotification] = useState<{title: string, subtitle?: string} | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -37,7 +48,6 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   const discardPileRef = useRef<HTMLDivElement>(null);
   const gridRefs = useRef<(HTMLDivElement | null)[]>([]);
   const prevStateRef = useRef<GameState | null>(null);
-  const pollInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
@@ -45,144 +55,56 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     }
   }, []);
 
-  const fetchState = useCallback(async (silent = false) => {
-    if (loadingStateRef.current && !silent) return;
-    if (!token) return;
-
-    try {
-      if (!silent && !prevStateRef.current) setLoading(true);
-      loadingStateRef.current = true;
-
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+  useEffect(() => {
+    if (state && state.game) {
+      const prevState = prevStateRef.current;
       
-      if (res.status === 404) {
-        setError("Match not found or has been archived.");
-        setLoading(false);
-        return;
+      // Turn notification
+      if (prevState && prevState.game.current_turn_player_id !== userId && state.game.current_turn_player_id === userId) {
+        setNotification({ title: "IT'S YOUR TURN!", subtitle: "Choose your next move" });
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
+          try {
+            new Notification("GOLF CARD GAME", {
+              body: "IT'S YOUR TURN! Choose your next move.",
+              tag: 'golf-turn'
+            });
+          } catch (err) {}
+        }
+        if (user.mute_sounds === 0) {
+          soundService.playTurn();
+        }
+        setTimeout(() => setNotification(null), 5000);
       }
 
-      if (!res.ok) {
-        throw new Error(`Sync Error: ${res.status}`);
-      }
-
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Invalid response format");
-      }
-
-      const data = await res.json();
-      
-      if (data && data.game) {
-        const prevState = prevStateRef.current;
-        
-        // Turn notification
-        if (prevState && prevState.game.current_turn_player_id !== userId && data.game.current_turn_player_id === userId) {
-          setNotification({ title: "IT'S YOUR TURN!", subtitle: "Choose your next move" });
-          
-          // Browser Notification
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
-            try {
-              new Notification("GOLF CARD GAME", {
-                body: "IT'S YOUR TURN! Choose your next move.",
-                tag: 'golf-turn'
-              });
-            } catch (err) {
-              console.error("Notification failed:", err);
-            }
-          }
-
-          if (user.mute_sounds === 0) {
-            soundService.playTurn();
-          }
-          setTimeout(() => setNotification(null), 5000);
-        }
-
-        // Initialization notification
-        if (!prevState && data.game.status === 'initializing') {
-          setNotification({ title: "GAME SETUP", subtitle: "Reveal 2 cards to start" });
-          setTimeout(() => setNotification(null), 3000);
-        }
-        
-        // Game start notification
-        if (prevState && prevState.game.status === 'initializing' && data.game.status === 'playing') {
-          setNotification({ title: "GAME STARTED!", subtitle: "Select a card from the deck or discard pile" });
-          setTimeout(() => setNotification(null), 4000);
-        }
-
-        // Detect CPU move change
-        const cpuMoves = data.moves.filter((m: Move) => m.player_id === 'cpu');
-        if (cpuMoves.length > 0) {
-          const latestCpuMove = cpuMoves[0];
-          
-        }
-
-        // Sound triggers
-        if (prevState && prevState.game.status !== data.game.status) {
-          if (data.game.status === 'round_end') {
-            soundService.playRoundEnd();
-          } else if (data.game.status === 'finished') {
-            if (data.game.winner_player_id === userId) {
-              soundService.playWin();
-            } else {
-              soundService.playLose();
-            }
+      // Sounds
+      if (prevState && prevState.game.status !== state.game.status) {
+        if (state.game.status === 'round_end') {
+          soundService.playRoundEnd();
+        } else if (state.game.status === 'finished') {
+          if (state.game.winner_player_id === userId) {
+            soundService.playWin();
+          } else {
+            soundService.playLose();
           }
         }
-        
-        setState(data);
-        prevStateRef.current = data;
-        setError(null);
-      } else {
-        throw new Error("Empty game data received");
       }
-    } catch (err: any) {
-      if (err.message !== 'Failed to fetch') {
-        console.error('Fetch State Error:', err);
-      }
-      if (!prevStateRef.current) {
-        if (err.message === 'Failed to fetch') {
-          // Check if server is actually alive. If it is, this CORS error is likely a 404 swallowed by a proxy.
-          setError('Connecting to server...');
-          fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/health`)
-            .then(healthRes => {
-              if (healthRes.ok) setError('Game not found or has been deleted.');
-            })
-            .catch(() => {}); // Leave as 'Connecting to server...'
-        } else {
-          setError(err.message || 'Unknown sync error');
-        }
-      }
-    } finally {
-      setLoading(false);
-      loadingStateRef.current = false;
+
+      prevStateRef.current = state;
     }
-  }, [gameId, token, userId, user.mute_sounds]);
-
-  
+  }, [state, userId, user.mute_sounds]);
 
   useEffect(() => {
-    // Initial fetch
-    fetchState();
-    
-    pollInterval.current = setInterval(() => fetchState(true), 1500);
-
     // Heartbeat & Online Status check
     const heartbeatId = setInterval(async () => {
       if (!token) return;
       try {
-        // Update my own status
-        const hbRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/heartbeat`, {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/heartbeat`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` }
         });
-        
-        if (!hbRes.ok) return;
 
-        // Check opponent status
-        if (prevStateRef.current?.game.id) {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${prevStateRef.current.game.id}/online`, {
+        if (state?.game?.id) {
+          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${state.game.id}/online`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -190,16 +112,13 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
             setIsOpponentOnline(data.online);
           }
         }
-      } catch (err) {
-        // Silent fail for network errors during heartbeat
-      }
+      } catch (err) {}
     }, 5000);
 
     return () => {
-      if (pollInterval.current) clearInterval(pollInterval.current);
       clearInterval(heartbeatId);
     };
-  }, [fetchState, token]);
+  }, [token, state?.game?.id]);
 
   useEffect(() => {
     if (state?.game) {
@@ -227,7 +146,6 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       return;
     }
     
-    setLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/rematch`, {
         method: 'POST',
@@ -240,7 +158,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       if (res.ok) {
         onRematch(data.gameId);
       } else {
-        setError(data.error);
+        console.error('Rematch failed:', data.error);
         onExit(); // Fallback
       }
     } catch (err) {
@@ -264,7 +182,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       });
       if (res.ok) {
         soundService.playDraw();
-        fetchState(true);
+        revalidateState();
       } else {
         const error = await res.json().catch(() => ({ error: 'Unknown error' }));
         console.error('Draw failed:', error);
@@ -296,7 +214,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
         body: JSON.stringify({ cardIndex })
       });
       if (res.ok) {
-        fetchState(true);
+        revalidateState();
       }
     } catch (err) {
       console.error(err);
@@ -319,7 +237,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       if (res.ok) {
         soundService.playPlay();
         setMobileTab('opponent');
-        fetchState(true);
+        revalidateState();
       } else {
         const error = await res.json().catch(() => ({ error: 'Unknown error' }));
         console.error('Move failed:', error);
@@ -693,7 +611,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
           <div className="text-[0.75rem] text-ui-gray mb-8 uppercase text-center leading-loose max-w-xs">{error}</div>
           <div className="flex flex-col gap-4 w-full max-w-xs">
             <button 
-              onClick={() => fetchState(false)}
+              onClick={() => revalidateState()}
               className="geometric-button text-[0.75rem] w-full border-ui-yellow text-ui-yellow"
             >
               RETRY CONNECTION
@@ -1246,7 +1164,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}` }
                       });
-                      if (res.ok) fetchState(true);
+                      if (res.ok) revalidateState();
                     }}
                     className="geometric-button px-10 py-4 text-[0.75rem] shrink-0"
                   >

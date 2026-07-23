@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { WebSocketServer, WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -73,6 +74,45 @@ async function startServer() {
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`SERVER: Listening on http://0.0.0.0:${PORT}`);
   });
+
+  const wss = new WebSocketServer({ server, path: '/ws' });
+  const gameSockets = new Map<string, Set<WebSocket>>();
+
+  wss.on('connection', (ws: WebSocket, req: any) => {
+    try {
+      const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
+      const gameId = url.searchParams.get('gameId');
+
+      if (gameId) {
+        if (!gameSockets.has(gameId)) {
+          gameSockets.set(gameId, new Set());
+        }
+        gameSockets.get(gameId)!.add(ws);
+
+        ws.on('close', () => {
+          const sockets = gameSockets.get(gameId);
+          if (sockets) {
+            sockets.delete(ws);
+            if (sockets.size === 0) gameSockets.delete(gameId);
+          }
+        });
+      }
+    } catch (e) {
+      console.error("[WS] Connection error:", e);
+    }
+  });
+
+  const broadcastToGame = (gameId: string, payload: any) => {
+    const sockets = gameSockets.get(gameId);
+    if (sockets) {
+      const message = JSON.stringify(payload);
+      sockets.forEach((socket) => {
+        if (socket.readyState === 1 /* OPEN */) {
+          socket.send(message);
+        }
+      });
+    }
+  };
 
   server.on('error', (err: any) => {
     console.error("SERVER: Listen error callback:", err);
@@ -973,6 +1013,7 @@ async function startServer() {
     db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = ? WHERE id = ?")
       .run(JSON.stringify(deck), JSON.stringify(discard), JSON.stringify(drawn), gameId);
 
+    broadcastToGame(gameId, { type: 'GAME_UPDATED', gameId });
     res.json({ drawn });
   });
 
@@ -1083,6 +1124,7 @@ async function startServer() {
         }
       })();
 
+      broadcastToGame(gameId, { type: 'GAME_UPDATED', gameId });
       res.json({ success: true });
     } catch (err) {
       console.error(err);
@@ -1275,6 +1317,7 @@ async function startServer() {
        db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_affected_index, card_suit, card_value, replaced_card_suit, replaced_card_value) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
           .run(nanoid(), gameId, 'cpu', `cpu_replace_${cpuSource}`, indexToReplace, cardToPlace.suit, cardToPlace.value, existingCard?.suit, existingCard?.value);
     })();
+      broadcastToGame(gameId, { type: 'GAME_UPDATED', gameId });
     } catch (err) {
       console.error("CPU Move error:", err);
     }
@@ -1331,6 +1374,7 @@ async function startServer() {
       }
     }
 
+    broadcastToGame(gameId, { type: 'GAME_UPDATED', gameId });
     res.json({ success: true });
   });
 
