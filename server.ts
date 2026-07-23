@@ -1147,11 +1147,13 @@ async function startServer() {
           const p1Total = game.player1_total_score + p1Round;
           const p2Total = game.player2_total_score + p2Round;
 
+          db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
+
           if (p1Total >= 100 || p2Total >= 100) {
             status = 'finished';
             const winner = p1Total < p2Total ? game.player1_id : (game.player2_id || 'cpu');
-            db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'finished', winner_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-              .run(p1Total, p2Total, winner, gameId);
+            db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, player1_total_score = ?, player2_total_score = ?, status = 'finished', winner_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+              .run(JSON.stringify(deck), JSON.stringify(discard), p1Total, p2Total, winner, gameId);
               
             if (winner !== 'cpu') {
               sendPushNotification(winner, "Grand Victory!", "You won the game of Golf!", `/game/${gameId}`);
@@ -1161,7 +1163,8 @@ async function startServer() {
               }
             }
           } else {
-            db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'round_end' WHERE id = ?").run(p1Total, p2Total, gameId);
+            db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, player1_total_score = ?, player2_total_score = ?, status = 'round_end', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+              .run(JSON.stringify(deck), JSON.stringify(discard), p1Total, p2Total, gameId);
           }
         } else {
           db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
@@ -1354,13 +1357,16 @@ async function startServer() {
         const p1Total = game.player1_total_score + p1Round;
         const p2Total = game.player2_total_score + p2Round;
 
+        db.prepare("UPDATE game_cards SET is_face_up = 1 WHERE game_id = ?").run(gameId);
+
         if (p1Total >= 100 || p2Total >= 100) {
           status = 'finished';
           const winner = p1Total < p2Total ? game.player1_id : (game.player2_id || 'cpu');
-          db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'finished', winner_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-            .run(p1Total, p2Total, winner, gameId);
+          db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, player1_total_score = ?, player2_total_score = ?, status = 'finished', winner_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(JSON.stringify(deck), JSON.stringify(discard), p1Total, p2Total, winner, gameId);
         } else {
-          db.prepare("UPDATE games SET player1_total_score = ?, player2_total_score = ?, status = 'round_end' WHERE id = ?").run(p1Total, p2Total, gameId);
+          db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, player1_total_score = ?, player2_total_score = ?, status = 'round_end', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+            .run(JSON.stringify(deck), JSON.stringify(discard), p1Total, p2Total, gameId);
         }
       } else {
         db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")

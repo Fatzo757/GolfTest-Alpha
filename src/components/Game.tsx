@@ -39,6 +39,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     handleDraw,
     handleReveal,
     handleMove,
+    handleNextRound,
     revalidateState,
   } = useGameState(gameId, token, user);
 
@@ -254,6 +255,110 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
             {/* Chat Drawer */}
             <Chat gameId={gameId} userId={userId} token={token} user={user} />
+
+            {/* Round End Modal Overlay */}
+            <AnimatePresence>
+              {state.game.status === 'round_end' && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    className="geometric-border border-ui-yellow bg-bg-dark p-6 md:p-8 max-w-md w-full text-center space-y-6 shadow-[12px_12px_0px_0px_rgba(255,205,117,0.3)]"
+                  >
+                    <div className="text-ui-yellow font-mono text-xs tracking-widest uppercase animate-pulse">
+                      Round {state.game.round_number} Concluded
+                    </div>
+                    <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-white">Round Scores</h2>
+                    
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-black/40 border-2 border-ui-border">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{user.username}</span>
+                        <span className="text-2xl font-bold text-ui-green">{state.game.player1_total_score}</span>
+                        <span className="text-[9px] text-ui-gray">PTS TOTAL</span>
+                      </div>
+                      <div className="flex flex-col items-center border-l-2 border-ui-border">
+                        <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{opponentName}</span>
+                        <span className="text-2xl font-bold text-ui-red">{state.game.player2_total_score}</span>
+                        <span className="text-[9px] text-ui-gray">PTS TOTAL</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleNextRound}
+                      className="geometric-button text-xs w-full py-3 bg-ui-yellow text-black hover:bg-yellow-400 font-bold uppercase tracking-widest cursor-pointer"
+                    >
+                      START ROUND {state.game.round_number + 1}
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Game Finished Modal Overlay */}
+            <AnimatePresence>
+              {state.game.status === 'finished' && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    className={`geometric-border p-6 md:p-8 max-w-md w-full text-center space-y-6 shadow-[12px_12px_0px_0px_rgba(0,0,0,0.5)] ${
+                      state.game.winner_player_id === userId ? 'border-ui-green bg-bg-dark' : 'border-ui-red bg-bg-dark'
+                    }`}
+                  >
+                    <div className="flex justify-center">
+                      <Star className={state.game.winner_player_id === userId ? 'text-ui-green animate-bounce' : 'text-ui-red'} size={48} />
+                    </div>
+
+                    <div>
+                      <h2 className={`text-xl md:text-2xl font-bold uppercase tracking-wider ${
+                        state.game.winner_player_id === userId ? 'text-ui-green' : 'text-ui-red'
+                      }`}>
+                        {state.game.winner_player_id === userId ? 'VICTORY!' : 'GAME OVER'}
+                      </h2>
+                      <p className="text-xs text-ui-gray uppercase mt-1">
+                        {state.game.winner_player_id === userId ? 'You won the match!' : `${opponentName} won the match!`}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-black/40 border-2 border-ui-border">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{user.username}</span>
+                        <span className="text-2xl font-bold text-ui-green">{state.game.player1_total_score}</span>
+                      </div>
+                      <div className="flex flex-col items-center border-l-2 border-ui-border">
+                        <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{opponentName}</span>
+                        <span className="text-2xl font-bold text-ui-red">{state.game.player2_total_score}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={handleRematchClick}
+                        className="geometric-button text-xs w-full py-3 bg-ui-green text-black hover:bg-green-400 font-bold uppercase tracking-widest cursor-pointer"
+                      >
+                        REMATCH
+                      </button>
+                      <button
+                        onClick={onExit}
+                        className="geometric-button text-xs w-full py-3 border-2 border-ui-border text-ui-gray hover:text-white uppercase tracking-widest cursor-pointer"
+                      >
+                        RETURN TO LOBBY
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Confetti & Winner Screen */}
             {state.game.status === 'finished' && state.game.winner_player_id === userId && <Confetti />}

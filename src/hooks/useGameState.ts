@@ -246,6 +246,24 @@ export function useGameState(gameId: string, token: string, user: User) {
     }
   };
 
+  const handleNextRound = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/next-round`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        soundService.playDraw();
+        revalidateState();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return {
     state,
     loading,
@@ -266,6 +284,7 @@ export function useGameState(gameId: string, token: string, user: User) {
     handleDraw,
     handleReveal,
     handleMove,
+    handleNextRound,
     revalidateState,
   };
 }
