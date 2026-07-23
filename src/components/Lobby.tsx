@@ -4,6 +4,7 @@ import { Users, Monitor, Play, Hash, History, Award, Trash2, Settings, Eye, Trop
 import { motion, AnimatePresence } from 'motion/react';
 import UserAvatar from './UserAvatar.tsx';
 import { formatMatchTime } from '../lib/timeUtils';
+import { registerServiceWorker, subscribeUserToPush } from '../lib/push';
 
 interface LobbyProps {
   token: string;
@@ -32,11 +33,9 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
-    import('../lib/push').then(({ registerServiceWorker, subscribeUserToPush }) => {
-      registerServiceWorker().then(() => {
-        subscribeUserToPush(token);
-      });
-    }).catch(err => console.error('Failed to load push module:', err));
+    registerServiceWorker()
+      .then(() => subscribeUserToPush(token))
+      .catch((err) => console.error('Failed to register push:', err));
     
     fetchStats();
     fetchHistory();

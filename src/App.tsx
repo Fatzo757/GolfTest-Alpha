@@ -8,7 +8,7 @@ import AdminDashboard from './components/AdminDashboard.tsx';
 import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X } from 'lucide-react';
 import { soundService } from './services/soundService';
-import { clearAppBadge } from './lib/push.ts';
+import { clearAppBadge } from './lib/push';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from './store/useAuthStore';
 import { useUIStore, LobbyView } from './store/useUIStore';

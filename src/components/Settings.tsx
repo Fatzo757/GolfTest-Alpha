@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import UserAvatar, { AVATAR_LIST } from './UserAvatar';
 import { soundService } from '../services/soundService';
 import CardComponent from './Card';
+import { resetPushSubscription, testPushNotification } from '../lib/push';
 
 interface SettingsProps {
   user: any;
@@ -796,7 +797,6 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={async () => {
-                  const { resetPushSubscription } = await import('../lib/push');
                   const success = await resetPushSubscription(token);
                   alert(success ? "Notifications reset and re-subscribed successfully." : "Failed to reset notifications.");
                 }}
@@ -806,7 +806,6 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               </button>
               <button
                 onClick={async () => {
-                  const { testPushNotification } = await import('../lib/push');
                   const success = await testPushNotification(token);
                   if (!success) alert("Failed to send test notification. Try resetting your subscription.");
                 }}
