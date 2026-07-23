@@ -268,17 +268,21 @@ export default function GameBoard({
       <div className={`w-full max-w-2xl mx-auto transition-all duration-500 mt-4 ${mobileTab === 'history' ? 'block' : 'hidden lg:block'}`}>
         <div className="p-4 md:p-6 bg-bg-dark/95 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
           <div className="flex items-center justify-between border-b-2 border-ui-border pb-3">
-            <h3 className="text-[0.65rem] sm:text-xs md:text-sm font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
-              <History size={16} /> MATCH MOVE HISTORY
+            <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
+              <History size={18} /> MATCH MOVE HISTORY
             </h3>
-            <span className="text-[0.55rem] sm:text-[0.65rem] text-ui-gray font-bold tracking-wider">{state.moves?.length || 0} MOVES</span>
+            <span className="text-xs sm:text-sm text-ui-gray font-bold tracking-wider">
+              {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length} MOVES
+            </span>
           </div>
 
-          <div className="max-h-[300px] overflow-y-auto space-y-3 pr-1 text-[0.6rem] sm:text-xs">
-            {!state.moves || state.moves.length === 0 ? (
-              <div className="text-center text-ui-gray py-6 uppercase tracking-widest text-[0.6rem] sm:text-xs">No moves recorded yet</div>
+          <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1 text-xs sm:text-sm">
+            {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length === 0 ? (
+              <div className="text-center text-ui-gray py-6 uppercase tracking-widest text-xs sm:text-sm">
+                No moves recorded yet
+              </div>
             ) : (
-              [...state.moves].reverse().map((m: any, idx: number) => {
+              [...getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1)].reverse().map((m: any, idx: number) => {
                 const isMe = m.player_id === userId;
                 const senderName = isMe ? myName : m.player_id === (opponentId || 'cpu') ? opponentName : m.player_id;
                 const isRoundEnd = m.move_type === 'round_end';
@@ -294,21 +298,29 @@ export default function GameBoard({
                   const p1Cards = snapshotCards.filter((c) => c.player_id === userId);
                   const p2Cards = snapshotCards.filter((c) => c.player_id !== userId);
 
+                  const p1RoundPoints = calcCardsScore(p1Cards);
+                  const p2RoundPoints = calcCardsScore(p2Cards);
+
                   return (
                     <div
                       key={m.id || idx}
-                      className="p-3 bg-ui-yellow/10 border-2 border-ui-yellow rounded flex flex-col gap-2"
+                      className="p-3.5 bg-ui-yellow/10 border-2 border-ui-yellow rounded flex flex-col gap-3"
                     >
-                      <div className="flex items-center justify-between font-bold text-ui-yellow text-[0.6rem] sm:text-xs uppercase tracking-widest">
-                        <span>🏆 END OF ROUND {m.round_number || 1}</span>
-                        <span className="text-[0.55rem] opacity-80">FINAL BOARD</span>
+                      <div className="flex items-center justify-between font-bold text-ui-yellow text-xs sm:text-sm uppercase tracking-widest">
+                        <span>🏆 END OF ROUND {m.round_number || 1} SUMMARY</span>
+                        <span className="text-xs opacity-90">FINAL BOARD</span>
                       </div>
 
                       {snapshotCards.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-ui-yellow/30">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-ui-yellow/30">
                           <div>
-                            <div className="text-[0.55rem] sm:text-[0.65rem] font-bold text-ui-green uppercase tracking-wider mb-1">{myName}</div>
-                            <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-2 border border-ui-border rounded">
+                            <div className="text-xs sm:text-sm font-bold text-ui-green uppercase tracking-wider mb-1 flex justify-between items-center">
+                              <span>{myName}</span>
+                              <span className="bg-ui-green/20 px-2 py-0.5 border border-ui-green rounded text-xs font-bold">
+                                +{p1RoundPoints} PTS
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
                               {p1Cards.map((c: any, cIdx: number) => (
                                 <div key={c.id || cIdx}>
                                   <MiniCard suit={c.suit} value={c.value} />
@@ -316,9 +328,15 @@ export default function GameBoard({
                               ))}
                             </div>
                           </div>
+
                           <div>
-                            <div className="text-[0.55rem] sm:text-[0.65rem] font-bold text-ui-red uppercase tracking-wider mb-1">{opponentName}</div>
-                            <div className="grid grid-cols-3 gap-1.5 bg-black/40 p-2 border border-ui-border rounded">
+                            <div className="text-xs sm:text-sm font-bold text-ui-red uppercase tracking-wider mb-1 flex justify-between items-center">
+                              <span>{opponentName}</span>
+                              <span className="bg-ui-red/20 px-2 py-0.5 border border-ui-red rounded text-xs font-bold">
+                                +{p2RoundPoints} PTS
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
                               {p2Cards.map((c: any, cIdx: number) => (
                                 <div key={c.id || cIdx}>
                                   <MiniCard suit={c.suit} value={c.value} />
@@ -334,30 +352,29 @@ export default function GameBoard({
 
                 const isSwap = m.move_type && (m.move_type.includes('replace') || m.move_type.includes('swap'));
                 const isDiscard = m.move_type && m.move_type.includes('discard');
-                const isInitial = m.move_type && m.move_type.includes('initial');
 
                 return (
                   <div
                     key={m.id || idx}
-                    className="p-2.5 bg-black/60 border border-ui-border/80 rounded flex items-center justify-between gap-3 transition-all hover:border-ui-yellow/50"
+                    className="p-3 bg-black/60 border border-ui-border/80 rounded flex items-center justify-between gap-3 transition-all hover:border-ui-yellow/50"
                   >
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-ui-gray font-bold text-[0.55rem] tracking-wider">R{m.round_number || 1}</span>
-                      <span className={`font-bold truncate max-w-[100px] text-[0.6rem] sm:text-xs ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
+                      <span className="text-ui-gray font-bold text-xs tracking-wider">R{m.round_number || 1}</span>
+                      <span className={`font-bold truncate max-w-[120px] text-xs sm:text-sm ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
                         {senderName}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 flex-wrap justify-end">
-                      <span className="text-[0.55rem] sm:text-[0.65rem] text-ui-gray uppercase font-bold tracking-wider">
-                        {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : isInitial ? 'REVEALED' : 'PLAYED'}
+                    <div className="flex items-center gap-2.5 flex-wrap justify-end">
+                      <span className="text-xs text-ui-gray uppercase font-bold tracking-wider">
+                        {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : 'PLAYED'}
                       </span>
 
                       <MiniCard suit={m.card_suit} value={m.card_value} />
 
                       {m.replaced_card_value && (
                         <>
-                          <span className="text-ui-gray text-[0.6rem]">➔</span>
+                          <span className="text-ui-gray text-xs font-bold">➔</span>
                           <MiniCard suit={m.replaced_card_suit} value={m.replaced_card_value} />
                         </>
                       )}
@@ -372,6 +389,61 @@ export default function GameBoard({
     </div>
   );
 }
+
+const getPoints = (value: string) => {
+  if (value === 'J') return -2;
+  if (value === 'K') return 0;
+  if (value === 'Q') return 10;
+  if (value === 'A') return 1;
+  const num = parseInt(value);
+  return isNaN(num) ? 10 : num;
+};
+
+const calcCardsScore = (cards: any[]) => {
+  if (!cards || cards.length === 0) return 0;
+  const sorted = [...cards].sort((a, b) => (a.card_index || 0) - (b.card_index || 0));
+  const partOfSet = new Set<number>();
+  const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+  const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
+
+  rows.forEach((indices) => {
+    const row = indices.map((i) => sorted[i]);
+    const allFaceUp = row.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
+    if (allFaceUp && row[0] && row[1] && row[2] && row[0].value === row[1].value && row[1].value === row[2].value) {
+      indices.forEach((i) => partOfSet.add(i));
+    }
+  });
+
+  cols.forEach((indices) => {
+    const col = indices.map((i) => sorted[i]);
+    const allFaceUp = col.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
+    if (allFaceUp && col[0] && col[1] && col[2] && col[0].value === col[1].value && col[1].value === col[2].value) {
+      indices.forEach((i) => partOfSet.add(i));
+    }
+  });
+
+  let total = 0;
+  sorted.forEach((card, index) => {
+    if (card && (card.is_face_up || card.is_face_up === undefined) && !partOfSet.has(index)) {
+      total += getPoints(card.value);
+    }
+  });
+
+  return total;
+};
+
+const getFilteredHistoryMoves = (moves: any[], currentRound: number) => {
+  if (!moves || moves.length === 0) return [];
+  const nonInitial = moves.filter((m) => !m.move_type?.includes('initial'));
+
+  return nonInitial.filter((m) => {
+    const rNum = m.round_number || 1;
+    if (rNum < currentRound) {
+      return m.move_type === 'round_end';
+    }
+    return true;
+  });
+};
 
 const MiniCard = ({ suit, value }: { suit?: string; value?: string }) => {
   if (!suit || !value) return null;
@@ -389,12 +461,12 @@ const MiniCard = ({ suit, value }: { suit?: string; value?: string }) => {
 
   return (
     <div
-      className={`inline-flex items-center justify-center gap-1 px-1.5 py-0.5 border-2 rounded font-bold text-[0.65rem] sm:text-xs shadow-sm bg-white shrink-0 ${
+      className={`inline-flex items-center justify-center gap-1 px-2 py-1 border-2 rounded font-bold text-xs sm:text-sm shadow-sm bg-white shrink-0 ${
         isRed ? 'text-ui-red border-red-400' : 'text-black border-gray-400'
       }`}
     >
       <span>{value}</span>
-      <span className="text-[0.7rem] sm:text-xs">{symbol}</span>
+      <span className="text-xs sm:text-sm">{symbol}</span>
     </div>
   );
 };

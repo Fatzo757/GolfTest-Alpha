@@ -18,6 +18,74 @@ interface GameProps {
   onRematch?: (newGameId: string) => void;
 }
 
+const getCardValuePoints = (value: string) => {
+  if (value === 'J') return -2;
+  if (value === 'K') return 0;
+  if (value === 'Q') return 10;
+  if (value === 'A') return 1;
+  const num = parseInt(value);
+  return isNaN(num) ? 10 : num;
+};
+
+const calcPopupHandScore = (cards: any[]) => {
+  if (!cards || cards.length === 0) return 0;
+  const sorted = [...cards].sort((a, b) => (a.card_index || 0) - (b.card_index || 0));
+  const partOfSet = new Set<number>();
+  const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
+  const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
+
+  rows.forEach((indices) => {
+    const row = indices.map((i) => sorted[i]);
+    const allFaceUp = row.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
+    if (allFaceUp && row[0] && row[1] && row[2] && row[0].value === row[1].value && row[1].value === row[2].value) {
+      indices.forEach((i) => partOfSet.add(i));
+    }
+  });
+
+  cols.forEach((indices) => {
+    const col = indices.map((i) => sorted[i]);
+    const allFaceUp = col.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
+    if (allFaceUp && col[0] && col[1] && col[2] && col[0].value === col[1].value && col[1].value === col[2].value) {
+      indices.forEach((i) => partOfSet.add(i));
+    }
+  });
+
+  let total = 0;
+  sorted.forEach((card, index) => {
+    if (card && (card.is_face_up || card.is_face_up === undefined) && !partOfSet.has(index)) {
+      total += getCardValuePoints(card.value);
+    }
+  });
+
+  return total;
+};
+
+const PopupMiniCard = ({ suit, value }: { suit?: string; value?: string }) => {
+  if (!suit || !value) return null;
+  const isRed = suit === 'hearts' || suit === 'diamonds' || suit === 'H' || suit === 'D' || suit === '♥' || suit === '♦';
+  const symbol =
+    suit === 'hearts' || suit === 'H'
+      ? '♥'
+      : suit === 'diamonds' || suit === 'D'
+      ? '♦'
+      : suit === 'clubs' || suit === 'C'
+      ? '♣'
+      : suit === 'spades' || suit === 'S'
+      ? '♠'
+      : suit;
+
+  return (
+    <div
+      className={`inline-flex items-center justify-center gap-1 px-1.5 py-0.5 border-2 rounded font-bold text-xs shadow-sm bg-white shrink-0 ${
+        isRed ? 'text-ui-red border-red-400' : 'text-black border-gray-400'
+      }`}
+    >
+      <span>{value}</span>
+      <span className="text-xs">{symbol}</span>
+    </div>
+  );
+};
+
 export default function Game({ gameId, token, user, onExit, onRematch }: GameProps) {
   const {
     state,
@@ -263,34 +331,64 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+                  className="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
                 >
                   <motion.div
                     initial={{ scale: 0.9, y: 20 }}
                     animate={{ scale: 1, y: 0 }}
-                    className="geometric-border border-ui-yellow bg-bg-dark p-6 md:p-8 max-w-md w-full text-center space-y-6 shadow-[12px_12px_0px_0px_rgba(255,205,117,0.3)]"
+                    className="geometric-border border-ui-yellow bg-bg-dark p-6 md:p-8 max-w-lg w-full text-center space-y-6 shadow-[12px_12px_0px_0px_rgba(255,205,117,0.3)]"
                   >
                     <div className="text-ui-yellow font-mono text-xs tracking-widest uppercase animate-pulse">
                       Round {state.game.round_number} Concluded
                     </div>
-                    <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-white">Round Scores</h2>
-                    
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-black/40 border-2 border-ui-border">
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{user.username}</span>
-                        <span className="text-2xl font-bold text-ui-green">{state.game.player1_total_score}</span>
-                        <span className="text-[9px] text-ui-gray">PTS TOTAL</span>
+                    <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-white">Round Results</h2>
+
+                    {/* Player & Opponent Final Card Grids & Round Scores */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                      {/* Player Hand */}
+                      <div className="bg-black/50 p-3 border-2 border-ui-green rounded space-y-2">
+                        <div className="flex justify-between items-center border-b border-ui-green/30 pb-1">
+                          <span className="text-xs font-bold text-ui-green uppercase truncate">{user.username}</span>
+                          <span className="text-xs font-bold text-ui-green bg-ui-green/20 px-2 py-0.5 rounded border border-ui-green">
+                            +{calcPopupHandScore(myCards)} ROUND PTS
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5 place-items-center pt-1">
+                          {myCards.map((c, idx) => (
+                            <div key={c.id || idx}>
+                              <PopupMiniCard suit={c.suit} value={c.value} />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-[10px] text-ui-gray font-bold text-center pt-1 border-t border-ui-border/50">
+                          TOTAL SCORE: <span className="text-ui-green font-extrabold">{userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score} PTS</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col items-center border-l-2 border-ui-border">
-                        <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{opponentName}</span>
-                        <span className="text-2xl font-bold text-ui-red">{state.game.player2_total_score}</span>
-                        <span className="text-[9px] text-ui-gray">PTS TOTAL</span>
+
+                      {/* Opponent Hand */}
+                      <div className="bg-black/50 p-3 border-2 border-ui-red rounded space-y-2">
+                        <div className="flex justify-between items-center border-b border-ui-red/30 pb-1">
+                          <span className="text-xs font-bold text-ui-red uppercase truncate">{opponentName}</span>
+                          <span className="text-xs font-bold text-ui-red bg-ui-red/20 px-2 py-0.5 rounded border border-ui-red">
+                            +{calcPopupHandScore(opponentCards)} ROUND PTS
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5 place-items-center pt-1">
+                          {opponentCards.map((c, idx) => (
+                            <div key={c.id || idx}>
+                              <PopupMiniCard suit={c.suit} value={c.value} />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-[10px] text-ui-gray font-bold text-center pt-1 border-t border-ui-border/50">
+                          TOTAL SCORE: <span className="text-ui-red font-extrabold">{userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score} PTS</span>
+                        </div>
                       </div>
                     </div>
 
                     <button
                       onClick={handleNextRound}
-                      className="geometric-button text-xs w-full py-3 bg-ui-yellow text-black hover:bg-yellow-400 font-bold uppercase tracking-widest cursor-pointer"
+                      className="geometric-button text-xs w-full py-3 bg-ui-yellow text-black hover:bg-yellow-400 font-bold uppercase tracking-widest cursor-pointer mt-2"
                     >
                       START ROUND {state.game.round_number + 1}
                     </button>
