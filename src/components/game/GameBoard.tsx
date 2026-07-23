@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Star } from 'lucide-react';
+import { ChevronRight, Star, History } from 'lucide-react';
 import { GameState, Card, Move, User } from '../../types';
 import CardComponent from '../Card';
 import UserAvatar from '../UserAvatar';
@@ -263,6 +263,46 @@ export default function GameBoard({
           </div>
         </div>
       </div>
+
+      {/* Move History Panel (Rendered when mobileTab === 'history') */}
+      {mobileTab === 'history' && (
+        <div className="w-full max-w-2xl mx-auto transition-all duration-500">
+          <div className="p-4 md:p-6 bg-bg-dark/90 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
+            <div className="flex items-center justify-between border-b-2 border-ui-border pb-3">
+              <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
+                <History size={16} /> MATCH MOVE HISTORY
+              </h3>
+              <span className="text-[10px] text-ui-gray font-mono">{state.moves?.length || 0} MOVES</span>
+            </div>
+
+            <div className="max-h-[350px] overflow-y-auto space-y-2 pr-1 font-mono text-[10px] md:text-xs">
+              {!state.moves || state.moves.length === 0 ? (
+                <div className="text-center text-ui-gray py-6 uppercase">No moves recorded yet</div>
+              ) : (
+                [...state.moves].reverse().map((m: any, idx: number) => {
+                  const isMe = m.player_id === userId;
+                  const senderName = isMe ? myName : m.player_id === (opponentId || 'cpu') ? opponentName : m.player_id;
+                  return (
+                    <div
+                      key={m.id || idx}
+                      className="p-2.5 bg-black/50 border border-ui-border flex items-center justify-between gap-2 transition-all hover:border-ui-yellow/50"
+                    >
+                      <span className="text-ui-gray shrink-0 font-bold">R{m.round_number || 1}</span>
+                      <span className={`font-bold truncate max-w-[110px] ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
+                        {senderName}
+                      </span>
+                      <span className="text-ui-yellow shrink-0 uppercase">
+                        {m.move_type ? m.move_type.replace('_', ' ') : 'MOVE'}
+                        {m.card_value ? ` (${m.card_suit || ''}${m.card_value})` : ''}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
