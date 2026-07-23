@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { WebSocketServer, WebSocket } from "ws";
 import { createServer as createViteServer } from "vite";
 import path from "path";
@@ -127,6 +128,7 @@ async function startServer() {
   });
 
   app.use(express.json());
+  app.use(cookieParser());
 
   // SEED ADMINS
   try {
@@ -174,10 +176,24 @@ async function startServer() {
   }
 
   // --- Auth Middleware ---
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
   const authenticate = (req: any, res: any, next: any) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing authorization header" });
-    const token = authHeader.split(" ")[1];
+    let token = req.cookies?.golf_token;
+    if (!token && req.headers.authorization) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+    if (!token && req.query?.token) {
+      token = req.query.token as string;
+    }
+
+    if (!token) return res.status(401).json({ error: "Missing authentication token" });
+
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string; username: string };
       req.user = decoded;
@@ -390,6 +406,7 @@ async function startServer() {
       const password_hash = bcrypt.hashSync(password, 10);
       db.prepare("INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)").run(id, username, password_hash);
       const token = jwt.sign({ id, username }, JWT_SECRET);
+      res.cookie("golf_token", token, cookieOptions);
       res.json({ token, user: { id, username, is_admin: 0 } });
     } catch (err: any) {
       if (err.message.includes("UNIQUE constraint failed")) {
@@ -408,7 +425,14 @@ async function startServer() {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
+    res.cookie("golf_token", token, cookieOptions);
     res.json({ token, user: { id: user.id, username: user.username, is_admin: user.is_admin } });
+  });
+
+  // User Logout
+  app.post("/api/auth/logout", (req, res) => {
+    res.clearCookie("golf_token", cookieOptions);
+    res.json({ success: true });
   });
 
   // Get Current User

@@ -6,6 +6,7 @@ export const fetcher = async (url: string) => {
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
 
   const res = await fetch(fullUrl, {
+    credentials: 'include',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 

@@ -12,6 +12,7 @@ import { clearAppBadge } from './lib/push.ts';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from './store/useAuthStore';
 import { useUIStore, LobbyView } from './store/useUIStore';
+import { cn } from './lib/utils';
 
 export default function App() {
   const {
@@ -49,7 +50,7 @@ export default function App() {
     handleNavClick,
   } = useUIStore();
 
-  const isAdmin = user && (user.is_admin === 1 || user.username === 'fatzo757@gmail.com' || user.username === 'admin' || user.username === 'system');
+  const isAdmin = !!(user && user.is_admin === 1);
 
   useEffect(() => {
     clearAppBadge();
@@ -216,15 +217,19 @@ export default function App() {
 
   return (
     <div
-      className={`w-full flex flex-col bg-bg-dark text-text-main font-press-start theme-${user?.theme || 'default'} ${
+      className={cn(
+        'w-full flex flex-col bg-bg-dark text-text-main font-press-start',
+        `theme-${user?.theme || 'default'}`,
         currentGameId || replayGameId ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh] overflow-x-hidden relative'
-      }`}
+      )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div
-        className={`flex flex-col flex-1 z-0 ui-mode-${user?.ui_mode || 'retro'} ${
+        className={cn(
+          'flex flex-col flex-1 z-0',
+          `ui-mode-${user?.ui_mode || 'retro'}`,
           currentGameId || replayGameId ? 'absolute inset-0 overflow-hidden' : 'relative'
-        }`}
+        )}
       >
         {/* CRT Scanline Overlay */}
         {user?.scanlines_enabled !== 0 && (
@@ -233,22 +238,25 @@ export default function App() {
 
         {/* Header Container */}
         <div
-          className={`sticky top-0 z-[9000] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all ${
+          className={cn(
+            'sticky top-0 z-[9000] bg-bg-dark/95 backdrop-blur-sm border-b border-ui-border/30 transition-all',
             currentGameId || replayGameId ? 'p-1 md:p-2' : 'p-2 md:p-4'
-          }`}
+          )}
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.25rem)' }}
         >
           <header
-            className={`p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all ${
+            className={cn(
+              'p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all',
               currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'
-            }`}
+            )}
           >
             <div className="flex items-center gap-2 md:gap-4 relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`secondary-button w-11 h-11 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer ${
-                  currentGameId || replayGameId ? 'md:w-6 md:h-6' : ''
-                }`}
+                className={cn(
+                  'secondary-button w-11 h-11 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer',
+                  currentGameId || replayGameId && 'md:w-6 md:h-6'
+                )}
               >
                 {isMenuOpen ? (
                   <X className="text-white" size={16} />

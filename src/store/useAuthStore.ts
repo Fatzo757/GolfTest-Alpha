@@ -8,7 +8,7 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   isOnline: boolean;
-  
+
   // Actions
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
@@ -63,25 +63,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (token) {
       await unsubscribeFromPush(token);
     }
+
+    try {
+      await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch (e) {}
+
     get().setToken(null);
     set({ user: null });
   },
 
   checkAuth: async () => {
-    const { token } = get();
-    if (!token) {
-      set({ loading: false });
-      return;
-    }
-
     set({ loading: true });
+    const { token } = get();
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -100,14 +105,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (err: any) {
       if (err.name === 'AbortError') return;
       console.error('Auth check failed:', err);
-      set({ error: `Authentication service unavailable: ${err.message}` });
       if (err.message === 'UNAUTHORIZED') {
         get().setToken(null);
-        set({ user: null });
+        set({ user: null, error: null });
+      } else {
+        set({ error: `Authentication service unavailable: ${err.message}` });
       }
     } finally {
       clearTimeout(timeoutId);
       set({ loading: false });
     }
-  }
+  },
 }));

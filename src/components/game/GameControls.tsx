@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { GameState, Move, User } from '../../types';
 import CardComponent, { CardPattern, getCardBackColors } from '../Card';
 import { soundService } from '../../services/soundService';
+import { cn } from '../../lib/utils';
 
 interface GameControlsProps {
   state: GameState;
@@ -42,13 +43,11 @@ export default function GameControls({
           onClick={() => canDraw && handleDraw('deck')}
           whileHover={canDraw ? { scale: 1.1, rotate: 5, boxShadow: '8px 8px 0px 0px rgba(255,123,82,0.4)' } : {}}
           whileTap={canDraw ? { scale: 0.9 } : {}}
-          className={`w-full aspect-[3/4] geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal ${
-            canDraw ? '!border-black ring-2 ring-ui-yellow ring-offset-2 ring-offset-bg-dark' : 'opacity-60 !border-black'
-          } ${
-            latestMove?.player_id !== userId && latestMove?.move_type.includes('deck')
-              ? 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]'
-              : ''
-          }`}
+          className={cn(
+            'w-full aspect-[3/4] geometric-card geometric-card-back cursor-pointer transition-all relative small md:normal',
+            canDraw ? '!border-black ring-2 ring-ui-yellow ring-offset-2 ring-offset-bg-dark' : 'opacity-60 !border-black',
+            latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') && 'ring-2 ring-ui-orange ring-offset-2 ring-offset-bg-dark shadow-[0_0_10px_rgba(255,123,82,0.5)]'
+          )}
           style={{ backgroundColor: getCardBackColors(user.card_back_color || 'ui-red').hex }}
         >
           {latestMove?.player_id !== userId && latestMove?.move_type.includes('deck') && (
