@@ -19,6 +19,7 @@ export interface User {
   card_scale?: number;
   scanlines_enabled?: number;
   show_card_points?: number;
+  ui_mode?: string;
 }
 
 export interface Card {

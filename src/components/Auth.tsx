@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { User } from '../types.ts';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface AuthProps {
-  onLogin: (token: string, user: User) => void;
+  onLogin?: (token: string, user: User) => void;
 }
 
 export default function Auth({ onLogin }: AuthProps) {
+  const loginInStore = useAuthStore((state) => state.login);
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +21,7 @@ export default function Auth({ onLogin }: AuthProps) {
 
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const endpoint = isLogin ? `${baseUrl}/api/auth/login` : `${baseUrl}/api/auth/register`;
-    
+
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -27,9 +29,13 @@ export default function Auth({ onLogin }: AuthProps) {
         body: JSON.stringify({ username, password })
       });
       const data = await res.json();
-      
+
       if (res.ok) {
-        onLogin(data.token, data.user);
+        if (onLogin) {
+          onLogin(data.token, data.user);
+        } else {
+          loginInStore(data.token, data.user);
+        }
       } else {
         setError(data.error || 'Authentication failed');
       }
