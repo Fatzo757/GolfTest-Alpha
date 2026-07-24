@@ -123,6 +123,42 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   const discardPileRef = useRef<HTMLDivElement>(null);
   const gridRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+
+    // Detect horizontal swipe if deltaX > 40px and dominant over vertical scrolling
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      const tabs: ('me' | 'opponent' | 'history')[] = ['me', 'opponent', 'history'];
+      const currentIndex = tabs.indexOf(mobileTab);
+
+      if (deltaX < 0) {
+        // Swiping Left (finger moves left <-) -> next tab
+        if (currentIndex < tabs.length - 1) {
+          setMobileTab(tabs[currentIndex + 1]);
+        }
+      } else {
+        // Swiping Right (finger moves right ->) -> previous tab
+        if (currentIndex > 0) {
+          setMobileTab(tabs[currentIndex - 1]);
+        }
+      }
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   // Automatically switch mobileTab to active turn player on load and turn change
   useEffect(() => {
     if (state?.game?.status === 'playing' || state?.game?.status === 'initializing') {
@@ -285,7 +321,11 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                 </div>
 
                 {/* Game Main Layout */}
-                <div className="flex flex-col lg:flex-row gap-4 md:gap-6 items-start justify-center px-4">
+                <div
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  className="flex flex-col lg:flex-row gap-4 md:gap-6 items-start justify-center px-4"
+                >
                   {/* Center Column: Deck & Discard */}
                   <div className="w-full lg:w-36 xl:w-48 2xl:w-64 order-last lg:order-2 mt-2 lg:mt-0 relative z-40">
                     <GameControls

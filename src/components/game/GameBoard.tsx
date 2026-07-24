@@ -282,7 +282,7 @@ export default function GameBoard({
                 No moves recorded yet
               </div>
             ) : (
-              [...getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1)].reverse().map((m: any, idx: number) => {
+              getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).map((m: any, idx: number) => {
                 const isMe = m.player_id === userId;
                 const senderName = isMe ? myName : m.player_id === (opponentId || 'cpu') ? opponentName : m.player_id;
                 const isRoundEnd = m.move_type === 'round_end';
