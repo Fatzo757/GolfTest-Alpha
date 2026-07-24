@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { RefreshCw, ArrowLeft, History, Info, ChevronRight, X, ChevronDown, ChevronUp, Layers, Star } from 'lucide-react';
 import { User, GameState } from '../types';
@@ -122,6 +122,17 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
   const discardPileRef = useRef<HTMLDivElement>(null);
   const gridRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Automatically switch mobileTab to active turn player on load and turn change
+  useEffect(() => {
+    if (state?.game?.status === 'playing' || state?.game?.status === 'initializing') {
+      if (isMyTurn) {
+        setMobileTab('me');
+      } else {
+        setMobileTab('opponent');
+      }
+    }
+  }, [isMyTurn, state?.game?.status, state?.game?.current_turn_player_id]);
 
   const handleRematchClick = async () => {
     if (!state || !onRematch) {
