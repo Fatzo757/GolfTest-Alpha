@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Star, History } from 'lucide-react';
+import { ChevronRight, Star, History, Clock } from 'lucide-react';
 import { GameState, Card, Move, User } from '../../types';
 import CardComponent from '../Card';
 import UserAvatar from '../UserAvatar';
@@ -58,6 +58,8 @@ export default function GameBoard({
   handleReveal,
   handleMove,
 }: GameBoardProps) {
+  const [showTimestamps, setShowTimestamps] = useState(false);
+
   // Keyboard Shortcuts Listener (1-6 to reveal/replace, 'd' deck, 's' discard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -253,9 +255,9 @@ export default function GameBoard({
                   )}
 
                   {state.game.drawn_card && !card.is_face_up && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none">
+                    <div className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none">
                       <div className="text-xs text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               ))}
@@ -267,13 +269,29 @@ export default function GameBoard({
       {/* Move History Panel (Rendered when mobileTab === 'history' on mobile, or in desktop layout) */}
       <div className={`w-full max-w-2xl mx-auto transition-all duration-500 mt-4 ${mobileTab === 'history' ? 'block' : 'hidden lg:block'}`}>
         <div className="p-4 md:p-6 bg-bg-dark/95 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
-          <div className="flex items-center justify-between border-b-2 border-ui-border pb-3">
+          <div className="flex items-center justify-between border-b-2 border-ui-border pb-3 flex-wrap gap-2">
             <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
               <History size={18} /> MATCH MOVE HISTORY
             </h3>
-            <span className="text-xs sm:text-sm text-ui-gray font-bold tracking-wider">
-              {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length} MOVES
-            </span>
+            
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowTimestamps(!showTimestamps)}
+                className={`px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all cursor-pointer ${
+                  showTimestamps
+                    ? 'bg-ui-yellow text-black border-ui-yellow'
+                    : 'bg-black/60 text-ui-gray border-ui-border hover:text-white hover:border-ui-yellow/50'
+                }`}
+                title="Toggle Date & Time display for moves"
+              >
+                <Clock size={13} />
+                <span>{showTimestamps ? 'Hide Time' : 'Show Time'}</span>
+              </button>
+
+              <span className="text-xs sm:text-sm text-ui-gray font-bold tracking-wider">
+                {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length} MOVES
+              </span>
+            </div>
           </div>
 
           <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1 text-xs sm:text-sm">
@@ -346,6 +364,12 @@ export default function GameBoard({
                           </div>
                         </div>
                       )}
+                      {showTimestamps && m.timestamp && (
+                        <div className="text-[10px] sm:text-xs text-ui-yellow/80 font-mono flex items-center gap-1 pt-1 border-t border-ui-yellow/20">
+                          <Clock size={11} className="shrink-0" />
+                          <span>{formatMoveTimestamp(m.timestamp)}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 }
@@ -356,29 +380,38 @@ export default function GameBoard({
                 return (
                   <div
                     key={m.id || idx}
-                    className="p-3 bg-black/60 border border-ui-border/80 rounded flex items-center justify-between gap-3 transition-all hover:border-ui-yellow/50"
+                    className="p-3 bg-black/60 border border-ui-border/80 rounded flex flex-col gap-1.5 transition-all hover:border-ui-yellow/50"
                   >
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-ui-gray font-bold text-xs tracking-wider">R{m.round_number || 1}</span>
-                      <span className={`font-bold truncate max-w-[120px] text-xs sm:text-sm ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
-                        {senderName}
-                      </span>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-ui-gray font-bold text-xs tracking-wider">R{m.round_number || 1}</span>
+                        <span className={`font-bold truncate max-w-[120px] text-xs sm:text-sm ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
+                          {senderName}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 flex-wrap justify-end">
+                        <span className="text-xs text-ui-gray uppercase font-bold tracking-wider">
+                          {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : 'PLAYED'}
+                        </span>
+
+                        <MiniCard suit={m.card_suit} value={m.card_value} />
+
+                        {m.replaced_card_value && (
+                          <>
+                            <span className="text-ui-gray text-xs font-bold">➔</span>
+                            <MiniCard suit={m.replaced_card_suit} value={m.replaced_card_value} />
+                          </>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5 flex-wrap justify-end">
-                      <span className="text-xs text-ui-gray uppercase font-bold tracking-wider">
-                        {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : 'PLAYED'}
-                      </span>
-
-                      <MiniCard suit={m.card_suit} value={m.card_value} />
-
-                      {m.replaced_card_value && (
-                        <>
-                          <span className="text-ui-gray text-xs font-bold">➔</span>
-                          <MiniCard suit={m.replaced_card_suit} value={m.replaced_card_value} />
-                        </>
-                      )}
-                    </div>
+                    {showTimestamps && m.timestamp && (
+                      <div className="text-[10px] sm:text-xs text-ui-gray/80 font-mono flex items-center gap-1 pt-1 border-t border-ui-border/40">
+                        <Clock size={11} className="shrink-0 text-ui-gray" />
+                        <span>{formatMoveTimestamp(m.timestamp)}</span>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -389,6 +422,30 @@ export default function GameBoard({
     </div>
   );
 }
+
+const formatMoveTimestamp = (timestamp?: string) => {
+  if (!timestamp) return '';
+  const formattedTs = timestamp.includes('T') ? timestamp : timestamp.replace(' ', 'T') + 'Z';
+  const date = new Date(formattedTs);
+  if (isNaN(date.getTime())) {
+    const rawDate = new Date(timestamp);
+    if (isNaN(rawDate.getTime())) return timestamp;
+    return rawDate.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  }
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+};
 
 const getPoints = (value: string) => {
   if (value === 'J') return -2;
