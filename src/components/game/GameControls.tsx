@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { GameState, Move, User } from '../../types';
@@ -35,6 +35,11 @@ export default function GameControls({
   handleDraw,
   handleMove,
 }: GameControlsProps) {
+  const [droppedOnTarget, setDroppedOnTarget] = useState(false);
+
+  useEffect(() => {
+    setDroppedOnTarget(false);
+  }, [state.game.drawn_card?.id]);
   return (
     <div className="h-[145px] md:h-[200px] lg:h-auto p-2 md:p-6 geometric-border bg-black/10 grid grid-cols-3 place-items-center lg:flex lg:flex-col gap-2 md:gap-4 lg:gap-8 min-w-fit w-full">
       {/* Deck Slot */}
@@ -93,8 +98,11 @@ export default function GameControls({
                 <motion.div
                   drag={isMyTurn}
                   dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-                  dragSnapToOrigin
-                  onDragStart={() => soundService.playDraw()}
+                  dragSnapToOrigin={!droppedOnTarget}
+                  onDragStart={() => {
+                    setDroppedOnTarget(false);
+                    soundService.playDraw();
+                  }}
                   onDrag={(e, info) => {
                     const x = info.point.x;
                     const y = info.point.y;
@@ -122,6 +130,7 @@ export default function GameControls({
                     setDraggingOver(null);
                     const discardRect = discardPileRef.current?.getBoundingClientRect();
                     if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
+                      setDroppedOnTarget(true);
                       handleMove(0, 'discard_drawn');
                       return;
                     }
@@ -129,11 +138,13 @@ export default function GameControls({
                       for (let i = 0; i < gridRefs.current.length; i++) {
                         const rect = gridRefs.current[i]?.getBoundingClientRect();
                         if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                          setDroppedOnTarget(true);
                           handleMove(i, 'replace');
                           return;
                         }
                       }
                     }
+                    setDroppedOnTarget(false);
                   }}
                   whileHover={isMyTurn ? { scale: 1.05 } : {}}
                   whileDrag={{ scale: 1.15, zIndex: 100 }}
