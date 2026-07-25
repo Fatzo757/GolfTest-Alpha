@@ -8,9 +8,10 @@ const __dirname = path.dirname(__filename);
 const dbPath = process.env.USE_MEMORY_DB === 'true' ? ':memory:' : (process.env.DB_PATH || path.resolve(__dirname, '../golf.db'));
 const db = new Database(dbPath);
 
-// Enable foreign keys & WAL (Write-Ahead Logging) mode for concurrent read/write performance
+// Enable foreign keys, WAL (Write-Ahead Logging) mode, & busy timeout for concurrent read/write stability
 db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
+db.pragma('busy_timeout = 5000');
 
 // Initialize schema idempotently without data loss
 db.exec(`

@@ -1707,3 +1707,18 @@ console.log("SERVER: Calling startServer()...");
 startServer().catch(err => {
   console.error("SERVER: Fatal error during startServer():", err);
 });
+
+const handleGracefulShutdown = (signal: string) => {
+  console.log(`SERVER: Received ${signal}. Truncating WAL log and closing database...`);
+  try {
+    db.pragma('wal_checkpoint(TRUNCATE)');
+    db.close();
+    console.log("SERVER: Database closed cleanly.");
+  } catch (err) {
+    console.error("SERVER: Error closing database during shutdown:", err);
+  }
+  process.exit(0);
+};
+
+process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
