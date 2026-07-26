@@ -318,7 +318,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
               <div className="text-xs uppercase font-bold flex items-center gap-2">
                 <span className="opacity-70">VS</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-ui-green truncate max-w-[150px]">
+                  <span className="text-white font-bold truncate max-w-[150px]">
                     {game.player1_id === user.id ? (game.player2_name || (game.is_vs_cpu ? 'CPU' : 'WAITING ROOM')) : (game.player1_name || 'OPPONENT')}
                   </span>
                   {game.is_vs_cpu && (
@@ -341,7 +341,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     {game.status.replace('_', ' ')}
                   </span>
                   {game.status === 'playing' && (
-                    <span className={`font-bold ${game.current_turn_player_id === user.id ? 'text-ui-yellow animate-pulse' : 'text-ui-red'}`}>
+                    <span className={`font-bold ${game.current_turn_player_id === user.id ? 'text-ui-yellow animate-pulse' : 'text-white'}`}>
                       • {game.current_turn_player_id === user.id ? 'YOUR TURN' : "OPPONENT'S TURN"}
                     </span>
                   )}

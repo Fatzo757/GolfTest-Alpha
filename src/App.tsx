@@ -54,22 +54,41 @@ export default function App() {
 
   const isAdmin = !!(user && user.is_admin === 1);
 
+  // Automatic Live Update (OTA) check and seamless auto-restart
   useEffect(() => {
     clearAppBadge();
     notifyAppReady();
+
     getCurrentVersion().then((ver) => {
       if (ver) setAppVersion(ver);
     });
-    checkForLiveUpdate().then((res) => {
-      if (res.updateAvailable) {
-        setPushToast({
-          title: '⚡ App Update Downloaded',
-          body: 'Tap settings to reload or restart the app.',
-          url: '',
-        });
+
+    const runAutoUpdateCheck = async () => {
+      try {
+        const res = await checkForLiveUpdate();
+        if (res.updateAvailable) {
+          console.log('[LiveUpdate] OTA update ready! Applying auto-restart...');
+          if (!currentGameId && !replayGameId) {
+            await applyLiveUpdate();
+          } else {
+            setPushToast({
+              title: '⚡ App Update Ready',
+              body: 'Update will auto-apply when you exit your match.',
+              url: '',
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[LiveUpdate] Auto-update check error:', err);
       }
-    });
-  }, [setPushToast, setAppVersion]);
+    };
+
+    runAutoUpdateCheck();
+
+    // Check for OTA updates every 30 seconds
+    const interval = setInterval(runAutoUpdateCheck, 30000);
+    return () => clearInterval(interval);
+  }, [currentGameId, replayGameId, setPushToast, setAppVersion]);
 
   // Fetch initial app version
   useEffect(() => {
