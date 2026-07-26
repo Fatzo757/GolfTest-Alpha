@@ -10,6 +10,7 @@ import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu
 import { soundService } from './services/soundService';
 import { clearAppBadge } from './lib/push';
 import { notifyAppReady, checkForLiveUpdate, applyLiveUpdate, getCurrentVersion, resetLiveUpdateBundle } from './services/liveUpdateService';
+import { getApiUrl } from './lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from './store/useAuthStore';
 import { useUIStore, LobbyView } from './store/useUIStore';
@@ -72,7 +73,7 @@ export default function App() {
 
   // Fetch initial app version
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/settings`)
+    fetch(getApiUrl('/api/settings'))
       .then((res) => res.json())
       .then((data) => {
         if (data && data.app_version) {

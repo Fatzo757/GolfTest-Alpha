@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Badge } from '@capawesome/capacitor-badge';
+import { getApiUrl } from './api';
 
 export async function clearAppBadge() {
   if (Capacitor.isNativePlatform()) {
@@ -73,7 +74,7 @@ export async function subscribeUserToPush(token: string) {
 
       PushNotifications.addListener('registration', async (tokenObj) => {
         try {
-          await fetchWithRetry(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
+          await fetchWithRetry(getApiUrl('/api/push/subscribe'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ export async function subscribeUserToPush(token: string) {
 
     const registration = await navigator.serviceWorker.ready;
     
-    const keyRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/public-key`, {
+    const keyRes = await fetch(getApiUrl('/api/push/public-key'), {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     const { publicKey } = await keyRes.json();
@@ -134,7 +135,7 @@ export async function subscribeUserToPush(token: string) {
         applicationServerKey: urlBase64ToUint8Array(publicKey)
       });
 
-      await fetchWithRetry(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/subscribe`, {
+      await fetchWithRetry(getApiUrl('/api/push/subscribe'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +190,7 @@ export async function resetPushSubscription(token: string) {
 
 export async function testPushNotification(token: string) {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/test`, {
+    const res = await fetch(getApiUrl('/api/push/test'), {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -212,7 +213,7 @@ export async function unsubscribeFromPush(token: string) {
       await PushNotifications.removeAllListeners();
     }
     
-    await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/push/unsubscribe`, {
+    await fetch(getApiUrl('/api/push/unsubscribe'), {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });

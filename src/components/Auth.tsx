@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { User } from '../types.ts';
 import { useAuthStore } from '../store/useAuthStore';
+import { getApiUrl, getApiBaseUrl, setCustomApiBaseUrl } from '../lib/api';
+import { Server, Settings } from 'lucide-react';
 
 interface AuthProps {
   onLogin?: (token: string, user: User) => void;
@@ -13,14 +15,24 @@ export default function Auth({ onLogin }: AuthProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Server Config state
+  const [showServerConfig, setShowServerConfig] = useState(false);
+  const [serverUrl, setServerUrl] = useState(getApiBaseUrl());
+
+  const handleSaveServerUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCustomApiBaseUrl(serverUrl);
+    setError('Server URL updated! Try logging in again.');
+    setShowServerConfig(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    const endpoint = isLogin ? `${baseUrl}/api/auth/login` : `${baseUrl}/api/auth/register`;
+    const endpoint = getApiUrl(isLogin ? '/api/auth/login' : '/api/auth/register');
 
     try {
       const res = await fetch(endpoint, {
@@ -28,6 +40,14 @@ export default function Auth({ onLogin }: AuthProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
+
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        setError('Cannot reach server API. Please check your backend URL or server status.');
+        setShowServerConfig(true);
+        return;
+      }
+
       const data = await res.json();
 
       if (res.ok) {
@@ -40,7 +60,8 @@ export default function Auth({ onLogin }: AuthProps) {
         setError(data.error || 'Authentication failed');
       }
     } catch (err: any) {
-      setError(`Connection error: ${err.message}`);
+      setError(`Connection error: ${err.message || 'Server unreachable'}`);
+      setShowServerConfig(true);
     } finally {
       setLoading(false);
     }
@@ -48,9 +69,54 @@ export default function Auth({ onLogin }: AuthProps) {
 
   return (
     <div className={`max-w-md mx-auto mt-10 p-8 geometric-border transition-colors duration-500 ${isLogin ? '!bg-ui-blue' : '!bg-ui-purple'}`}>
-      <h2 className="text-sm mb-8 text-center text-ui-yellow tracking-tighter">
-        {isLogin ? 'Login' : 'Create Account'}
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-sm text-ui-yellow tracking-tighter uppercase font-bold">
+          {isLogin ? 'Login' : 'Create Account'}
+        </h2>
+        <button
+          type="button"
+          onClick={() => setShowServerConfig(!showServerConfig)}
+          className="text-white/60 hover:text-ui-yellow transition-colors flex items-center gap-1 text-[10px] uppercase font-mono"
+        >
+          <Server size={14} /> Server
+        </button>
+      </div>
+
+      {showServerConfig && (
+        <form onSubmit={handleSaveServerUrl} className="mb-6 p-4 bg-black/90 border-2 border-ui-yellow space-y-3">
+          <div className="text-[10px] text-ui-yellow font-bold uppercase tracking-widest flex items-center gap-2">
+            <Settings size={12} /> Server Endpoint Config
+          </div>
+          <p className="text-[9px] text-white/70">
+            Set your backend server IP/Domain (e.g. <code>http://192.168.1.50:3000</code> or <code>https://your-domain.com</code>).
+          </p>
+          <input
+            type="text"
+            value={serverUrl}
+            onChange={(e) => setServerUrl(e.target.value)}
+            placeholder="http://your-server-ip:3000"
+            className="w-full bg-bg-dark border border-ui-border p-2 text-xs text-white font-mono"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="flex-1 py-1.5 bg-ui-yellow text-black font-bold text-[10px] uppercase hover:bg-yellow-400"
+            >
+              Save Server URL
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomApiBaseUrl('');
+                setServerUrl('');
+              }}
+              className="py-1.5 px-3 bg-white/10 text-white font-bold text-[10px] uppercase hover:bg-white/20"
+            >
+              Reset
+            </button>
+          </div>
+        </form>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-black/80 p-4 border border-ui-border/40 shadow-inner">

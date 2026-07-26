@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSWRConfig } from 'swr';
 import { useAuthStore } from '../store/useAuthStore';
+import { getApiBaseUrl } from '../lib/api';
 
 export function useGameSocket(gameId: string | null) {
   const { mutate } = useSWRConfig();
@@ -10,16 +11,15 @@ export function useGameSocket(gameId: string | null) {
   useEffect(() => {
     if (!gameId || !token) return;
 
-    // Determine WS protocol based on window location
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const apiBase = getApiBaseUrl();
+    let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     let host = window.location.host;
 
-    // Handle Vite dev server port vs Express backend port if configured
-    const apiBase = import.meta.env.VITE_API_BASE_URL;
     if (apiBase) {
       try {
         const url = new URL(apiBase);
         host = url.host;
+        protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
       } catch (e) {}
     }
 

@@ -1,5 +1,6 @@
 import { LiveUpdate } from '@capawesome/capacitor-live-update';
 import { Capacitor } from '@capacitor/core';
+import { getApiUrl, getApiBaseUrl } from '../lib/api';
 
 export interface LiveUpdateCheckResult {
   updateAvailable: boolean;
@@ -51,8 +52,8 @@ export async function checkForLiveUpdate(): Promise<LiveUpdateCheckResult> {
     console.log('[LiveUpdate] Current bundle ID:', currentBundleId);
 
     // 2. Resolve server manifest URL
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
-    const manifestUrl = `${baseUrl.replace(/\/$/, '')}/api/live-update/manifest`;
+    const baseUrl = getApiBaseUrl();
+    const manifestUrl = getApiUrl('/api/live-update/manifest');
 
     console.log('[LiveUpdate] Fetching manifest from:', manifestUrl);
     const response = await fetch(manifestUrl);
