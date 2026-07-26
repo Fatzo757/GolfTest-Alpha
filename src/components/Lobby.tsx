@@ -757,22 +757,24 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                         <Trophy size={20} />
                       </div>
                       <div>
-                        <div className="text-xs uppercase font-bold mb-1 flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <div className="w-4 h-4 flex items-center justify-center opacity-70">
-                               <UserAvatar type={game.player1_avatar} size={12} />
+                        <div className="text-xs sm:text-sm font-extrabold uppercase mb-1.5 flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                               <UserAvatar type={game.player1_avatar} size={16} />
                             </div>
-                            <span className={game.player1_id === game.winner_player_id ? 'text-ui-green' : ''}>{game.player1_name}</span>
+                            <span className={game.player1_id === game.winner_player_id ? 'text-ui-green font-black' : 'text-gray-900 font-extrabold'}>{game.player1_name}</span>
                           </div>
-                          <span className="mx-2 opacity-30 text-[10px]">VS</span>
-                          <div className="flex items-center gap-1">
-                            <div className="w-4 h-4 flex items-center justify-center opacity-70">
-                               <UserAvatar type={game.player2_avatar} size={12} />
+
+                          <span className="mx-1 px-2 py-0.5 bg-black text-ui-yellow text-[10px] font-black border border-ui-yellow rounded shadow-sm">VS</span>
+
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                               <UserAvatar type={game.player2_avatar} size={16} />
                             </div>
-                            <span className={game.player2_id === game.winner_player_id ? 'text-ui-green' : ''}>{game.player2_name}</span>
+                            <span className={game.player2_id === game.winner_player_id ? 'text-ui-green font-black' : 'text-gray-900 font-extrabold'}>{game.player2_name}</span>
                           </div>
                         </div>
-                        <div className="text-[10px] text-ui-gray uppercase letter-spacing-widest">
+                        <div className="text-xs font-mono font-bold text-gray-700 uppercase tracking-wide">
                           {game.player1_total_score} - {game.player2_total_score} • {formatMatchTime(game.updated_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
                         </div>
                       </div>

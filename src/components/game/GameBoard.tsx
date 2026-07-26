@@ -371,9 +371,9 @@ export default function GameBoard({
                         </div>
                       )}
                       {showTimestamps && m.timestamp && (
-                        <div className="text-[10px] sm:text-xs text-ui-yellow/80 font-mono flex items-center gap-1 pt-1 border-t border-ui-yellow/20">
-                          <Clock size={11} className="shrink-0" />
-                          <span>{formatMoveTimestamp(m.timestamp)}</span>
+                        <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-yellow/30">
+                          <Clock size={13} className="shrink-0 text-ui-yellow" />
+                          <span className="tracking-wide">{formatMoveTimestamp(m.timestamp)}</span>
                         </div>
                       )}
                     </div>
@@ -413,9 +413,9 @@ export default function GameBoard({
                     </div>
 
                     {showTimestamps && m.timestamp && (
-                      <div className="text-[10px] sm:text-xs text-ui-gray/80 font-mono flex items-center gap-1 pt-1 border-t border-ui-border/40">
-                        <Clock size={11} className="shrink-0 text-ui-gray" />
-                        <span>{formatMoveTimestamp(m.timestamp)}</span>
+                      <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-border/60">
+                        <Clock size={13} className="shrink-0 text-ui-yellow" />
+                        <span className="tracking-wide">{formatMoveTimestamp(m.timestamp)}</span>
                       </div>
                     )}
                   </div>
