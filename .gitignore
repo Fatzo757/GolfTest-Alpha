@@ -10,3 +10,5 @@ coverage/
 !.env.example
 golf.db*
 vapid.json
+public/live-updates/
+public/version.json

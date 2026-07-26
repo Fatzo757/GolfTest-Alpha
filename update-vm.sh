@@ -16,8 +16,9 @@ echo "--- UPDATING GOLF CARD GAME ---"
 
 cd "$APP_DIR"
 
-# 1. Pull latest changes
+# 1. Pull latest changes (cleaning generated build assets first)
 echo "Pulling latest code..."
+git checkout -- public/live-updates/ public/version.json 2>/dev/null || true
 git pull
 
 # 2. Install any new dependencies
