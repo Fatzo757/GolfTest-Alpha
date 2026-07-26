@@ -743,60 +743,64 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
               </div>
             ) : (
               <div className="grid gap-4">
-                {history.map((game, index) => (
-                  <motion.div 
-                    key={game.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ scale: 1.01 }}
-                    className="p-6 geometric-border bg-ui-blue/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 h-full group"
-                  >
-                    <div className="flex items-center gap-6">
-                      <div className={`p-3 border-2 ${game.winner_player_id === 'cpu' || game.winner_player_id ? 'border-ui-green text-ui-green' : 'border-ui-red text-ui-red'}`}>
-                        <Trophy size={20} />
-                      </div>
-                      <div>
-                        <div className="text-xs sm:text-sm font-extrabold uppercase mb-1.5 flex items-center gap-2 flex-wrap">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                               <UserAvatar type={game.player1_avatar} size={16} />
+                {history.map((game, index) => {
+                  const isUserWinner = game.winner_player_id === user.id;
+
+                  return (
+                    <motion.div 
+                      key={game.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      whileHover={{ scale: 1.01 }}
+                      className="p-6 geometric-border bg-ui-blue/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 h-full group"
+                    >
+                      <div className="flex items-center gap-6">
+                        <div className={`p-3 border-2 rounded shadow-md ${isUserWinner ? 'border-ui-green text-ui-green bg-black' : 'border-ui-red text-ui-red bg-black'}`}>
+                          <Trophy size={22} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                          <div className="text-xs sm:text-sm font-extrabold uppercase mb-1.5 flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                                 <UserAvatar type={game.player1_avatar} size={16} />
+                              </div>
+                              <span className={game.player1_id === game.winner_player_id ? 'text-emerald-800 font-black' : 'text-ui-red font-black'}>{game.player1_name}</span>
                             </div>
-                            <span className={game.player1_id === game.winner_player_id ? 'text-ui-green font-black' : 'text-gray-900 font-extrabold'}>{game.player1_name}</span>
+
+                            <span className="mx-1 px-2 py-0.5 bg-black text-ui-yellow text-[10px] font-black border border-ui-yellow rounded shadow-sm">VS</span>
+
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                                 <UserAvatar type={game.player2_avatar} size={16} />
+                              </div>
+                              <span className={game.player2_id === game.winner_player_id ? 'text-emerald-800 font-black' : 'text-ui-red font-black'}>{game.player2_name}</span>
+                            </div>
                           </div>
-
-                          <span className="mx-1 px-2 py-0.5 bg-black text-ui-yellow text-[10px] font-black border border-ui-yellow rounded shadow-sm">VS</span>
-
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                               <UserAvatar type={game.player2_avatar} size={16} />
-                            </div>
-                            <span className={game.player2_id === game.winner_player_id ? 'text-ui-green font-black' : 'text-gray-900 font-extrabold'}>{game.player2_name}</span>
+                          <div className="text-xs font-mono font-bold text-gray-700 uppercase tracking-wide">
+                            {game.player1_total_score} - {game.player2_total_score} • {formatMatchTime(game.updated_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
                           </div>
                         </div>
-                        <div className="text-xs font-mono font-bold text-gray-700 uppercase tracking-wide">
-                          {game.player1_total_score} - {game.player2_total_score} • {formatMatchTime(game.updated_at, { timeZone: user.time_zone, timeFormat: user.time_format, showDate: !!user.show_date })}
-                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-start md:justify-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
-                      <button 
-                        onClick={() => onViewReplay(game.id)}
-                        className="geometric-button px-4 py-3 text-xs flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
-                      >
-                        <Eye size={12} />
-                        REPLAY
-                      </button>
-                      <button 
-                         onClick={() => deleteMatch(game.id)}
-                         className="p-3 text-ui-red hover:bg-ui-red/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 bg-ui-red/5 rounded-full"
-                         title="Remove from history"
-                      >
-                        <Trash2 size={24} />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="flex flex-wrap items-center justify-start md:justify-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
+                        <button 
+                          onClick={() => onViewReplay(game.id)}
+                          className="geometric-button px-4 py-3 text-xs flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
+                        >
+                          <Eye size={12} />
+                          REPLAY
+                        </button>
+                        <button 
+                           onClick={() => deleteMatch(game.id)}
+                           className="p-3 text-ui-red hover:bg-ui-red/10 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 bg-ui-red/5 rounded-full"
+                           title="Remove from history"
+                        >
+                          <Trash2 size={24} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </motion.div>
