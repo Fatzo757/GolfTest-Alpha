@@ -10,6 +10,11 @@ const config: CapacitorConfig = {
     },
     SystemBars: {
       style: "DARK"
+    },
+    LiveUpdate: {
+      appId: 'com.golfgame.app',
+      autoDeleteBundles: true,
+      readyTimeout: 10000
     }
   }
 };

@@ -56,7 +56,7 @@ Ensure your VM's firewall allows incoming traffic on the application port (defau
   ```bash
   cd ~/golf-card-game
   git pull
-  npm run build
+  npm run bundle:live-update
   pm2 restart golf-game
   ```
 

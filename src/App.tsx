@@ -9,6 +9,7 @@ import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X, WifiOff } from 'lucide-react';
 import { soundService } from './services/soundService';
 import { clearAppBadge } from './lib/push';
+import { notifyAppReady, checkForLiveUpdate, applyLiveUpdate, getCurrentVersion } from './services/liveUpdateService';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from './store/useAuthStore';
 import { useUIStore, LobbyView } from './store/useUIStore';
@@ -54,7 +55,20 @@ export default function App() {
 
   useEffect(() => {
     clearAppBadge();
-  }, []);
+    notifyAppReady();
+    getCurrentVersion().then((ver) => {
+      if (ver) setAppVersion(ver);
+    });
+    checkForLiveUpdate().then((res) => {
+      if (res.updateAvailable) {
+        setPushToast({
+          title: '⚡ App Update Downloaded',
+          body: 'Tap settings to reload or restart the app.',
+          url: '',
+        });
+      }
+    });
+  }, [setPushToast, setAppVersion]);
 
   // Fetch initial app version
   useEffect(() => {

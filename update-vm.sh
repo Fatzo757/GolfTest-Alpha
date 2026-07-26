@@ -24,9 +24,9 @@ git pull
 echo "Installing dependencies..."
 npm install
 
-# 3. Rebuild frontend
-echo "Building production assets..."
-npm run build
+# 3. Rebuild frontend and package Live Update bundle
+echo "Building production assets & packaging Live Update bundle..."
+npm run bundle:live-update
 
 # 4. Restart with PM2
 echo "Restarting application..."

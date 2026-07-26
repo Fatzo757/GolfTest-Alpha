@@ -1679,6 +1679,23 @@ async function startServer() {
     });
   });
 
+  // --- Live Update Endpoints ---
+  const liveUpdatesDir = path.join(process.cwd(), "public", "live-updates");
+  app.use("/live-updates", express.static(liveUpdatesDir));
+
+  app.get("/api/live-update/manifest", (_req, res) => {
+    const manifestPath = path.join(liveUpdatesDir, "manifest.json");
+    if (fs.existsSync(manifestPath)) {
+      try {
+        const manifestData = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+        return res.json(manifestData);
+      } catch (err) {
+        return res.status(500).json({ error: "Failed to parse live update manifest" });
+      }
+    }
+    return res.status(404).json({ error: "No live update manifest available" });
+  });
+
   // --- Vite Middleware ---
   if (process.env.NODE_ENV !== "production") {
     console.log("SERVER: Starting Vite in middleware mode...");

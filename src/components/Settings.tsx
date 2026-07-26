@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Palette, Layers, X, Check, User as UserIcon, Volume2, VolumeX, Clock, Calendar, Key } from 'lucide-react';
+import { Palette, Layers, X, Check, User as UserIcon, Volume2, VolumeX, Clock, Calendar, Key, RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
 import UserAvatar, { AVATAR_LIST } from './UserAvatar';
 import { soundService } from '../services/soundService';
 import CardComponent from './Card';
 import { resetPushSubscription, testPushNotification } from '../lib/push';
+import { checkForLiveUpdate, applyLiveUpdate } from '../services/liveUpdateService';
 
 interface SettingsProps {
   user: any;
@@ -82,6 +83,27 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [passError, setPassError] = useState<string | null>(null);
   const [passSuccess, setPassSuccess] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [updateChecking, setUpdateChecking] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+
+  const handleManualLiveUpdateCheck = async () => {
+    setUpdateChecking(true);
+    setUpdateStatus('Checking for live update...');
+    try {
+      const res = await checkForLiveUpdate();
+      if (res.updateAvailable) {
+        setUpdateStatus('New update ready! Tap below to reload.');
+      } else if (res.error) {
+        setUpdateStatus(`Check failed: ${res.error}`);
+      } else {
+        setUpdateStatus('App is up to date.');
+      }
+    } catch (err: any) {
+      setUpdateStatus('Failed to check for updates.');
+    } finally {
+      setUpdateChecking(false);
+    }
+  };
 
   const isWin32Mode = uiMode === 'classic' || uiMode === 'modern_win32';
   const activeThemes = isWin32Mode ? WIN32_THEMES : NEON_THEMES;
@@ -813,6 +835,39 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               >
                 Test Notification
               </button>
+            </div>
+
+            {/* Live Updates Section */}
+            <div className="pt-6 border-t border-ui-border/40 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
+                <RefreshCw size={14} /> Live Updates (OTA)
+              </h3>
+              <p className="text-[11px] text-white/60">
+                Check for over-the-air web updates to get the latest features without re-installing the APK.
+              </p>
+              {updateStatus && (
+                <div className="text-[11px] font-mono text-ui-yellow bg-black/40 p-2.5 rounded border border-ui-border">
+                  {updateStatus}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={updateChecking}
+                  onClick={handleManualLiveUpdateCheck}
+                  className="flex-1 py-2.5 bg-ui-yellow/20 border-2 border-ui-yellow text-ui-yellow font-bold text-xs uppercase hover:bg-ui-yellow hover:text-black transition-all flex items-center justify-center gap-2"
+                >
+                  <RefreshCw size={14} className={updateChecking ? 'animate-spin' : ''} />
+                  {updateChecking ? 'Checking...' : 'Check for Updates'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyLiveUpdate()}
+                  className="py-2.5 px-4 bg-ui-green/20 border-2 border-ui-green text-ui-green font-bold text-xs uppercase hover:bg-ui-green hover:text-black transition-all"
+                >
+                  Reload App
+                </button>
+              </div>
             </div>
           </section>
           )}

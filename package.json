@@ -9,12 +9,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "bundle:live-update": "node scripts/package-bundle.js"
   },
   "dependencies": {
     "@capacitor/core": "^8.4.0",
     "@capacitor/push-notifications": "^8.1.1",
     "@capawesome/capacitor-badge": "^8.0.2",
+    "@capawesome/capacitor-live-update": "^8.3.0",
     "@google/genai": "^1.29.0",
     "@tailwindcss/vite": "^4.1.14",
     "@types/bcryptjs": "^2.4.6",
