@@ -6,6 +6,7 @@ import { soundService } from '../services/soundService';
 import CardComponent from './Card';
 import { resetPushSubscription, testPushNotification } from '../lib/push';
 import { checkForLiveUpdate, applyLiveUpdate } from '../services/liveUpdateService';
+import { getApiUrl } from '../lib/api';
 
 interface SettingsProps {
   user: any;
@@ -137,7 +138,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
 
     setSaving(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/change-password`, {
+      const res = await fetch(getApiUrl('/api/auth/change-password'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -165,7 +166,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/preferences`, {
+      const res = await fetch(getApiUrl('/api/auth/preferences'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +195,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
         }),
       });
 
-      const avatarRes = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/avatar`, {
+      const avatarRes = await fetch(getApiUrl('/api/users/avatar'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -968,7 +969,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                     onClick={async () => {
                       setSaving(true);
                       try {
-                        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/stats/reset`, {
+                        const res = await fetch(getApiUrl('/api/users/stats/reset'), {
                           method: 'POST',
                           headers: { 'Authorization': `Bearer ${token}` }
                         });

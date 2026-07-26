@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, X, SkipForward, SkipBack, Clock, FastForward } from 'lucide-react';
 import UserAvatar from './UserAvatar.tsx';
 import CardComponent from './Card.tsx';
+import { getApiUrl } from '../lib/api';
 
 interface ReplayProps {
   gameId: string;
@@ -35,7 +36,7 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
   useEffect(() => {
     const fetchReplay = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/replay`, {
+        const res = await fetch(getApiUrl(`/api/games/${gameId}/replay`), {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();

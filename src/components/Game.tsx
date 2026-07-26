@@ -9,6 +9,7 @@ import { useGameState } from '../hooks/useGameState';
 import GameHeader from './game/GameHeader';
 import GameControls from './game/GameControls';
 import GameBoard from './game/GameBoard';
+import { getApiUrl } from '../lib/api';
 
 interface GameProps {
   gameId: string;
@@ -176,7 +177,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
       return;
     }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/rematch`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}/rematch`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +267,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                               setNudgeCooldown(true);
                               setTimeout(() => setNudgeCooldown(false), 5000);
                               try {
-                                await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/messages`, {
+                                await fetch(getApiUrl(`/api/games/${gameId}/messages`), {
                                   method: 'POST',
                                   headers: {
                                     'Content-Type': 'application/json',

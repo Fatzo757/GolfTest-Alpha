@@ -77,7 +77,12 @@ interface ActiveWebSocket extends WebSocket {
 async function startServer() {
   console.log("SERVER: Initializing server...");
   const app = express();
-  app.use(cors({ origin: true, credentials: true }));
+  app.use(cors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  }));
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
   // 1. Listen immediately to open the port

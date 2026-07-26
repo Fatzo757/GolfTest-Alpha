@@ -4,6 +4,7 @@ import { GameState, Card, Move, User } from '../types';
 import { fetcher } from '../lib/fetcher';
 import { useGameSocket } from './useGameSocket';
 import { soundService } from '../services/soundService';
+import { getApiUrl } from '../lib/api';
 
 export function getPoints(value: string) {
   if (value === 'J') return -2;
@@ -79,13 +80,13 @@ export function useGameState(gameId: string, token: string, user: User) {
     const heartbeatId = setInterval(async () => {
       if (!token) return;
       try {
-        await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/heartbeat`, {
+        await fetch(getApiUrl('/api/heartbeat'), {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (state?.game?.id) {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${state.game.id}/online`, {
+          const res = await fetch(getApiUrl(`/api/games/${state.game.id}/online`), {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.ok) {
@@ -182,7 +183,7 @@ export function useGameState(gameId: string, token: string, user: User) {
     if (state.game.drawn_card) return;
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/draw`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}/draw`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,7 +212,7 @@ export function useGameState(gameId: string, token: string, user: User) {
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/reveal`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}/reveal`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -268,7 +269,7 @@ export function useGameState(gameId: string, token: string, user: User) {
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/move`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}/move`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -289,7 +290,7 @@ export function useGameState(gameId: string, token: string, user: User) {
 
   const handleNextRound = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/next-round`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}/next-round`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

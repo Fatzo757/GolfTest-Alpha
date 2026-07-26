@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import UserAvatar from './UserAvatar.tsx';
 import { formatMatchTime } from '../lib/timeUtils';
 import { registerServiceWorker, subscribeUserToPush } from '../lib/push';
+import { getApiUrl } from '../lib/api';
 
 interface LobbyProps {
   token: string;
@@ -56,7 +57,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const fetchActiveMatches = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/active`, {
+      const res = await fetch(getApiUrl('/api/games/active'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -68,7 +69,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const abandonGame = async (gameId: string) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}`), {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -95,7 +96,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/remind`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}/remind`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -117,7 +118,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const fetchJoinableGames = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/joinable`, {
+      const res = await fetch(getApiUrl('/api/games/joinable'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -129,7 +130,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const fetchOnlineUsers = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/online`, {
+      const res = await fetch(getApiUrl('/api/users/online'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -146,7 +147,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
       return;
     }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/search?query=${encodeURIComponent(query)}`, {
+      const res = await fetch(getApiUrl(`/api/users/search?query=${encodeURIComponent(query)}`), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -159,7 +160,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
   const inviteUser = async (targetId: string) => {
     setInviteLoading(targetId);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/invite`, {
+      const res = await fetch(getApiUrl('/api/games/invite'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +178,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/users/stats`, {
+      const res = await fetch(getApiUrl('/api/users/stats'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -187,7 +188,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/history`, {
+      const res = await fetch(getApiUrl('/api/games/history'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -197,7 +198,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const deleteMatch = async (gameId: string) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/archive`, {
+      const res = await fetch(getApiUrl(`/api/games/${gameId}/archive`), {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -217,7 +218,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
     
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/history/clear`, {
+      const res = await fetch(getApiUrl('/api/games/history/clear'), {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -249,7 +250,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
   const createGame = async (isVsCpu: boolean) => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/create`, {
+      const res = await fetch(getApiUrl('/api/games/create'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -275,7 +276,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
     if (!roomCode) return;
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/join/${roomCode}`, {
+      const res = await fetch(getApiUrl(`/api/games/join/${roomCode}`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
