@@ -79,38 +79,43 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkAuth: async () => {
     set({ loading: true });
     const { token } = get();
+    if (!token) {
+      set({ user: null, loading: false, error: null });
+      return;
+    }
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/me`, {
         credentials: 'include',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: { Authorization: `Bearer ${token}` },
         signal: controller.signal,
       });
 
-      if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error('UNAUTHORIZED');
-        }
-        throw new Error(`Server returned ${res.status}`);
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        get().setToken(null);
+        set({ user: null, error: null });
+        return;
       }
 
       const data = await res.json();
-      if (data.user) {
+      if (data && data.user) {
         set({ user: data.user, error: null });
       } else {
-        throw new Error('Invalid user data');
-      }
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      console.error('Auth check failed:', err);
-      if (err.message === 'UNAUTHORIZED') {
         get().setToken(null);
         set({ user: null, error: null });
-      } else {
-        set({ error: `Authentication service unavailable: ${err.message}` });
       }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.warn('Auth check request timed out');
+      } else {
+        console.error('Auth check failed:', err);
+      }
+      get().setToken(null);
+      set({ user: null, error: null });
     } finally {
       clearTimeout(timeoutId);
       set({ loading: false });

@@ -120,3 +120,20 @@ export async function applyLiveUpdate(): Promise<void> {
     console.error('[LiveUpdate] Failed to reload app:', err);
   }
 }
+
+/**
+ * Resets Capawesome Live Update to the default APK bundle, clears storage, and reloads.
+ */
+export async function resetLiveUpdateBundle(): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await LiveUpdate.reset();
+    } catch (err) {
+      console.error('[LiveUpdate] Reset error:', err);
+    }
+  }
+  try {
+    localStorage.clear();
+  } catch (e) {}
+  window.location.reload();
+}

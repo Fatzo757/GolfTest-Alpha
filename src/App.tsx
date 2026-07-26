@@ -9,7 +9,7 @@ import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X, WifiOff } from 'lucide-react';
 import { soundService } from './services/soundService';
 import { clearAppBadge } from './lib/push';
-import { notifyAppReady, checkForLiveUpdate, applyLiveUpdate, getCurrentVersion } from './services/liveUpdateService';
+import { notifyAppReady, checkForLiveUpdate, applyLiveUpdate, getCurrentVersion, resetLiveUpdateBundle } from './services/liveUpdateService';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from './store/useAuthStore';
 import { useUIStore, LobbyView } from './store/useUIStore';
@@ -216,14 +216,30 @@ export default function App() {
 
   if (error && !user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-10 text-center">
-        <div className="p-8 geometric-border border-ui-red max-w-md w-full">
-          <ShieldAlert className="mx-auto text-ui-red mb-6" size={48} />
-          <h2 className="text-sm text-ui-red font-bold mb-4 uppercase">System Error</h2>
-          <p className="text-xs text-ui-gray leading-loose mb-8 uppercase tracking-tighter">{error}</p>
-          <button onClick={() => window.location.reload()} className="geometric-button text-xs w-full">
-            REBOOT SYSTEM
-          </button>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-6 text-center font-press-start">
+        <div className="p-8 geometric-border border-ui-red max-w-md w-full space-y-6 bg-black/40">
+          <ShieldAlert className="mx-auto text-ui-red animate-pulse" size={48} />
+          <h2 className="text-sm text-ui-red font-bold uppercase tracking-widest">System Error</h2>
+          <div className="p-3 bg-black/60 border border-ui-border text-[9px] text-ui-yellow font-mono text-left max-h-32 overflow-y-auto">
+            {error}
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                useAuthStore.getState().setError(null);
+                checkAuth();
+              }}
+              className="geometric-button text-xs w-full py-3 bg-ui-yellow text-black font-bold uppercase"
+            >
+              RETRY CONNECTION
+            </button>
+            <button
+              onClick={() => resetLiveUpdateBundle()}
+              className="geometric-button text-xs w-full py-3 bg-ui-red text-white font-bold uppercase"
+            >
+              RESET APP & CLEAR CACHE
+            </button>
+          </div>
         </div>
       </div>
     );

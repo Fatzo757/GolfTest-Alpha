@@ -1,5 +1,6 @@
 import React, { ErrorInfo, ReactNode } from 'react';
-import { ShieldAlert, RefreshCw } from 'lucide-react';
+import { ShieldAlert, RefreshCw, RotateCcw } from 'lucide-react';
+import { resetLiveUpdateBundle } from '../services/liveUpdateService';
 
 interface Props {
   children: ReactNode;
@@ -35,6 +36,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
     window.location.reload();
   };
 
+  private handleResetApp = () => {
+    resetLiveUpdateBundle();
+  };
+
   public render() {
     if (this.state.hasError) {
       return (
@@ -48,13 +53,22 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <div className="p-3 bg-black/60 border border-ui-border text-[9px] text-ui-yellow font-mono overflow-x-auto text-left max-h-32">
               {this.state.error?.message || 'Unknown render fault'}
             </div>
-            <button
-              onClick={this.handleReload}
-              className="geometric-button text-xs w-full py-3 bg-ui-red text-white flex items-center justify-center gap-2 hover:bg-red-600 transition-all cursor-pointer"
-            >
-              <RefreshCw size={14} />
-              REBOOT SYSTEM
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={this.handleReload}
+                className="geometric-button text-xs w-full py-3 bg-ui-yellow text-black flex items-center justify-center gap-2 hover:bg-yellow-400 transition-all cursor-pointer font-bold"
+              >
+                <RefreshCw size={14} />
+                REBOOT SYSTEM
+              </button>
+              <button
+                onClick={this.handleResetApp}
+                className="geometric-button text-xs w-full py-3 bg-ui-red text-white flex items-center justify-center gap-2 hover:bg-red-600 transition-all cursor-pointer font-bold"
+              >
+                <RotateCcw size={14} />
+                RESET APP & CLEAR CACHE
+              </button>
+            </div>
           </div>
         </div>
       );
