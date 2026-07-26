@@ -332,11 +332,14 @@ export default function GameBoard({
                       {snapshotCards.length > 0 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-ui-yellow/30">
                           <div>
-                            <div className="text-xs sm:text-sm font-bold text-ui-green uppercase tracking-wider mb-1 flex justify-between items-center">
-                              <span>{myName}</span>
-                              <span className="bg-ui-green/20 px-2 py-0.5 border border-ui-green rounded text-xs font-bold">
-                                +{p1RoundPoints} PTS
-                              </span>
+                            <div className="flex flex-col mb-1.5 gap-0.5">
+                              <span className="text-xs sm:text-sm font-bold text-ui-green uppercase tracking-wider truncate">{myName}</span>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
+                                <span className="bg-ui-green/20 px-2 py-0.5 border border-ui-green rounded text-xs font-bold text-ui-green">
+                                  +{p1RoundPoints} PTS
+                                </span>
+                              </div>
                             </div>
                             <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
                               {p1Cards.map((c: any, cIdx: number) => (
@@ -348,11 +351,14 @@ export default function GameBoard({
                           </div>
 
                           <div>
-                            <div className="text-xs sm:text-sm font-bold text-ui-red uppercase tracking-wider mb-1 flex justify-between items-center">
-                              <span>{opponentName}</span>
-                              <span className="bg-ui-red/20 px-2 py-0.5 border border-ui-red rounded text-xs font-bold">
-                                +{p2RoundPoints} PTS
-                              </span>
+                            <div className="flex flex-col mb-1.5 gap-0.5">
+                              <span className="text-xs sm:text-sm font-bold text-ui-red uppercase tracking-wider truncate">{opponentName}</span>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
+                                <span className="bg-ui-red/20 px-2 py-0.5 border border-ui-red rounded text-xs font-bold text-ui-red">
+                                  +{p2RoundPoints} PTS
+                                </span>
+                              </div>
                             </div>
                             <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
                               {p2Cards.map((c: any, cIdx: number) => (

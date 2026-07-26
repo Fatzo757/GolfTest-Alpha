@@ -398,11 +398,14 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                       {/* Player Hand */}
                       <div className="bg-black/50 p-3 border-2 border-ui-green rounded space-y-2">
-                        <div className="flex justify-between items-center border-b border-ui-green/30 pb-1">
-                          <span className="text-xs font-bold text-ui-green uppercase truncate">{user.username}</span>
-                          <span className="text-xs font-bold text-ui-green bg-ui-green/20 px-2 py-0.5 rounded border border-ui-green">
-                            +{calcPopupHandScore(myCards)} ROUND PTS
-                          </span>
+                        <div className="flex flex-col border-b border-ui-green/30 pb-1.5 gap-1">
+                          <span className="text-xs sm:text-sm font-bold text-ui-green uppercase truncate tracking-wider">{user.username}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
+                            <span className="text-xs font-bold text-ui-green bg-ui-green/20 px-2 py-0.5 rounded border border-ui-green">
+                              +{calcPopupHandScore(myCards)} ROUND PTS
+                            </span>
+                          </div>
                         </div>
                         <div className="grid grid-cols-3 gap-1.5 place-items-center pt-1">
                           {myCards.map((c, idx) => (
@@ -418,11 +421,14 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
                       {/* Opponent Hand */}
                       <div className="bg-black/50 p-3 border-2 border-ui-red rounded space-y-2">
-                        <div className="flex justify-between items-center border-b border-ui-red/30 pb-1">
-                          <span className="text-xs font-bold text-ui-red uppercase truncate">{opponentName}</span>
-                          <span className="text-xs font-bold text-ui-red bg-ui-red/20 px-2 py-0.5 rounded border border-ui-red">
-                            +{calcPopupHandScore(opponentCards)} ROUND PTS
-                          </span>
+                        <div className="flex flex-col border-b border-ui-red/30 pb-1.5 gap-1">
+                          <span className="text-xs sm:text-sm font-bold text-ui-red uppercase truncate tracking-wider">{opponentName}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
+                            <span className="text-xs font-bold text-ui-red bg-ui-red/20 px-2 py-0.5 rounded border border-ui-red">
+                              +{calcPopupHandScore(opponentCards)} ROUND PTS
+                            </span>
+                          </div>
                         </div>
                         <div className="grid grid-cols-3 gap-1.5 place-items-center pt-1">
                           {opponentCards.map((c, idx) => (

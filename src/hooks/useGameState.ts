@@ -228,6 +228,45 @@ export function useGameState(gameId: string, token: string, user: User) {
   };
 
   const handleMove = async (cardIndex: number, moveType: 'replace' | 'discard_drawn') => {
+    soundService.playPlay();
+
+    // Optimistically update SWR cache so drawn_card disappears instantly from active box
+    // and grid card index gets updated without waiting for server network roundtrip!
+    if (state) {
+      const drawnCard = state.game.drawn_card;
+      if (drawnCard) {
+        const updatedCards = state.cards.map((c) => {
+          if (c.player_id === userId && c.card_index === cardIndex && moveType === 'replace') {
+            return {
+              ...c,
+              suit: drawnCard.suit,
+              value: drawnCard.value,
+              is_face_up: true,
+              id: drawnCard.id,
+            };
+          }
+          return c;
+        });
+
+        const updatedDiscard = [...(state.game.discard || [])];
+        if (moveType === 'discard_drawn') {
+          updatedDiscard.unshift({ ...drawnCard, is_face_up: true });
+        }
+
+        const optimisticState: GameState = {
+          ...state,
+          game: {
+            ...state.game,
+            drawn_card: null,
+            discard: updatedDiscard,
+          },
+          cards: updatedCards,
+        };
+
+        revalidateState(optimisticState, false);
+      }
+    }
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/games/${gameId}/move`, {
         method: 'POST',
@@ -238,11 +277,13 @@ export function useGameState(gameId: string, token: string, user: User) {
         body: JSON.stringify({ moveType, cardIndex }),
       });
       if (res.ok) {
-        soundService.playPlay();
+        revalidateState();
+      } else {
         revalidateState();
       }
     } catch (err) {
       console.error(err);
+      revalidateState();
     }
   };
 
