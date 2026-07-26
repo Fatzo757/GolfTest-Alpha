@@ -69,7 +69,7 @@ export default function Auth({ onLogin }: AuthProps) {
   };
 
   return (
-    <div className={`max-w-md mx-auto mt-10 p-8 geometric-border transition-colors duration-500 ${isLogin ? '!bg-ui-blue' : '!bg-ui-purple'}`}>
+    <div className={`max-w-md mx-auto mt-10 p-8 geometric-border transition-colors duration-500 ${isLogin ? '!bg-[#008000]' : '!bg-[#005c00]'}`}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-sm text-ui-yellow tracking-tighter uppercase font-bold">
           {isLogin ? 'Login' : 'Create Account'}

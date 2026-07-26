@@ -277,8 +277,8 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* CRT Scanline Overlay */}
-        {user?.scanlines_enabled !== 0 && (
+        {/* CRT Scanline Overlay (Disabled by default unless user explicitly enabled it) */}
+        {user?.scanlines_enabled === 1 && (
           <div className="crt-overlay pointer-events-none fixed inset-0 z-[99999]"></div>
         )}
 
@@ -292,7 +292,7 @@ export default function App() {
         >
           <header
             className={cn(
-              'p-2 bg-ui-blue border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all',
+              'p-2 bg-[#008000] border-4 border-ui-border shadow-[4px_4px_0px_0px_#000000] flex justify-between items-center transition-all',
               currentGameId || replayGameId ? 'md:p-3 opacity-90' : 'md:p-6'
             )}
           >

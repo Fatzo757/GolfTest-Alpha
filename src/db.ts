@@ -38,7 +38,7 @@ db.exec(`
     sound_profile TEXT DEFAULT 'classic',
     ui_scale REAL DEFAULT 1.0,
     card_scale REAL DEFAULT 1.0,
-    scanlines_enabled INTEGER DEFAULT 1,
+    scanlines_enabled INTEGER DEFAULT 0,
     show_card_points INTEGER DEFAULT 1
   );
 
@@ -166,7 +166,7 @@ try {
   addColumn('users', 'sound_profile', "TEXT DEFAULT 'classic'");
   addColumn('users', 'ui_scale', "REAL DEFAULT 1.0");
   addColumn('users', 'card_scale', "REAL DEFAULT 1.0");
-  addColumn('users', 'scanlines_enabled', "INTEGER DEFAULT 1");
+  addColumn('users', 'scanlines_enabled', "INTEGER DEFAULT 0");
 
   addColumn('games', 'drawn_card_json', 'TEXT');
   addColumn('games', 'cpu_difficulty', "TEXT DEFAULT 'normal'");
