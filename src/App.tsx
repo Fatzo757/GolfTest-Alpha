@@ -83,10 +83,10 @@ export default function App() {
       .catch(console.error);
   }, [setAppVersion]);
 
-  // Auth initialization check
+  // Auth initialization check (initial mount only)
   useEffect(() => {
     checkAuth();
-  }, [token, checkAuth]);
+  }, []);
 
   // Online status monitoring
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function App() {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 5000);
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/me`, {
+          const res = await fetch(getApiUrl('/api/auth/me'), {
             method: 'HEAD',
             headers: token ? { Authorization: `Bearer ${token}` } : {},
             signal: controller.signal,

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User } from '../types';
 import { unsubscribeFromPush } from '../lib/push';
+import { getApiUrl } from '../lib/api';
 
 interface AuthState {
   user: User | null;
@@ -65,7 +66,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/logout`, {
+      await fetch(getApiUrl('/api/auth/logout'), {
         method: 'POST',
         credentials: 'include',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -88,7 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/auth/me`, {
+      const res = await fetch(getApiUrl('/api/auth/me'), {
         credentials: 'include',
         headers: { Authorization: `Bearer ${token}` },
         signal: controller.signal,
