@@ -1683,6 +1683,22 @@ async function startServer() {
   const liveUpdatesDir = path.join(process.cwd(), "public", "live-updates");
   app.use("/live-updates", express.static(liveUpdatesDir));
 
+  app.get("/api/settings", (_req, res) => {
+    let app_version = "v1.0";
+    const manifestPath = path.join(liveUpdatesDir, "manifest.json");
+    if (fs.existsSync(manifestPath)) {
+      try {
+        const manifestData = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+        if (manifestData.bundleId) {
+          app_version = manifestData.bundleId;
+        }
+      } catch (err) {
+        // Fallback to default
+      }
+    }
+    return res.json({ app_version });
+  });
+
   app.get("/api/live-update/manifest", (_req, res) => {
     const manifestPath = path.join(liveUpdatesDir, "manifest.json");
     if (fs.existsSync(manifestPath)) {

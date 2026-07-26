@@ -46,14 +46,14 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
   const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; message: string } | null>(null);
   const [resetPassUser, setResetPassUser] = useState<string | null>(null);
   const [newPass, setNewPass] = useState('');
-  const [appVersionInput, setAppVersionInput] = useState('');
+  const [currentAppVersion, setCurrentAppVersion] = useState('');
 
   const fetchSettings = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/settings`);
       const data = await res.json();
       if (data.app_version) {
-        setAppVersionInput(data.app_version);
+        setCurrentAppVersion(data.app_version);
       }
     } catch (err: any) {
       console.error(err);
@@ -210,24 +210,6 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
   const handleRestartBackend = () => {
     setSuccess('Backend restart triggered (simulated for environment safety). All temporary caches cleared.');
     fetchSummary();
-  };
-
-  const handleUpdateAppVersion = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/admin/settings`, {
-        method: 'PUT',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ key: 'app_version', value: appVersionInput })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setSuccess('App version updated successfully. Restart client or refresh to see changes.');
-    } catch (err: any) {
-      setError(err.message);
-    }
   };
 
   return (
@@ -398,21 +380,9 @@ export default function AdminDashboard({ token, onClose }: AdminDashboardProps) 
                   </div>
                   
                   <div className="pt-4 border-t border-white/10">
-                    <div className="text-gray-300 text-[10px] mb-2 uppercase">System Status Label (Version)</div>
-                    <div className="flex max-w-sm gap-2">
-                      <input 
-                        type="text" 
-                        value={appVersionInput} 
-                        onChange={(e) => setAppVersionInput(e.target.value)}
-                        className="bg-bg-dark border border-white/20 p-2 text-white font-mono text-xs flex-1 outline-none focus:border-ui-yellow"
-                        placeholder="e.g. V1.0-Release"
-                      />
-                      <button 
-                        onClick={handleUpdateAppVersion}
-                        className="bg-white text-black px-4 py-2 text-[12px] font-bold uppercase hover:bg-ui-yellow transition-colors"
-                      >
-                        Update
-                      </button>
+                    <div className="text-gray-300 text-[10px] mb-1.5 uppercase tracking-widest font-bold">Active Build Version (Auto-Generated)</div>
+                    <div className="bg-bg-dark border border-ui-yellow/40 p-2.5 text-ui-yellow font-mono text-xs font-bold inline-block rounded">
+                      {currentAppVersion || 'v1.0'}
                     </div>
                   </div>
 
