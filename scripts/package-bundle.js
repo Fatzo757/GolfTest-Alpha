@@ -39,15 +39,32 @@ console.log(`📦 Packaging Live Update bundle version: ${bundleVersion}...`);
 const versionJsonPath = path.join(rootDir, 'public', 'version.json');
 fs.writeFileSync(versionJsonPath, JSON.stringify({ version: bundleVersion, updatedAt: new Date().toISOString() }, null, 2));
 
-// 3. Always run fresh Vite build
-console.log('🏗️  Building Vite production assets...');
-execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
-
-// 4. Prepare live updates directory
+// 3. Prepare live updates directory and clean old zip bundles
 const updatesDir = path.join(rootDir, 'public', 'live-updates');
 if (!fs.existsSync(updatesDir)) {
   fs.mkdirSync(updatesDir, { recursive: true });
+} else {
+  console.log('🧹 Cleaning old zip bundles in public/live-updates...');
+  const files = fs.readdirSync(updatesDir);
+  for (const file of files) {
+    if (file.endsWith('.zip')) {
+      try {
+        fs.unlinkSync(path.join(updatesDir, file));
+      } catch (e) {}
+    }
+  }
 }
+
+// 4. Always run fresh Vite build
+const distDir = path.join(rootDir, 'dist');
+if (fs.existsSync(distDir)) {
+  try {
+    fs.rmSync(distDir, { recursive: true, force: true });
+  } catch (e) {}
+}
+
+console.log('🏗️  Building Vite production assets...');
+execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
 
 const bundleFileName = `bundle-${bundleVersion}.zip`;
 const bundleFilePath = path.join(updatesDir, bundleFileName);
@@ -57,7 +74,6 @@ if (fs.existsSync(bundleFilePath)) {
 }
 
 // 5. Compress dist output
-const distDir = path.join(rootDir, 'dist');
 console.log(`🤐 Zipping ${distDir} -> ${bundleFilePath}...`);
 
 if (process.platform === 'win32') {

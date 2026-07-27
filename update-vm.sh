@@ -16,20 +16,25 @@ echo "--- UPDATING GOLF CARD GAME ---"
 
 cd "$APP_DIR"
 
-# 1. Pull latest changes (cleaning generated build assets first)
+# 1. Clean old zip archives to prevent disk space accumulation
+echo "Cleaning old live update zip bundles..."
+rm -f public/live-updates/*.zip 2>/dev/null || true
+rm -rf dist 2>/dev/null || true
+
+# 2. Pull latest changes
 echo "Pulling latest code..."
 git checkout -- public/live-updates/ public/version.json 2>/dev/null || true
 git pull
 
-# 2. Install any new dependencies
+# 3. Install any new dependencies
 echo "Installing dependencies..."
 npm install
 
-# 3. Rebuild frontend and package Live Update bundle
+# 4. Rebuild frontend and package Live Update bundle
 echo "Building production assets & packaging Live Update bundle..."
 npm run bundle:live-update
 
-# 4. Restart with PM2
+# 5. Restart with PM2
 echo "Restarting application..."
 pm2 restart golf-game || pm2 start server.ts --name golf-game --interpreter=node --node-args="--experimental-strip-types --enable-source-maps"
 pm2 save
