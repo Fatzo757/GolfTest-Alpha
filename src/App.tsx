@@ -361,7 +361,7 @@ export default function App() {
                 >
                   GOLF CARD GAME
                 </h1>
-                <div className="text-xs text-white/90 font-bold uppercase tracking-widest whitespace-nowrap">
+                <div className="hidden sm:block text-xs text-white/90 font-bold uppercase tracking-widest whitespace-nowrap">
                   {appVersion} {(currentGameId || replayGameId) && ' • © 2026'}
                 </div>
               </div>
