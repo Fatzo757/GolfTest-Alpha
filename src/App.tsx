@@ -318,6 +318,7 @@ export default function App() {
             <div className="flex items-center gap-2 md:gap-4 relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Toggle Navigation Menu"
                 className={cn(
                   'secondary-button w-11 h-11 md:w-10 md:h-10 bg-ui-purple border-4 border-ui-red flex items-center justify-center hover:bg-ui-red transition-all cursor-pointer',
                   currentGameId || replayGameId && 'md:w-6 md:h-6'
@@ -337,6 +338,7 @@ export default function App() {
                     <button
                       key={view}
                       onClick={() => handleNavClick(view)}
+                      aria-label={`Navigate to ${view === 'history' ? 'Match History' : view}`}
                       className={`px-4 py-4 md:py-5 text-xs md:text-sm uppercase font-bold text-left hover:bg-ui-blue/50 transition-all ${
                         lobbyView === view && !currentGameId && !replayGameId
                           ? 'text-ui-yellow bg-ui-blue/20'
@@ -359,7 +361,7 @@ export default function App() {
                 >
                   GOLF CARD GAME
                 </h1>
-                <div className="text-xs text-ui-gray uppercase tracking-widest whitespace-nowrap">
+                <div className="text-xs text-white/90 font-bold uppercase tracking-widest whitespace-nowrap">
                   {appVersion} {(currentGameId || replayGameId) && ' • © 2026'}
                 </div>
               </div>
@@ -373,7 +375,7 @@ export default function App() {
                       : 'bg-ui-red shadow-[0_0_3px_rgba(255,50,50,0.8)]'
                   }`}
                 ></div>
-                <span className={`text-[10px] md:text-xs uppercase tracking-widest ${isOnline ? 'text-ui-green' : 'text-ui-red'}`}>
+                <span className={`text-[10px] md:text-xs uppercase tracking-widest font-bold ${isOnline ? 'text-ui-green' : 'text-ui-red'}`}>
                   {isOnline ? 'ONLINE' : 'OFFLINE'}
                 </span>
               </div>
@@ -383,6 +385,7 @@ export default function App() {
               <div className="flex items-center gap-2 md:gap-4">
                 <button
                   onClick={() => setShowSettings(true)}
+                  aria-label="User Profile and Settings"
                   className="secondary-button flex items-center gap-2 md:gap-4 hover:opacity-80 transition-all p-1 md:p-2 bg-black/40 border-2 border-ui-border rounded-sm group cursor-pointer shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]"
                 >
                   <div className="w-6 h-6 md:w-8 md:h-8 bg-black/60 border-2 border-ui-green flex items-center justify-center group-hover:bg-ui-green group-hover:text-black transition-all">
@@ -397,6 +400,7 @@ export default function App() {
                   {isAdmin && (
                     <button
                       onClick={() => setShowAdmin(true)}
+                      aria-label="Open Admin Dashboard"
                       className="secondary-button p-2 md:p-3 bg-red-900 border-b-4 border-ui-red text-xs hover:bg-opacity-80 transition-all flex items-center gap-2"
                     >
                       <ShieldAlert size={16} className="text-white" />
@@ -404,6 +408,7 @@ export default function App() {
                   )}
                   <button
                     onClick={handleLogoutClick}
+                    aria-label="Log Out"
                     className="secondary-button p-2 md:p-3 bg-ui-red border-b-4 border-ui-purple text-xs hover:bg-red-600 transition-all"
                   >
                     <LogOut size={16} />
@@ -522,9 +527,9 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          {/* Integrated Footer to reduce scroll depth */}
+          {/* Integrated Footer with WCAG compliant high contrast */}
           {!(currentGameId || replayGameId) && (
-            <div className="mt-12 text-xs text-center text-neutral-500/40 uppercase tracking-widest">
+            <div className="mt-12 text-xs text-center text-white/70 font-semibold uppercase tracking-widest">
               © 2026 GOLF CARD GAME - {appVersion}
             </div>
           )}

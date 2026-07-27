@@ -491,17 +491,18 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
               
               <div className="space-y-6">
                 <div className="flex flex-col gap-3">
-                  <span className="text-xs text-ui-gray uppercase tracking-widest px-1">AI Difficulty</span>
+                  <span className="text-xs text-ui-yellow font-bold uppercase tracking-widest px-1">AI Difficulty</span>
                   <div className="grid grid-cols-3 gap-2">
                     {(['easy', 'normal', 'hard'] as const).map((d) => (
                       <motion.button
                         key={d}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setDifficulty(d)}
-                        className={`py-3 px-2 text-xs uppercase border-2 transition-all font-bold ${
+                        aria-label={`Set AI Difficulty to ${d}`}
+                        className={`py-3 px-2 text-xs uppercase border-2 transition-all ${
                           difficulty === d 
-                            ? 'border-black bg-ui-orange text-bg-dark shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' 
-                            : 'border-ui-border text-ui-gray opacity-50 hover:opacity-100'
+                            ? 'border-black bg-ui-orange text-bg-dark font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' 
+                            : 'border-white/40 bg-black/60 text-white font-bold hover:border-white hover:bg-black/90'
                         }`}
                       >
                         {d}
