@@ -1122,7 +1122,7 @@ async function startServer() {
 
         const faceDownCount: any = db.prepare("SELECT COUNT(*) as count FROM game_cards WHERE game_id = ? AND player_id = ? AND is_face_up = 0").get(gameId, req.user.id);
         
-        const nextPlayer = game.player1_id === req.user.id ? game.player2_id : game.player1_id;
+        const nextPlayer = game.player1_id === req.user.id ? (game.player2_id || 'cpu') : game.player1_id;
         
         let status = game.status;
         let firstRevealerId = game.first_revealer_id;

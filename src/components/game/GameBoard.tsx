@@ -105,325 +105,353 @@ export default function GameBoard({
     </motion.div>
   );
 
-  return (
-    <div className="flex-1 flex flex-col gap-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {/* Opponent's Grid */}
-        <div className={`flex-1 w-full max-w-2xl transition-all duration-500 ${mobileTab === 'opponent' ? 'block' : 'hidden lg:block'}`}>
-          <div
-            className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-red/20 border-4 transition-all duration-500 ${
-              !isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-ui-border'
-            }`}
-          >
-            <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-red z-10">
-              <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
-                <div className="flex items-center gap-1.5 text-ui-red">
-                  <UserAvatar type={opponentAvatar} size={14} className="hidden md:block shrink-0" />
-                  <UserAvatar type={opponentAvatar} size={10} className="md:hidden shrink-0" />
-                  <span className="text-[0.65rem] sm:text-xs md:text-sm lg:text-base font-bold truncate block max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px]">
-                    {opponentName}
-                  </span>
-                </div>
-                <div className="text-[0.55rem] sm:text-[0.65rem] md:text-xs text-white/70 font-black mt-0.5">
-                  {opponentId ? calculateScore(opponentId) : calculateScore('cpu')} PTS
-                </div>
-              </div>
-              {!isMyTurn && state.game.status === 'playing' && (
-                <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-red/10">{turnIndicator('text-ui-red')}</div>
-              )}
-            </div>
-
-            <motion.div
-              variants={boardVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center opacity-85"
-              style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
-            >
-              {opponentCards.map((card, idx) => (
-                <div key={card.id || idx} className="relative w-full">
-                  {latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0, rotate: -45 }}
-                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                      className="absolute -top-3 -right-3 text-ui-yellow drop-shadow-[0_0_5px_rgba(255,205,117,0.8)] z-30"
-                    >
-                      <Star size={24} fill="currentColor" />
-                    </motion.div>
-                  )}
-                  <CardComponent
-                    card={card}
-                    index={idx}
-                    style={user.card_style || 'classic'}
-                    backStyle={user.card_back_style || 'classic'}
-                    backColor={user.card_back_color || 'ui-red'}
-                    backSecondaryColor={user.card_back_secondary_color || 'white'}
-                    showPoints={user.show_card_points !== 0}
-                    className={`fluid ${
-                      latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx
-                        ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]'
-                        : ''
-                    }`}
-                  />
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Player's Grid */}
-        <div className={`flex-1 w-full max-w-2xl transition-all duration-500 ${mobileTab === 'me' ? 'block' : 'hidden lg:block'}`}>
-          <div
-            className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-green/20 border-4 transition-all duration-500 ${
-              isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'
-            }`}
-          >
-            <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-green z-10">
-              <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
-                <div className="flex items-center gap-1.5 text-ui-green">
-                  <UserAvatar type={user.avatar} size={14} className="hidden md:block shrink-0" />
-                  <UserAvatar type={user.avatar} size={10} className="md:hidden shrink-0" />
-                  <span className="text-[0.65rem] sm:text-xs md:text-sm lg:text-base font-bold truncate block max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px]">
-                    {myName}
-                  </span>
-                </div>
-                <div className="text-[0.55rem] sm:text-[0.65rem] md:text-xs text-white/70 font-black mt-0.5">
-                  {calculateScore(userId)} PTS
-                </div>
-              </div>
-              {isMyTurn && state.game.status === 'playing' && (
-                <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-green/10">{turnIndicator('text-ui-yellow')}</div>
-              )}
-            </div>
-
-            <motion.div
-              variants={boardVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center"
-              style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
-            >
-              {myCards.map((card, idx) => (
-                <div
-                  key={card.id || idx}
-                  ref={(el) => {
-                    if (gridRefs.current) gridRefs.current[idx] = el;
-                  }}
-                  className="relative group w-full"
-                >
-                  {latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0, rotate: -45 }}
-                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                      className="absolute -top-3 -right-3 text-ui-yellow drop-shadow-[0_0_5px_rgba(255,205,117,0.8)] z-30"
-                    >
-                      <Star size={24} fill="currentColor" />
-                    </motion.div>
-                  )}
-                  <CardComponent
-                    card={card}
-                    index={idx}
-                    style={user.card_style || 'classic'}
-                    backStyle={user.card_back_style || 'classic'}
-                    backColor={user.card_back_color || 'ui-red'}
-                    backSecondaryColor={user.card_back_secondary_color || 'white'}
-                    showPoints={user.show_card_points !== 0}
-                    onClick={() => {
-                      if (state.game.status === 'initializing') {
-                        handleReveal(idx);
-                      } else if (state.game.drawn_card) {
-                        handleMove(idx, 'replace');
-                      }
-                    }}
-                    className={`fluid cursor-pointer ${
-                      latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx
-                        ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]'
-                        : ''
-                    } ${
-                      state.game.drawn_card
-                        ? 'ring-4 ring-ui-yellow ring-offset-4 ring-offset-bg-dark border-ui-yellow scale-105 z-10 shadow-[0_0_20px_rgba(255,205,117,0.4)]'
-                        : ''
-                    } ${draggingOver?.type === 'grid' && draggingOver.index === idx ? 'scale-110 -translate-y-4 ring-ui-yellow ring-4' : ''} hover:y-[-10px] hover:scale-110 hover:shadow-[0_0_20px_rgba(56,217,115,0.4),8px_8px_0px_0px_rgba(0,0,0,0.4)]`}
-                  />
-
-                  {state.game.status === 'initializing' && !card.is_face_up && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-xs text-ui-yellow font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest bg-bg-dark/80 px-2 py-1 border border-ui-yellow transition-opacity">
-                        Reveal
-                      </span>
-                    </div>
-                  )}
-
-                  {state.game.drawn_card && !card.is_face_up && (
-                    <div className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none">
-                      <div className="text-xs text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Move History Panel (Rendered when mobileTab === 'history' on mobile, or in desktop layout) */}
-      <div className={`w-full max-w-2xl mx-auto transition-all duration-500 mt-4 ${mobileTab === 'history' ? 'block' : 'hidden lg:block'}`}>
-        <div className="p-4 md:p-6 bg-bg-dark/95 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
-          <div className="flex items-center justify-between border-b-2 border-ui-border pb-3 flex-wrap gap-2">
-            <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
-              <History size={18} /> MATCH MOVE HISTORY
-            </h3>
-            
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowTimestamps(!showTimestamps)}
-                className={`px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all cursor-pointer ${
-                  showTimestamps
-                    ? 'bg-ui-yellow text-black border-ui-yellow'
-                    : 'bg-black/60 text-ui-gray border-ui-border hover:text-white hover:border-ui-yellow/50'
-                }`}
-                title="Toggle Date & Time display for moves"
-              >
-                <Clock size={13} />
-                <span>{showTimestamps ? 'Hide Time' : 'Show Time'}</span>
-              </button>
-
-              <span className="text-xs sm:text-sm text-ui-gray font-bold tracking-wider">
-                {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length} MOVES
+  const renderOpponentGrid = () => (
+    <div className="flex-1 w-full max-w-2xl">
+      <div
+        className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-red/20 border-4 transition-all duration-500 ${
+          !isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-ui-border'
+        }`}
+      >
+        <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-red z-10">
+          <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
+            <div className="flex items-center gap-1.5 text-ui-red">
+              <UserAvatar type={opponentAvatar} size={14} className="hidden md:block shrink-0" />
+              <UserAvatar type={opponentAvatar} size={10} className="md:hidden shrink-0" />
+              <span className="text-[0.65rem] sm:text-xs md:text-sm lg:text-base font-bold truncate block max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px]">
+                {opponentName}
               </span>
             </div>
+            <div className="text-[0.55rem] sm:text-[0.65rem] md:text-xs text-white/70 font-black mt-0.5">
+              {opponentId ? calculateScore(opponentId) : calculateScore('cpu')} PTS
+            </div>
           </div>
+          {!isMyTurn && state.game.status === 'playing' && (
+            <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-red/10">{turnIndicator('text-ui-red')}</div>
+          )}
+        </div>
 
-          <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1 text-xs sm:text-sm">
-            {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length === 0 ? (
-              <div className="text-center text-ui-gray py-6 uppercase tracking-widest text-xs sm:text-sm">
-                No moves recorded yet
-              </div>
-            ) : (
-              getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).map((m: any, idx: number) => {
-                const isMe = m.player_id === userId;
-                const senderName = isMe ? myName : m.player_id === (opponentId || 'cpu') ? opponentName : m.player_id;
-                const isRoundEnd = m.move_type === 'round_end';
+        <motion.div
+          variants={boardVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center opacity-85"
+          style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
+        >
+          {opponentCards.map((card, idx) => (
+            <div key={card.id || idx} className="relative w-full">
+              {latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0, rotate: -45 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  className="absolute -top-3 -right-3 text-ui-yellow drop-shadow-[0_0_5px_rgba(255,205,117,0.8)] z-30"
+                >
+                  <Star size={24} fill="currentColor" />
+                </motion.div>
+              )}
+              <CardComponent
+                card={card}
+                index={idx}
+                style={user.card_style || 'classic'}
+                backStyle={user.card_back_style || 'classic'}
+                backColor={user.card_back_color || 'ui-red'}
+                backSecondaryColor={user.card_back_secondary_color || 'white'}
+                showPoints={user.show_card_points !== 0}
+                className={`fluid ${
+                  latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx
+                    ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]'
+                    : ''
+                }`}
+              />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
+  );
 
-                if (isRoundEnd) {
-                  let snapshotCards: any[] = [];
-                  if (m.snapshot_json) {
-                    try {
-                      snapshotCards = JSON.parse(m.snapshot_json);
-                    } catch (e) {}
+  const renderPlayerGrid = () => (
+    <div className="flex-1 w-full max-w-2xl">
+      <div
+        className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-green/20 border-4 transition-all duration-500 ${
+          isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'
+        }`}
+      >
+        <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-green z-10">
+          <div className="px-2 md:px-3 py-1 md:py-1.5 flex flex-col justify-center min-w-0">
+            <div className="flex items-center gap-1.5 text-ui-green">
+              <UserAvatar type={user.avatar} size={14} className="hidden md:block shrink-0" />
+              <UserAvatar type={user.avatar} size={10} className="md:hidden shrink-0" />
+              <span className="text-[0.65rem] sm:text-xs md:text-sm lg:text-base font-bold truncate block max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[220px]">
+                {myName}
+              </span>
+            </div>
+            <div className="text-[0.55rem] sm:text-[0.65rem] md:text-xs text-white/70 font-black mt-0.5">
+              {calculateScore(userId)} PTS
+            </div>
+          </div>
+          {isMyTurn && state.game.status === 'playing' && (
+            <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-green/10">{turnIndicator('text-ui-yellow')}</div>
+          )}
+        </div>
+
+        <motion.div
+          variants={boardVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center"
+          style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
+        >
+          {myCards.map((card, idx) => (
+            <div
+              key={card.id || idx}
+              ref={(el) => {
+                if (gridRefs.current) gridRefs.current[idx] = el;
+              }}
+              className="relative group w-full"
+            >
+              {latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0, rotate: -45 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  className="absolute -top-3 -right-3 text-ui-yellow drop-shadow-[0_0_5px_rgba(255,205,117,0.8)] z-30"
+                >
+                  <Star size={24} fill="currentColor" />
+                </motion.div>
+              )}
+              <CardComponent
+                card={card}
+                index={idx}
+                style={user.card_style || 'classic'}
+                backStyle={user.card_back_style || 'classic'}
+                backColor={user.card_back_color || 'ui-red'}
+                backSecondaryColor={user.card_back_secondary_color || 'white'}
+                showPoints={user.show_card_points !== 0}
+                onClick={() => {
+                  if (state.game.status === 'initializing') {
+                    handleReveal(idx);
+                  } else if (state.game.drawn_card) {
+                    handleMove(idx, 'replace');
                   }
+                }}
+                className={`fluid cursor-pointer ${
+                  latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx
+                    ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]'
+                    : ''
+                } ${
+                  state.game.drawn_card
+                    ? 'ring-4 ring-ui-yellow ring-offset-4 ring-offset-bg-dark border-ui-yellow scale-105 z-10 shadow-[0_0_20px_rgba(255,205,117,0.4)]'
+                    : ''
+                } ${draggingOver?.type === 'grid' && draggingOver.index === idx ? 'scale-110 -translate-y-4 ring-ui-yellow ring-4' : ''} hover:y-[-10px] hover:scale-110 hover:shadow-[0_0_20px_rgba(56,217,115,0.4),8px_8px_0px_0px_rgba(0,0,0,0.4)]`}
+              />
 
-                  const p1Cards = snapshotCards.filter((c) => c.player_id === userId);
-                  const p2Cards = snapshotCards.filter((c) => c.player_id !== userId);
+              {state.game.status === 'initializing' && !card.is_face_up && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="text-xs text-ui-yellow font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest bg-bg-dark/80 px-2 py-1 border border-ui-yellow transition-opacity">
+                    Reveal
+                  </span>
+                </div>
+              )}
 
-                  const p1RoundPoints = calcCardsScore(p1Cards);
-                  const p2RoundPoints = calcCardsScore(p2Cards);
+              {state.game.drawn_card && !card.is_face_up && (
+                <div className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none">
+                  <div className="text-xs text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
+                </div>
+              )}
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
+  );
 
-                  return (
-                    <div
-                      key={m.id || idx}
-                      className="p-3.5 bg-ui-yellow/10 border-2 border-ui-yellow rounded flex flex-col gap-3"
-                    >
-                      <div className="flex items-center justify-between font-bold text-ui-yellow text-xs sm:text-sm uppercase tracking-widest">
-                        <span>🏆 END OF ROUND {m.round_number || 1} SUMMARY</span>
-                        <span className="text-xs opacity-90">FINAL BOARD</span>
-                      </div>
+  const renderHistoryPanel = () => (
+    <div className="w-full max-w-2xl mx-auto mt-2">
+      <div className="p-4 md:p-6 bg-bg-dark/95 geometric-border border-ui-yellow space-y-4 shadow-[8px_8px_0px_0px_rgba(255,205,117,0.2)]">
+        <div className="flex items-center justify-between border-b-2 border-ui-border pb-3 flex-wrap gap-2">
+          <h3 className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-widest text-ui-yellow flex items-center gap-2">
+            <History size={18} /> MATCH MOVE HISTORY
+          </h3>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowTimestamps(!showTimestamps)}
+              className={`px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all cursor-pointer ${
+                showTimestamps
+                  ? 'bg-ui-yellow text-black border-ui-yellow'
+                  : 'bg-black/60 text-ui-gray border-ui-border hover:text-white hover:border-ui-yellow/50'
+              }`}
+              title="Toggle Date & Time display for moves"
+            >
+              <Clock size={13} />
+              <span>{showTimestamps ? 'Hide Time' : 'Show Time'}</span>
+            </button>
 
-                      {snapshotCards.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-ui-yellow/30">
-                          <div>
-                            <div className="flex flex-col mb-1.5 gap-0.5">
-                              <span className="text-xs sm:text-sm font-bold text-ui-green uppercase tracking-wider truncate">{myName}</span>
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
-                                <span className="bg-ui-green/20 px-2 py-0.5 border border-ui-green rounded text-xs font-bold text-ui-green">
-                                  +{p1RoundPoints} PTS
-                                </span>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
-                              {p1Cards.map((c: any, cIdx: number) => (
-                                <div key={c.id || cIdx}>
-                                  <MiniCard suit={c.suit} value={c.value} />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+            <span className="text-xs sm:text-sm text-ui-gray font-bold tracking-wider">
+              {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length} MOVES
+            </span>
+          </div>
+        </div>
 
-                          <div>
-                            <div className="flex flex-col mb-1.5 gap-0.5">
-                              <span className="text-xs sm:text-sm font-bold text-ui-red uppercase tracking-wider truncate">{opponentName}</span>
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
-                                <span className="bg-ui-red/20 px-2 py-0.5 border border-ui-red rounded text-xs font-bold text-ui-red">
-                                  +{p2RoundPoints} PTS
-                                </span>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
-                              {p2Cards.map((c: any, cIdx: number) => (
-                                <div key={c.id || cIdx}>
-                                  <MiniCard suit={c.suit} value={c.value} />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {showTimestamps && m.timestamp && (
-                        <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-yellow/30">
-                          <Clock size={13} className="shrink-0 text-ui-yellow" />
-                          <span className="tracking-wide">{formatMoveTimestamp(m.timestamp)}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
+        <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1 text-xs sm:text-sm">
+          {getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).length === 0 ? (
+            <div className="text-center text-ui-gray py-6 uppercase tracking-widest text-xs sm:text-sm">
+              No moves recorded yet
+            </div>
+          ) : (
+            getFilteredHistoryMoves(state.moves || [], state.game.round_number || 1).map((m: any, idx: number) => {
+              const isMe = m.player_id === userId;
+              const senderName = isMe ? myName : m.player_id === (opponentId || 'cpu') ? opponentName : m.player_id;
+              const isRoundEnd = m.move_type === 'round_end';
+
+              if (isRoundEnd) {
+                let snapshotCards: any[] = [];
+                if (m.snapshot_json) {
+                  try {
+                    snapshotCards = JSON.parse(m.snapshot_json);
+                  } catch (e) {}
                 }
 
-                const isSwap = m.move_type && (m.move_type.includes('replace') || m.move_type.includes('swap'));
-                const isDiscard = m.move_type && m.move_type.includes('discard');
+                const p1Cards = snapshotCards.filter((c) => c.player_id === userId);
+                const p2Cards = snapshotCards.filter((c) => c.player_id !== userId);
+
+                const p1RoundPoints = calcCardsScore(p1Cards);
+                const p2RoundPoints = calcCardsScore(p2Cards);
 
                 return (
                   <div
                     key={m.id || idx}
-                    className="p-3 bg-black/60 border border-ui-border/80 rounded flex flex-col gap-1.5 transition-all hover:border-ui-yellow/50"
+                    className="p-3.5 bg-ui-yellow/10 border-2 border-ui-yellow rounded flex flex-col gap-3"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-ui-gray font-bold text-xs tracking-wider">R{m.round_number || 1}</span>
-                        <span className={`font-bold truncate max-w-[120px] text-xs sm:text-sm ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
-                          {senderName}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2.5 flex-wrap justify-end">
-                        <span className="text-xs text-ui-gray uppercase font-bold tracking-wider">
-                          {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : 'PLAYED'}
-                        </span>
-
-                        <MiniCard suit={m.card_suit} value={m.card_value} />
-
-                        {m.replaced_card_value && (
-                          <>
-                            <span className="text-ui-gray text-xs font-bold">➔</span>
-                            <MiniCard suit={m.replaced_card_suit} value={m.replaced_card_value} />
-                          </>
-                        )}
-                      </div>
+                    <div className="flex items-center justify-between font-bold text-ui-yellow text-xs sm:text-sm uppercase tracking-widest">
+                      <span>🏆 END OF ROUND {m.round_number || 1} SUMMARY</span>
+                      <span className="text-xs opacity-90">FINAL BOARD</span>
                     </div>
 
+                    {snapshotCards.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-ui-yellow/30">
+                        <div>
+                          <div className="flex flex-col mb-1.5 gap-0.5">
+                            <span className="text-xs sm:text-sm font-bold text-ui-green uppercase tracking-wider truncate">{myName}</span>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
+                              <span className="bg-ui-green/20 px-2 py-0.5 border border-ui-green rounded text-xs font-bold text-ui-green">
+                                +{p1RoundPoints} PTS
+                              </span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
+                            {p1Cards.map((c: any, cIdx: number) => (
+                              <div key={c.id || cIdx}>
+                                <MiniCard suit={c.suit} value={c.value} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex flex-col mb-1.5 gap-0.5">
+                            <span className="text-xs sm:text-sm font-bold text-ui-red uppercase tracking-wider truncate">{opponentName}</span>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
+                              <span className="bg-ui-red/20 px-2 py-0.5 border border-ui-red rounded text-xs font-bold text-ui-red">
+                                +{p2RoundPoints} PTS
+                              </span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 bg-black/50 p-2.5 border border-ui-border rounded place-items-center">
+                            {p2Cards.map((c: any, cIdx: number) => (
+                              <div key={c.id || cIdx}>
+                                <MiniCard suit={c.suit} value={c.value} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {showTimestamps && m.timestamp && (
-                      <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-border/60">
+                      <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-yellow/30">
                         <Clock size={13} className="shrink-0 text-ui-yellow" />
                         <span className="tracking-wide">{formatMoveTimestamp(m.timestamp)}</span>
                       </div>
                     )}
                   </div>
                 );
-              })
-            )}
-          </div>
+              }
+
+              const isSwap = m.move_type && (m.move_type.includes('replace') || m.move_type.includes('swap'));
+              const isDiscard = m.move_type && m.move_type.includes('discard');
+
+              return (
+                <div
+                  key={m.id || idx}
+                  className="p-3 bg-black/60 border border-ui-border/80 rounded flex flex-col gap-1.5 transition-all hover:border-ui-yellow/50"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-ui-gray font-bold text-xs tracking-wider">R{m.round_number || 1}</span>
+                      <span className={`font-bold truncate max-w-[120px] text-xs sm:text-sm ${isMe ? 'text-ui-green' : 'text-ui-red'}`}>
+                        {senderName}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 flex-wrap justify-end">
+                      <span className="text-xs text-ui-gray uppercase font-bold tracking-wider">
+                        {isSwap ? 'SWAPPED' : isDiscard ? 'DISCARDED' : 'PLAYED'}
+                      </span>
+
+                      <MiniCard suit={m.card_suit} value={m.card_value} />
+
+                      {m.replaced_card_value && (
+                        <>
+                          <span className="text-ui-gray text-xs font-bold">➔</span>
+                          <MiniCard suit={m.replaced_card_suit} value={m.replaced_card_value} />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {showTimestamps && m.timestamp && (
+                    <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-border/60">
+                      <Clock size={13} className="shrink-0 text-ui-yellow" />
+                      <span className="tracking-wide">{formatMoveTimestamp(m.timestamp)}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex-1 flex flex-col gap-6 w-full">
+      {/* Mobile Animated Tab View (lg:hidden) */}
+      <div className="lg:hidden w-full overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={mobileTab}
+            initial={{ opacity: 0, x: mobileTab === 'history' ? 25 : mobileTab === 'me' ? -25 : 0, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: mobileTab === 'history' ? -25 : mobileTab === 'me' ? 25 : 0, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: [0.4, 0.0, 0.2, 1] }}
+            className="w-full flex justify-center"
+          >
+            {mobileTab === 'opponent' && renderOpponentGrid()}
+            {mobileTab === 'me' && renderPlayerGrid()}
+            {mobileTab === 'history' && renderHistoryPanel()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Desktop Concurrent View (hidden lg:flex) */}
+      <div className="hidden lg:flex flex-col gap-6 w-full">
+        <div className="grid grid-cols-2 gap-6 items-start">
+          {renderOpponentGrid()}
+          {renderPlayerGrid()}
+        </div>
+        {renderHistoryPanel()}
       </div>
     </div>
   );

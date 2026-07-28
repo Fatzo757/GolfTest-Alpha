@@ -431,7 +431,7 @@ export default function App() {
                 if (match) setCurrentGameId(match[1]);
                 setPushToast(null);
               }}
-              className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] p-4 bg-bg-dark border-2 border-ui-green text-ui-green shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm"
+              className="fixed top-[calc(env(safe-area-inset-top,0px)+5.5rem)] left-1/2 -translate-x-1/2 z-[999999] p-4 bg-bg-dark border-4 border-ui-green text-ui-green shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm rounded-sm"
             >
               <div className="flex justify-between items-center">
                 <span className="text-xs uppercase font-bold">{pushToast.title}</span>
