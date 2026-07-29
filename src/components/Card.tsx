@@ -132,8 +132,6 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
 
   return (
     <motion.div 
-      layout
-      layoutId={card.id}
       onClick={onClick}
       className={`geometric-card preserve-3d ${!isFaceUp ? 'geometric-card-back' : ''} ${className}`}
       style={{ transformStyle: 'preserve-3d', ...(!isFaceUp ? { backgroundColor: cMap.hex } : {}) }}

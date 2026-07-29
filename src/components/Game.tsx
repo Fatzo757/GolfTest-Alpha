@@ -261,8 +261,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
               )}
             </AnimatePresence>
 
-            <LayoutGroup>
-              <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6">
                 {/* Initialization Banner */}
                 <AnimatePresence>
                   {state.game.status === 'initializing' && (
@@ -392,7 +391,6 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   </div>
                 </div>
               </div>
-            </LayoutGroup>
 
             {/* Chat Drawer */}
             <Chat gameId={gameId} userId={userId} token={token} user={user} />

@@ -130,10 +130,7 @@ export default function GameBoard({
           )}
         </div>
 
-        <motion.div
-          variants={boardVariants}
-          initial="hidden"
-          animate="visible"
+        <div
           className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center opacity-85"
           style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
         >
@@ -164,7 +161,7 @@ export default function GameBoard({
               />
             </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -194,10 +191,7 @@ export default function GameBoard({
           )}
         </div>
 
-        <motion.div
-          variants={boardVariants}
-          initial="hidden"
-          animate="visible"
+        <div
           className="grid grid-cols-3 gap-3 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto place-items-center"
           style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
         >
@@ -259,7 +253,7 @@ export default function GameBoard({
               )}
             </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
