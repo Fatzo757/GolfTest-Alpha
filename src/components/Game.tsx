@@ -239,7 +239,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
         </motion.div>
       ) : (
         state && (
-          <motion.div key="game-content" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <motion.div key="game-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.1 }}>
             {/* Floating Toast Notification for turn updates / ready state (safely below title bar) */}
             <AnimatePresence>
               {notification && (
@@ -247,7 +247,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                   initial={{ opacity: 0, y: -20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
                   className="fixed top-[calc(env(safe-area-inset-top,0px)+5.5rem)] left-1/2 -translate-x-1/2 z-[99999] p-3.5 sm:p-4 bg-bg-dark border-4 border-ui-yellow text-ui-yellow shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] pointer-events-none flex flex-col items-center justify-center text-center gap-1 w-11/12 max-w-sm rounded-sm"
                 >
                   <div className="flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
             </AnimatePresence>
 
             <LayoutGroup>
-              <div className="flex flex-col gap-6 animate-in fade-in zoom-in duration-500">
+              <div className="flex flex-col gap-6">
                 {/* Initialization Banner */}
                 <AnimatePresence>
                   {state.game.status === 'initializing' && (

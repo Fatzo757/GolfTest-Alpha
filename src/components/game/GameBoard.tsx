@@ -108,7 +108,7 @@ export default function GameBoard({
   const renderOpponentGrid = () => (
     <div className="flex-1 w-full max-w-2xl">
       <div
-        className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-red/20 border-4 transition-all duration-500 ${
+        className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-red/20 border-4 transition-colors duration-75 lg:transition-none ${
           !isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-ui-border'
         }`}
       >
@@ -172,7 +172,7 @@ export default function GameBoard({
   const renderPlayerGrid = () => (
     <div className="flex-1 w-full max-w-2xl">
       <div
-        className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-green/20 border-4 transition-all duration-500 ${
+        className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-green/20 border-4 transition-colors duration-75 lg:transition-none ${
           isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'
         }`}
       >
@@ -432,10 +432,10 @@ export default function GameBoard({
         <AnimatePresence mode="wait">
           <motion.div
             key={mobileTab}
-            initial={{ opacity: 0, x: mobileTab === 'history' ? 25 : mobileTab === 'me' ? -25 : 0, scale: 0.98 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: mobileTab === 'history' ? -25 : mobileTab === 'me' ? 25 : 0, scale: 0.98 }}
-            transition={{ duration: 0.22, ease: [0.4, 0.0, 0.2, 1] }}
+            initial={{ opacity: 0, x: mobileTab === 'history' ? 15 : mobileTab === 'me' ? -15 : 0 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: mobileTab === 'history' ? -15 : mobileTab === 'me' ? 15 : 0 }}
+            transition={{ duration: 0.08, ease: 'easeOut' }}
             className="w-full flex justify-center"
           >
             {mobileTab === 'opponent' && renderOpponentGrid()}
