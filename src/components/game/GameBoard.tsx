@@ -421,22 +421,11 @@ export default function GameBoard({
 
   return (
     <div className="flex-1 flex flex-col gap-6 w-full">
-      {/* Mobile Animated Tab View (lg:hidden) */}
-      <div className="lg:hidden w-full overflow-hidden">
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={mobileTab}
-            initial={{ opacity: 0.8, x: mobileTab === 'history' ? 15 : mobileTab === 'me' ? -15 : 0 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0.8, x: mobileTab === 'history' ? -15 : mobileTab === 'me' ? 15 : 0 }}
-            transition={{ duration: 0.1, ease: 'easeOut' }}
-            className="w-full flex justify-center"
-          >
-            {mobileTab === 'opponent' && renderOpponentGrid()}
-            {mobileTab === 'me' && renderPlayerGrid()}
-            {mobileTab === 'history' && renderHistoryPanel()}
-          </motion.div>
-        </AnimatePresence>
+      {/* Mobile Tab View (lg:hidden) */}
+      <div className="lg:hidden w-full flex justify-center">
+        {mobileTab === 'opponent' && renderOpponentGrid()}
+        {mobileTab === 'me' && renderPlayerGrid()}
+        {mobileTab === 'history' && renderHistoryPanel()}
       </div>
 
       {/* Desktop Concurrent View (hidden lg:flex) */}
