@@ -193,10 +193,21 @@ export default function App() {
 
     const handlePushReceived = (e: any) => {
       if (e.detail && e.detail.title) {
+        // Skip toast if user is already actively playing the match (Game.tsx handles turn toasts)
+        const targetUrl = e.detail.data?.url || e.detail.url || '/';
+        const match = targetUrl.match(/^\/game\/(.+)$/);
+        const targetGameId = match ? match[1] : null;
+        if (targetGameId && targetGameId === currentGameId) {
+          return;
+        }
+        if (currentGameId && (e.detail.title?.toUpperCase().includes('TURN') || e.detail.body?.toUpperCase().includes('TURN'))) {
+          return;
+        }
+
         setPushToast({
           title: e.detail.title,
           body: e.detail.body,
-          url: e.detail.data?.url || '/',
+          url: targetUrl,
         });
         setTimeout(() => setPushToast(null), 5000);
       }
@@ -217,7 +228,7 @@ export default function App() {
       window.removeEventListener('push-received', handlePushReceived);
       window.removeEventListener('sw-update', handleSwUpdate);
     };
-  }, [user, setCurrentGameId, setPushToast, setSwUpdateAvailable]);
+  }, [user, currentGameId, setCurrentGameId, setPushToast, setSwUpdateAvailable]);
 
   const handleLogoutClick = async () => {
     await logout();
@@ -431,7 +442,10 @@ export default function App() {
                 if (match) setCurrentGameId(match[1]);
                 setPushToast(null);
               }}
-              className="fixed top-[calc(env(safe-area-inset-top,0px)+5.5rem)] left-1/2 -translate-x-1/2 z-[999999] p-4 bg-bg-dark border-4 border-ui-green text-ui-green shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm rounded-sm"
+              className={cn(
+                'fixed left-1/2 -translate-x-1/2 z-[999999] p-4 bg-bg-dark border-4 border-ui-green text-ui-green shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm rounded-sm',
+                currentGameId || replayGameId ? 'top-[calc(env(safe-area-inset-top,0px)+5.5rem)]' : 'top-[calc(env(safe-area-inset-top,0px)+8.5rem)]'
+              )}
             >
               <div className="flex justify-between items-center">
                 <span className="text-xs uppercase font-bold">{pushToast.title}</span>

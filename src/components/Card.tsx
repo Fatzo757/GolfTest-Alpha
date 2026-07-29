@@ -140,14 +140,14 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence initial={false}>
         {!isFaceUp ? (
           <motion.div 
             key="back"
-            initial={{ rotateY: 180, opacity: 0, scale: 0.95 }}
-            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
-            exit={{ rotateY: -180, opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            initial={{ rotateY: 90, opacity: 0.8 }}
+            animate={{ rotateY: 0, opacity: 1 }}
+            exit={{ rotateY: -90, opacity: 0.8 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className={`card-pattern w-full h-full relative border-2 ${cMap.border} bg-transparent`}
           >
             <CardPattern backStyle={backStyle} backColor={backColor} backSecondaryColor={backSecondaryColor} />
@@ -155,10 +155,10 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
         ) : (
           <motion.div
             key="front"
-            initial={{ rotateY: -180, opacity: 0, scale: 0.95 }}
-            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
-            exit={{ rotateY: 180, opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            initial={{ rotateY: -90, opacity: 0.8 }}
+            animate={{ rotateY: 0, opacity: 1 }}
+            exit={{ rotateY: 90, opacity: 0.8 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className={`w-full h-full flex flex-col items-start justify-between ${style === 'sketch' ? 'font-handdrawn' : ''}`}
           >
             <span className={`font-bold ${isRed ? 'text-ui-red' : 'text-black'} ${style === 'sketch' ? 'text-2xl sm:text-lg italic' : style === 'modern' ? 'text-4xl sm:text-2xl' : 'text-xl sm:text-sm'} ${style === 'classic' ? 'tracking-tighter' : ''}`}>

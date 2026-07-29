@@ -28,7 +28,7 @@ interface GameBoardProps {
 }
 
 const boardVariants = {
-  hidden: { opacity: 0 },
+  hidden: { opacity: 1 },
   visible: {
     opacity: 1,
     transition: {
@@ -429,13 +429,13 @@ export default function GameBoard({
     <div className="flex-1 flex flex-col gap-6 w-full">
       {/* Mobile Animated Tab View (lg:hidden) */}
       <div className="lg:hidden w-full overflow-hidden">
-        <AnimatePresence mode="wait">
+        <AnimatePresence initial={false}>
           <motion.div
             key={mobileTab}
-            initial={{ opacity: 0, x: mobileTab === 'history' ? 15 : mobileTab === 'me' ? -15 : 0 }}
+            initial={{ opacity: 0.8, x: mobileTab === 'history' ? 15 : mobileTab === 'me' ? -15 : 0 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: mobileTab === 'history' ? -15 : mobileTab === 'me' ? 15 : 0 }}
-            transition={{ duration: 0.08, ease: 'easeOut' }}
+            exit={{ opacity: 0.8, x: mobileTab === 'history' ? -15 : mobileTab === 'me' ? 15 : 0 }}
+            transition={{ duration: 0.1, ease: 'easeOut' }}
             className="w-full flex justify-center"
           >
             {mobileTab === 'opponent' && renderOpponentGrid()}
