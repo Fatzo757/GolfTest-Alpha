@@ -14,8 +14,19 @@ import webpush from "web-push";
 import fs from "fs";
 import { initializeApp, applicationDefault, getApps } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
+
+// Defensive JSON parsing helper
+export function safeJsonParse<T>(jsonStr: any, fallback: T): T {
+  if (typeof jsonStr !== "string" || !jsonStr.trim()) return fallback;
+  try {
+    return JSON.parse(jsonStr) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   try {
@@ -42,18 +53,24 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
     privateKey: process.env.VAPID_PRIVATE_KEY
   };
 } else if (fs.existsSync(VAPID_FILE)) {
-  vapidKeys = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf-8'));
+  vapidKeys = safeJsonParse(fs.readFileSync(VAPID_FILE, 'utf-8'), { publicKey: '', privateKey: '' });
 } else {
   vapidKeys = webpush.generateVAPIDKeys();
-  fs.writeFileSync(VAPID_FILE, JSON.stringify(vapidKeys));
-  console.log("SERVER: Generated new VAPID keys and saved to vapid.json");
+  try {
+    fs.writeFileSync(VAPID_FILE, JSON.stringify(vapidKeys));
+    console.log("SERVER: Generated new VAPID keys and saved to vapid.json");
+  } catch (e) {
+    console.warn("SERVER: Could not write vapid.json to disk:", e);
+  }
 }
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || 'mailto:admin@example.com',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
+if (vapidKeys.publicKey && vapidKeys.privateKey) {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || 'mailto:admin@example.com',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+  );
+}
 
 if (process.env.NODE_ENV === "production" && (!process.env.JWT_SECRET || process.env.JWT_SECRET === "default-secret-key-123")) {
   console.error("FATAL SECURITY ERROR: JWT_SECRET must be explicitly set to a secure string in production mode!");
@@ -84,6 +101,26 @@ async function startServer() {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   }));
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+
+  // Rate limiters for security
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 30, // max 30 attempts per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many authentication attempts, please try again after 15 minutes." }
+  });
+
+  const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 300, // max 300 requests per minute
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many requests, please slow down." }
+  });
+
+  // Apply general API rate limiting
+  app.use("/api/", apiLimiter);
 
   // 1. Listen immediately to open the port
   const server = app.listen(PORT, "0.0.0.0", () => {
@@ -117,8 +154,42 @@ async function startServer() {
 
       const url = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
       const gameId = url.searchParams.get('gameId');
+      
+      // Authenticate WebSocket connection
+      let token = url.searchParams.get('token');
+      if (!token && req.headers.cookie) {
+        const match = req.headers.cookie.match(/(?:^|;\s*)golf_token=([^;]+)/);
+        if (match) token = decodeURIComponent(match[1]);
+      }
+
+      if (!token) {
+        ws.close(4001, 'Authentication token required');
+        return;
+      }
+
+      let userId: string;
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { id: string; username: string };
+        userId = decoded.id;
+      } catch (err) {
+        ws.close(4001, 'Invalid authentication token');
+        return;
+      }
 
       if (gameId) {
+        // Authorize game access (participant or admin)
+        const game: any = db.prepare("SELECT player1_id, player2_id, is_vs_cpu FROM games WHERE id = ?").get(gameId);
+        if (game) {
+          const isParticipant = game.player1_id === userId || game.player2_id === userId || (game.is_vs_cpu && game.player1_id === userId);
+          const user: any = db.prepare("SELECT is_admin FROM users WHERE id = ?").get(userId);
+          const isUserAdmin = user && user.is_admin === 1;
+
+          if (!isParticipant && !isUserAdmin && game.player2_id !== null) {
+            ws.close(4003, 'Forbidden: Not a participant of this game');
+            return;
+          }
+        }
+
         if (!gameSockets.has(gameId)) {
           gameSockets.set(gameId, new Set());
         }
@@ -134,6 +205,7 @@ async function startServer() {
       }
     } catch (e) {
       console.error("[WS] Connection error:", e);
+      try { ws.close(1011, 'Internal error'); } catch {}
     }
   });
 
@@ -166,27 +238,50 @@ async function startServer() {
 
   // SEED ADMINS
   try {
-    const admins = ['fatzo757@gmail.com', 'admin', 'system'];
-    admins.forEach(username => {
-      db.prepare("UPDATE users SET is_admin = 1 WHERE username = ?").run(username);
-    });
-    console.log("SERVER: Admin users seeded.");
+    const configuredAdmins = process.env.ADMIN_USERS
+      ? process.env.ADMIN_USERS.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+      : (process.env.NODE_ENV !== 'production' ? ['fatzo757@gmail.com', 'admin', 'system'] : []);
+    
+    if (configuredAdmins.length > 0) {
+      const placeholders = configuredAdmins.map(() => '?').join(',');
+      db.prepare(`UPDATE users SET is_admin = 1 WHERE LOWER(username) IN (${placeholders})`).run(...configuredAdmins);
+      console.log("SERVER: Admin users seeded/verified:", configuredAdmins.join(', '));
+    }
   } catch (e) {
     console.error("SERVER: Failed to seed admins:", e);
   }
   
-  // 3. Early API routes
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", time: new Date().toISOString() });
+  // 3. Health check with SQLite connection check
+  app.get("/api/health", (_req, res) => {
+    try {
+      db.prepare("SELECT 1").get();
+      res.json({ status: "ok", db: "connected", time: new Date().toISOString() });
+    } catch (err: any) {
+      res.status(503).json({ status: "degraded", error: err.message });
+    }
   });
 
-  app.get("/api/settings", (req, res) => {
+  // Settings endpoint (unifies database system_settings + live update manifest app_version)
+  app.get("/api/settings", (_req, res) => {
     try {
       const settings = db.prepare("SELECT key, value FROM system_settings").all() as {key: string, value: string}[];
       const settingsMap = settings.reduce((acc, s) => {
         acc[s.key] = s.value;
         return acc;
       }, {} as Record<string, string>);
+
+      // Check live update manifest for active bundle version
+      const liveUpdatesDir = path.join(process.cwd(), "public", "live-updates");
+      const manifestPath = path.join(liveUpdatesDir, "manifest.json");
+      if (fs.existsSync(manifestPath)) {
+        try {
+          const manifestData = safeJsonParse<any>(fs.readFileSync(manifestPath, "utf-8"), null);
+          if (manifestData?.bundleId) {
+            settingsMap.app_version = manifestData.bundleId;
+          }
+        } catch {}
+      }
+
       res.json(settingsMap);
     } catch (err) {
       res.status(500).json({ error: "Failed to load settings" });
@@ -306,65 +401,69 @@ async function startServer() {
       }
 
       const subscriptions = db.prepare("SELECT subscription FROM push_subscriptions WHERE user_id = ?").all(userId) as any[];
-      
-      for (const row of subscriptions) {
-        try {
-          const subscriptionPayload = JSON.parse(row.subscription);
-          
-          let platform = subscriptionPayload.platform;
-          if (!platform) {
-            // Infer platform if missing from old app versions
-            if (subscriptionPayload.token && typeof subscriptionPayload.token === 'string') {
-              platform = 'android';
-            } else if (subscriptionPayload.endpoint) {
-              platform = 'web';
+      if (!subscriptions || subscriptions.length === 0) return;
+
+      await Promise.allSettled(
+        subscriptions.map(async (row) => {
+          try {
+            const subscriptionPayload = safeJsonParse<any>(row.subscription, null);
+            if (!subscriptionPayload) return;
+            
+            let platform = subscriptionPayload.platform;
+            if (!platform) {
+              // Infer platform if missing from old app versions
+              if (subscriptionPayload.token && typeof subscriptionPayload.token === 'string') {
+                platform = 'android';
+              } else if (subscriptionPayload.endpoint) {
+                platform = 'web';
+              }
+            }
+            
+            if (platform === 'android') {
+              if (getApps().length > 0) {
+                const messagePayload: any = {
+                  token: subscriptionPayload.token,
+                  notification: { title, body },
+                  data: { url },
+                  android: {
+                    notification: {
+                      title,
+                      body,
+                      channelId: 'fcm_default_channel',
+                      icon: 'ic_stat_golf',
+                      color: '#29366f',
+                      tag: tag || 'golf_update',
+                      sound: 'default',
+                      notificationCount: 1
+                    }
+                  }
+                };
+                console.log(`SERVER: Sending FCM message to token: ${subscriptionPayload.token.substring(0, 10)}...`);
+                const response = await getMessaging().send(messagePayload);
+                console.log(`SERVER: FCM message sent successfully, response: ${response}`);
+              } else {
+                console.warn("SERVER: Cannot send Android push, Firebase Admin not initialized");
+              }
+            } else {
+              const webSub = subscriptionPayload.platform === 'web' ? subscriptionPayload.details : subscriptionPayload;
+              await webpush.sendNotification(webSub, JSON.stringify({
+                title,
+                body,
+                url,
+                icon: '/notification_icon.png',
+                tag
+              }));
+            }
+          } catch (err: any) {
+            if (err.statusCode === 410 || err.statusCode === 404 || err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 400 || (err.code && typeof err.code === 'string' && err.code.includes('messaging/registration-token-not-registered'))) {
+              // Subscription expired, invalid, or VAPID key mismatch
+              db.prepare("DELETE FROM push_subscriptions WHERE user_id = ? AND subscription = ?").run(userId, row.subscription);
+            } else {
+              console.error(`SERVER: Push error to user ${userId}:`, err?.message || err);
             }
           }
-          
-          if (platform === 'android') {
-             if (getApps().length > 0) {
-               const messagePayload: any = {
-                 token: subscriptionPayload.token,
-                 notification: { title, body },
-                 data: { url },
-                 android: {
-                   notification: {
-                     title,
-                     body,
-                     channelId: 'fcm_default_channel',
-                     icon: 'ic_stat_golf',
-                     color: '#29366f',
-                     tag: tag || 'golf_update',
-                     sound: 'default',
-                     notificationCount: 1
-                   }
-                 }
-               };
-               console.log(`SERVER: Sending FCM message to token: ${subscriptionPayload.token.substring(0, 10)}...`);
-               const response = await getMessaging().send(messagePayload);
-               console.log(`SERVER: FCM message sent successfully, response: ${response}`);
-             } else {
-               console.warn("SERVER: Cannot send Android push, Firebase Admin not initialized");
-             }
-          } else {
-            const webSub = subscriptionPayload.platform === 'web' ? subscriptionPayload.details : subscriptionPayload;
-            await webpush.sendNotification(webSub, JSON.stringify({
-              title,
-              body,
-              url,
-              icon: '/notification_icon.png',
-              tag
-            }));
-          }
-        } catch (err: any) {
-          if (err.statusCode === 410 || err.statusCode === 404 || err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 400 || (err.code && err.code.includes('messaging/registration-token-not-registered'))) {
-            // Subscription expired, invalid, or VAPID key mismatch
-            db.prepare("DELETE FROM push_subscriptions WHERE user_id = ? AND subscription = ?").run(userId, row.subscription);
-          } else {
-            console.error(`SERVER: Push error to user ${userId}:`, err);
-          }
-        }
-      }
+        })
+      );
     } catch (err) {
       console.error("SERVER: Failed to fetch subscriptions:", err);
     }
@@ -430,18 +529,25 @@ async function startServer() {
     })();
   }
 
+  const RESERVED_USERNAMES = new Set(['admin', 'system', 'root', 'cpu', 'moderator', 'bot', 'golf', 'support']);
+
   // User Registration
-  app.post("/api/auth/register", (req, res) => {
+  app.post("/api/auth/register", authLimiter, async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "Username and password required" });
 
+    const cleanUsername = String(username).trim();
+    if (RESERVED_USERNAMES.has(cleanUsername.toLowerCase())) {
+      return res.status(400).json({ error: "This username is reserved and cannot be registered." });
+    }
+
     try {
       const id = nanoid();
-      const password_hash = bcrypt.hashSync(password, 10);
-      db.prepare("INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)").run(id, username, password_hash);
-      const token = jwt.sign({ id, username }, JWT_SECRET);
+      const password_hash = await bcrypt.hash(password, 10);
+      db.prepare("INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)").run(id, cleanUsername, password_hash);
+      const token = jwt.sign({ id, username: cleanUsername }, JWT_SECRET);
       res.cookie("golf_token", token, cookieOptions);
-      res.json({ token, user: { id, username, is_admin: 0 } });
+      res.json({ token, user: { id, username: cleanUsername, is_admin: 0 } });
     } catch (err: any) {
       if (err.message.includes("UNIQUE constraint failed")) {
         res.status(400).json({ error: "Username already exists" });
@@ -452,10 +558,12 @@ async function startServer() {
   });
 
   // User Login
-  app.post("/api/auth/login", (req, res) => {
+  app.post("/api/auth/login", authLimiter, async (req, res) => {
     const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: "Username and password required" });
+
     const user: any = db.prepare("SELECT * FROM users WHERE username = ?").get(username);
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET);
@@ -483,18 +591,18 @@ async function startServer() {
     res.json({ success: true });
   });
 
-  app.post("/api/auth/change-password", authenticate, (req, res) => {
+  app.post("/api/auth/change-password", authenticate, authLimiter, async (req: any, res) => {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword || newPassword.length < 6) {
       return res.status(400).json({ error: "Missing current password or invalid new password (min 6 chars)" });
     }
 
     const user: any = db.prepare("SELECT password_hash FROM users WHERE id = ?").get(req.user.id);
-    if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
+    if (!user || !(await bcrypt.compare(currentPassword, user.password_hash))) {
       return res.status(401).json({ error: "Invalid current password" });
     }
 
-    const newHash = bcrypt.hashSync(newPassword, 10);
+    const newHash = await bcrypt.hash(newPassword, 10);
     db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(newHash, req.user.id);
     res.json({ success: true });
   });
@@ -1020,7 +1128,7 @@ async function startServer() {
       return c;
     });
 
-    let drawnCard = game.drawn_card_json ? JSON.parse(game.drawn_card_json) : null;
+    let drawnCard = game.drawn_card_json ? safeJsonParse<any>(game.drawn_card_json, null) : null;
     if (drawnCard && game.current_turn_player_id !== req.user.id) {
       // Hide drawn card from opponent if it's not their turn
       // Note: If they draw from discard, it's public knowledge, but hiding it keeps the implementation simple and consistent.
@@ -1028,12 +1136,15 @@ async function startServer() {
       drawnCard = { suit: 'hidden', value: 'hidden' };
     }
 
+    const deckCards = safeJsonParse<any[]>(game.deck_json, []);
+    const discardCards = safeJsonParse<any[]>(game.discard_json, []);
+
     res.json({
       game: {
         ...game,
         deck_json: undefined,
-        deck_count: JSON.parse(game.deck_json).length,
-        discard: JSON.parse(game.discard_json),
+        deck_count: deckCards.length,
+        discard: discardCards,
         drawn_card: drawnCard,
         player1_name: p1?.username || 'Unknown',
         player1_avatar: p1?.avatar || 'user',
@@ -1056,8 +1167,8 @@ async function startServer() {
     if (game.current_turn_player_id !== req.user.id) return res.status(400).json({ error: "Not your turn" });
     if (game.drawn_card_json) return res.status(400).json({ error: "Already holding a card" });
 
-    const deck = JSON.parse(game.deck_json);
-    const discard = JSON.parse(game.discard_json);
+    const deck = safeJsonParse<any[]>(game.deck_json, []);
+    const discard = safeJsonParse<any[]>(game.discard_json, []);
     let drawn;
 
     if (source === 'deck') {
@@ -1089,9 +1200,10 @@ async function startServer() {
     if (game.current_turn_player_id !== req.user.id) return res.status(400).json({ error: "Not your turn" });
     if (!game.drawn_card_json) return res.status(400).json({ error: "Draw a card first" });
 
-    const deck = JSON.parse(game.deck_json);
-    const discard = JSON.parse(game.discard_json);
-    const cardToPlace = JSON.parse(game.drawn_card_json);
+    const deck = safeJsonParse<any[]>(game.deck_json, []);
+    const discard = safeJsonParse<any[]>(game.discard_json, []);
+    const cardToPlace = safeJsonParse<any>(game.drawn_card_json, null);
+    if (!cardToPlace) return res.status(400).json({ error: "Invalid drawn card state" });
 
     try {
       db.transaction(() => {
@@ -1219,8 +1331,8 @@ async function startServer() {
       const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
     if (!game || game.status === 'finished' || game.status === 'round_end' || game.status === 'initializing') return;
 
-    const deck = JSON.parse(game.deck_json);
-    const discard = JSON.parse(game.discard_json);
+    const deck = safeJsonParse<any[]>(game.deck_json, []);
+    const discard = safeJsonParse<any[]>(game.discard_json, []);
     const topDiscard = discard[discard.length - 1];
     
     const cpuCards = db.prepare("SELECT * FROM game_cards WHERE game_id = ? AND player_id = 'cpu' ORDER BY card_index ASC").all(gameId);
@@ -1519,10 +1631,7 @@ async function startServer() {
     try {
       const user: any = db.prepare("SELECT is_admin, username FROM users WHERE id = ?").get(req.user.id);
       
-      // Hardcoded super admins boostrap check
-      const superAdmins = ["fatzo757@gmail.com", "admin", "system"];
-      
-      if (user && (user.is_admin === 1 || superAdmins.includes(user.username))) {
+      if (user && user.is_admin === 1) {
         next();
       } else {
         res.status(403).json({ error: "Access denied. Admin only." });
@@ -1531,12 +1640,6 @@ async function startServer() {
       res.status(500).json({ error: "Server error during auth check" });
     }
   };
-
-  // Sync hardcoded admins on startup
-  const bootstrapAdmins = ["fatzo757@gmail.com", "admin", "system"];
-  bootstrapAdmins.forEach(name => {
-    db.prepare("UPDATE users SET is_admin = 1 WHERE username = ?").run(name);
-  });
 
   // --- Admin Routes ---
   app.get("/api/admin/summary", authenticate, isAdmin, (req, res) => {
@@ -1580,7 +1683,8 @@ async function startServer() {
     try {
       const subs = db.prepare("SELECT user_id, subscription FROM push_subscriptions").all() as any[];
       const stats = subs.reduce((acc: any, s: any) => {
-        const p = JSON.parse(s.subscription).platform || 'unknown';
+        const payload = safeJsonParse<any>(s.subscription, {});
+        const p = payload.platform || 'unknown';
         acc[p] = (acc[p] || 0) + 1;
         return acc;
       }, {});
@@ -1600,12 +1704,12 @@ async function startServer() {
     res.json({ users });
   });
   
-  app.post("/api/admin/users/:userId/reset-password", authenticate, isAdmin, (req, res) => {
+  app.post("/api/admin/users/:userId/reset-password", authenticate, isAdmin, async (req, res) => {
     const { userId } = req.params;
     const { newPassword } = req.body;
     if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: "Valid password required (min 6 chars)" });
     
-    const password_hash = bcrypt.hashSync(newPassword, 10);
+    const password_hash = await bcrypt.hash(newPassword, 10);
     db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(password_hash, userId);
     res.json({ success: true });
   });
@@ -1672,7 +1776,26 @@ async function startServer() {
     res.json({ success: true });
   });
 
-  // --- Centralized Express Error Handling Middleware ---
+  // --- Live Update Endpoints ---
+  const liveUpdatesDir = path.join(process.cwd(), "public", "live-updates");
+  app.use("/live-updates", express.static(liveUpdatesDir));
+
+  app.get("/api/live-update/manifest", (_req, res) => {
+    const manifestPath = path.join(liveUpdatesDir, "manifest.json");
+    if (fs.existsSync(manifestPath)) {
+      try {
+        const manifestData = safeJsonParse<any>(fs.readFileSync(manifestPath, "utf-8"), null);
+        if (manifestData) {
+          return res.json(manifestData);
+        }
+      } catch (err) {
+        return res.status(500).json({ error: "Failed to parse live update manifest" });
+      }
+    }
+    return res.status(404).json({ error: "No live update manifest available" });
+  });
+
+  // --- Centralized Express Error Handling Middleware (Registered AFTER all API routes) ---
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error("SERVER UNHANDLED ERROR:", err);
     if (res.headersSent) {
@@ -1682,39 +1805,6 @@ async function startServer() {
     res.status(statusCode).json({
       error: process.env.NODE_ENV === "production" ? "Internal server error" : (err.message || "Unknown error"),
     });
-  });
-
-  // --- Live Update Endpoints ---
-  const liveUpdatesDir = path.join(process.cwd(), "public", "live-updates");
-  app.use("/live-updates", express.static(liveUpdatesDir));
-
-  app.get("/api/settings", (_req, res) => {
-    let app_version = "v1.0";
-    const manifestPath = path.join(liveUpdatesDir, "manifest.json");
-    if (fs.existsSync(manifestPath)) {
-      try {
-        const manifestData = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
-        if (manifestData.bundleId) {
-          app_version = manifestData.bundleId;
-        }
-      } catch (err) {
-        // Fallback to default
-      }
-    }
-    return res.json({ app_version });
-  });
-
-  app.get("/api/live-update/manifest", (_req, res) => {
-    const manifestPath = path.join(liveUpdatesDir, "manifest.json");
-    if (fs.existsSync(manifestPath)) {
-      try {
-        const manifestData = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
-        return res.json(manifestData);
-      } catch (err) {
-        return res.status(500).json({ error: "Failed to parse live update manifest" });
-      }
-    }
-    return res.status(404).json({ error: "No live update manifest available" });
   });
 
   // --- Vite Middleware ---
