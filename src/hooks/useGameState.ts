@@ -43,7 +43,6 @@ export function useGameState(gameId: string, token: string, user: User) {
 
       // Turn notification
       if (prevState && prevState.game.current_turn_player_id !== userId && state.game.current_turn_player_id === userId) {
-        setNotification({ title: "IT'S YOUR TURN!", subtitle: 'Choose your next move' });
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
           try {
             new Notification('GOLF CARD GAME', {
@@ -55,7 +54,6 @@ export function useGameState(gameId: string, token: string, user: User) {
         if (user.mute_sounds === 0) {
           soundService.playTurn();
         }
-        setTimeout(() => setNotification(null), 5000);
       }
 
       // Sound triggers
