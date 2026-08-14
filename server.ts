@@ -1578,6 +1578,7 @@ async function startServer() {
     }
 
     setupNewRound(gameId, game.player1_id, game.player2_id, nextStarter);
+    broadcastToGame(gameId, { type: 'GAME_UPDATED', gameId });
     res.json({ success: true });
   });
 

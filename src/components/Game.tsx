@@ -160,16 +160,24 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
     touchStartY.current = null;
   };
 
-  // Automatically switch mobileTab to active turn player on load and turn change
+  const prevRoundRef = useRef<number | null>(null);
+
+  // Automatically switch mobileTab to player's playfield ('me') on start of new round or initializing phase
   useEffect(() => {
-    if (state?.game?.status === 'playing' || state?.game?.status === 'initializing') {
+    const currentRound = state?.game?.round_number || 1;
+    const isNewRound = prevRoundRef.current !== null && prevRoundRef.current !== currentRound;
+    prevRoundRef.current = currentRound;
+
+    if (state?.game?.status === 'initializing' || isNewRound) {
+      setMobileTab('me');
+    } else if (state?.game?.status === 'playing') {
       if (isMyTurn) {
         setMobileTab('me');
       } else {
         setMobileTab('opponent');
       }
     }
-  }, [isMyTurn, state?.game?.status, state?.game?.current_turn_player_id]);
+  }, [isMyTurn, state?.game?.status, state?.game?.round_number, state?.game?.current_turn_player_id]);
 
   const handleRematchClick = async () => {
     if (!state || !onRematch) {
