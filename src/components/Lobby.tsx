@@ -335,12 +335,13 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
               <div className="text-xs flex items-center gap-2 uppercase">
                   <span className={`px-1 py-0.5 font-bold ${
                     game.status === 'playing' ? 'bg-ui-green/20 text-ui-green' : 
+                    game.status === 'last_turns' ? 'bg-ui-orange/20 text-ui-orange animate-pulse' :
                     game.status === 'initializing' ? 'bg-ui-yellow/20 text-ui-yellow animate-pulse' :
                     'bg-ui-purple/20 text-ui-purple'
                   }`}>
                     {game.status.replace('_', ' ')}
                   </span>
-                  {game.status === 'playing' && (
+                  {(game.status === 'playing' || game.status === 'last_turns') && (
                     <span className={`font-bold ${game.current_turn_player_id === user.id ? 'text-ui-yellow animate-pulse' : 'text-white'}`}>
                       • {game.current_turn_player_id === user.id ? 'YOUR TURN' : "OPPONENT'S TURN"}
                     </span>
@@ -386,7 +387,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                     >
                       <Trash2 size={16} />
                     </button>
-                    {game.status === 'playing' && game.current_turn_player_id !== user.id && !game.is_vs_cpu && (
+                    {(game.status === 'playing' || game.status === 'last_turns') && game.current_turn_player_id !== user.id && !game.is_vs_cpu && (
                       <button
                         onClick={() => remindOpponent(game.id)}
                         className="geometric-button p-3 border-2 border-ui-yellow text-ui-yellow text-xs font-black hover:bg-ui-yellow hover:text-bg-dark transition-all whitespace-nowrap flex-1"
@@ -399,7 +400,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
                       onClick={() => onJoinGame(game.id)}
                       className="geometric-button p-3 bg-ui-green text-bg-dark text-xs font-black hover:bg-white transition-all whitespace-nowrap flex-1 min-w-[80px]"
                     >
-                      {game.status === 'playing' ? 'RESUME' : 'VIEW'}
+                      {game.status === 'playing' || game.status === 'last_turns' ? 'RESUME' : 'VIEW'}
                     </button>
                   </motion.div>
                 )}

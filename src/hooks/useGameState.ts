@@ -5,15 +5,9 @@ import { fetcher } from '../lib/fetcher';
 import { useGameSocket } from './useGameSocket';
 import { soundService } from '../services/soundService';
 import { getApiUrl } from '../lib/api';
+import { getPoints, calculatePlayerScore } from '../lib/gameScoring';
 
-export function getPoints(value: string) {
-  if (value === 'J') return -2;
-  if (value === 'K') return 0;
-  if (value === 'Q') return 10;
-  if (value === 'A') return 1;
-  const num = parseInt(value);
-  return isNaN(num) ? 10 : num;
-}
+export { getPoints };
 
 export function useGameState(gameId: string, token: string, user: User) {
   const userId = user.id;
@@ -136,41 +130,8 @@ export function useGameState(gameId: string, token: string, user: User) {
 
   const calculateScore = useCallback(
     (player_id: string) => {
-      if (!state) return 0;
-      const playerCards = state.cards
-        .filter((c) => c.player_id === player_id)
-        .sort((a, b) => (a.card_index || 0) - (b.card_index || 0));
-
-      const partOfSet = new Set<number>();
-      const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
-      const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
-
-      // Check rows
-      rows.forEach((indices) => {
-        const row = indices.map((i) => playerCards[i]);
-        const allFaceUp = row.every((c) => c && c.is_face_up);
-        if (allFaceUp && row[0].value === row[1].value && row[1].value === row[2].value) {
-          indices.forEach((i) => partOfSet.add(i));
-        }
-      });
-
-      // Check columns
-      cols.forEach((indices) => {
-        const col = indices.map((i) => playerCards[i]);
-        const allFaceUp = col.every((c) => c && c.is_face_up);
-        if (allFaceUp && col[0].value === col[1].value && col[1].value === col[2].value) {
-          indices.forEach((i) => partOfSet.add(i));
-        }
-      });
-
-      let total = 0;
-      playerCards.forEach((card, index) => {
-        if (card && card.is_face_up && !partOfSet.has(index)) {
-          total += getPoints(card.value);
-        }
-      });
-
-      return total;
+      if (!state?.cards) return 0;
+      return calculatePlayerScore(state.cards, player_id, { onlyFaceUp: true });
     },
     [state]
   );
@@ -234,8 +195,10 @@ export function useGameState(gameId: string, token: string, user: User) {
     if (state) {
       const drawnCard = state.game.drawn_card;
       if (drawnCard) {
+        let replacedCard: Card | undefined;
         const updatedCards = state.cards.map((c) => {
           if (c.player_id === userId && c.card_index === cardIndex && moveType === 'replace') {
+            replacedCard = c;
             return {
               ...c,
               suit: drawnCard.suit,
@@ -249,7 +212,9 @@ export function useGameState(gameId: string, token: string, user: User) {
 
         const updatedDiscard = [...(state.game.discard || [])];
         if (moveType === 'discard_drawn') {
-          updatedDiscard.unshift({ ...drawnCard, is_face_up: true });
+          updatedDiscard.push({ ...drawnCard, is_face_up: true });
+        } else if (moveType === 'replace' && replacedCard) {
+          updatedDiscard.push({ ...replacedCard, is_face_up: true });
         }
 
         const optimisticState: GameState = {

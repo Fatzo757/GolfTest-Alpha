@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, X, SkipForward, Skip
 import UserAvatar from './UserAvatar.tsx';
 import CardComponent from './Card.tsx';
 import { getApiUrl } from '../lib/api';
+import { calculateHandScore } from '../lib/gameScoring';
 
 interface ReplayProps {
   gameId: string;
@@ -129,41 +130,8 @@ export default function Replay({ gameId, token, user, onExit }: ReplayProps) {
     return () => clearTimeout(timer);
   }, [isPlaying, currentIdx, moves, playbackSpeed]);
 
-  const getPoints = (value: string) => {
-    if (value === 'J') return -2;
-    if (value === 'K') return 0;
-    if (value === 'Q') return 10;
-    if (value === 'A') return 1;
-    const num = parseInt(value);
-    return isNaN(num) ? 10 : num;
-  };
-
   const calculateScore = (cards: Card[]) => {
-    const partOfSet = new Set<number>();
-    const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
-    const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
-
-    rows.forEach(indices => {
-      const row = indices.map(i => cards[i]);
-      if (row.every(c => c && c.is_face_up) && row[0].value === row[1].value && row[1].value === row[2].value) {
-        indices.forEach(i => partOfSet.add(i));
-      }
-    });
-
-    cols.forEach(indices => {
-      const col = indices.map(i => cards[i]);
-      if (col.every(c => c && c.is_face_up) && col[0].value === col[1].value && col[1].value === col[2].value) {
-        indices.forEach(i => partOfSet.add(i));
-      }
-    });
-
-    let total = 0;
-    cards.forEach((card, index) => {
-      if (card && card.is_face_up && !partOfSet.has(index)) {
-        total += getPoints(card.value);
-      }
-    });
-    return total;
+    return calculateHandScore(cards, { onlyFaceUp: true });
   };
 
   const roundNavigation = useMemo(() => {

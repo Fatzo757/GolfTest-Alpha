@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 import db from "./src/db.ts";
+import { getPoints, calculateHandScore } from "./src/lib/gameScoring.ts";
 import dotenv from "dotenv";
 import webpush from "web-push";
 import fs from "fs";
@@ -333,57 +334,6 @@ async function startServer() {
   };
 
 
-  function getPoints(value: string) {
-    if (value === 'J') return -2;
-    if (value === 'K') return 0;
-    if (value === 'Q') return 10;
-    if (value === 'A') return 1;
-    return parseInt(value) || 10;
-  }
-
-  function calculateHandScore(hand: any[]) {
-    if (hand.length < 9) {
-      return hand.reduce((total, c) => total + getPoints(c.value), 0);
-    }
-    
-    const sortedHand = [...hand].sort((a, b) => a.card_index - b.card_index);
-    const partOfSet = new Set<number>();
-
-    // 0 1 2
-    // 3 4 5
-    // 6 7 8
-    const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
-    const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
-
-    // Check rows for 3 of a kind
-    rows.forEach(indices => {
-      const v0 = sortedHand[indices[0]]?.value;
-      const v1 = sortedHand[indices[1]]?.value;
-      const v2 = sortedHand[indices[2]]?.value;
-      if (v0 && v0 === v1 && v1 === v2) {
-        indices.forEach(i => partOfSet.add(i));
-      }
-    });
-
-    // Check columns for 3 of a kind
-    cols.forEach(indices => {
-      const v0 = sortedHand[indices[0]]?.value;
-      const v1 = sortedHand[indices[1]]?.value;
-      const v2 = sortedHand[indices[2]]?.value;
-      if (v0 && v0 === v1 && v1 === v2) {
-        indices.forEach(i => partOfSet.add(i));
-      }
-    });
-
-    let total = 0;
-    sortedHand.forEach((card, index) => {
-      if (!partOfSet.has(index)) {
-        total += getPoints(card.value);
-      }
-    });
-
-    return total;
-  }
 
   async function sendPushNotification(userId: string, title: string, body: string, url: string = '/', tag?: string) {
     if (!tag) {
@@ -791,7 +741,7 @@ async function startServer() {
     try {
       const game: any = db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
       if (!game) return res.status(404).json({ error: "Game not found" });
-      if (game.status !== 'playing' && game.status !== 'initializing') return res.status(400).json({ error: "Game is not active" });
+      if (game.status !== 'playing' && game.status !== 'initializing' && game.status !== 'last_turns') return res.status(400).json({ error: "Game is not active" });
       if (game.current_turn_player_id === userId) return res.status(400).json({ error: "It is your turn" });
       if (game.current_turn_player_id === 'cpu') return res.status(400).json({ error: "Cannot nudge CPU" });
       

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card as CardType } from '../types.ts';
+import { getPoints } from '../lib/gameScoring.ts';
 
 interface CardProps {
   card: CardType;
@@ -121,14 +122,6 @@ export default function Card({ card, index, style, backStyle = 'classic', backCo
 
   const cMap = getCardBackColors(backColor);
 
-  const getPoints = (value: string) => {
-    if (value === 'J') return -2;
-    if (value === 'K') return 0;
-    if (value === 'Q') return 10;
-    if (value === 'A') return 1;
-    const num = parseInt(value);
-    return isNaN(num) ? 10 : num;
-  };
 
   return (
     <motion.div 

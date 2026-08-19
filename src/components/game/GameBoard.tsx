@@ -4,6 +4,7 @@ import { ChevronRight, Star, History, Clock } from 'lucide-react';
 import { GameState, Card, Move, User } from '../../types';
 import CardComponent from '../Card';
 import UserAvatar from '../UserAvatar';
+import { calculateHandScore } from '../../lib/gameScoring';
 
 interface GameBoardProps {
   state: GameState;
@@ -60,7 +61,7 @@ export default function GameBoard({
 }: GameBoardProps) {
   const [showTimestamps, setShowTimestamps] = useState(false);
 
-  // Keyboard Shortcuts Listener (1-6 to reveal/replace, 'd' deck, 's' discard)
+  // Keyboard Shortcuts Listener (1-9 to reveal/replace, 'd' deck, 's' discard)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -71,7 +72,7 @@ export default function GameBoard({
       if (!state?.game || !isMyTurnNow) return;
 
       const num = parseInt(e.key);
-      if (!isNaN(num) && num >= 1 && num <= 6) {
+      if (!isNaN(num) && num >= 1 && num <= 9) {
         if (state.game.status === 'initializing') {
           handleReveal(num - 1);
         } else if (state.game.status === 'playing' && state.game.drawn_card) {
@@ -464,46 +465,8 @@ const formatMoveTimestamp = (timestamp?: string) => {
   });
 };
 
-const getPoints = (value: string) => {
-  if (value === 'J') return -2;
-  if (value === 'K') return 0;
-  if (value === 'Q') return 10;
-  if (value === 'A') return 1;
-  const num = parseInt(value);
-  return isNaN(num) ? 10 : num;
-};
-
 const calcCardsScore = (cards: any[]) => {
-  if (!cards || cards.length === 0) return 0;
-  const sorted = [...cards].sort((a, b) => (a.card_index || 0) - (b.card_index || 0));
-  const partOfSet = new Set<number>();
-  const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
-  const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
-
-  rows.forEach((indices) => {
-    const row = indices.map((i) => sorted[i]);
-    const allFaceUp = row.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
-    if (allFaceUp && row[0] && row[1] && row[2] && row[0].value === row[1].value && row[1].value === row[2].value) {
-      indices.forEach((i) => partOfSet.add(i));
-    }
-  });
-
-  cols.forEach((indices) => {
-    const col = indices.map((i) => sorted[i]);
-    const allFaceUp = col.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
-    if (allFaceUp && col[0] && col[1] && col[2] && col[0].value === col[1].value && col[1].value === col[2].value) {
-      indices.forEach((i) => partOfSet.add(i));
-    }
-  });
-
-  let total = 0;
-  sorted.forEach((card, index) => {
-    if (card && (card.is_face_up || card.is_face_up === undefined) && !partOfSet.has(index)) {
-      total += getPoints(card.value);
-    }
-  });
-
-  return total;
+  return calculateHandScore(cards, { onlyFaceUp: true });
 };
 
 const getFilteredHistoryMoves = (moves: any[], currentRound: number) => {

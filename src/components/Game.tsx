@@ -10,6 +10,7 @@ import GameHeader from './game/GameHeader';
 import GameControls from './game/GameControls';
 import GameBoard from './game/GameBoard';
 import { getApiUrl } from '../lib/api';
+import { calculateHandScore } from '../lib/gameScoring';
 
 interface GameProps {
   gameId: string;
@@ -18,48 +19,6 @@ interface GameProps {
   onExit: () => void;
   onRematch?: (newGameId: string) => void;
 }
-
-const getCardValuePoints = (value: string) => {
-  if (value === 'J') return -2;
-  if (value === 'K') return 0;
-  if (value === 'Q') return 10;
-  if (value === 'A') return 1;
-  const num = parseInt(value);
-  return isNaN(num) ? 10 : num;
-};
-
-const calcPopupHandScore = (cards: any[]) => {
-  if (!cards || cards.length === 0) return 0;
-  const sorted = [...cards].sort((a, b) => (a.card_index || 0) - (b.card_index || 0));
-  const partOfSet = new Set<number>();
-  const rows = [[0, 1, 2], [3, 4, 5], [6, 7, 8]];
-  const cols = [[0, 3, 6], [1, 4, 7], [2, 5, 8]];
-
-  rows.forEach((indices) => {
-    const row = indices.map((i) => sorted[i]);
-    const allFaceUp = row.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
-    if (allFaceUp && row[0] && row[1] && row[2] && row[0].value === row[1].value && row[1].value === row[2].value) {
-      indices.forEach((i) => partOfSet.add(i));
-    }
-  });
-
-  cols.forEach((indices) => {
-    const col = indices.map((i) => sorted[i]);
-    const allFaceUp = col.every((c) => c && (c.is_face_up || c.is_face_up === undefined));
-    if (allFaceUp && col[0] && col[1] && col[2] && col[0].value === col[1].value && col[1].value === col[2].value) {
-      indices.forEach((i) => partOfSet.add(i));
-    }
-  });
-
-  let total = 0;
-  sorted.forEach((card, index) => {
-    if (card && (card.is_face_up || card.is_face_up === undefined) && !partOfSet.has(index)) {
-      total += getCardValuePoints(card.value);
-    }
-  });
-
-  return total;
-};
 
 const PopupMiniCard = ({ suit, value }: { suit?: string; value?: string }) => {
   if (!suit || !value) return null;
@@ -431,7 +390,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
                             <span className="text-xs font-bold text-ui-green bg-ui-green/20 px-2 py-0.5 rounded border border-ui-green">
-                              +{calcPopupHandScore(myCards)} ROUND PTS
+                              +{calculateHandScore(myCards)} ROUND PTS
                             </span>
                           </div>
                         </div>
@@ -454,7 +413,7 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-ui-gray uppercase font-semibold">ROUND SCORE</span>
                             <span className="text-xs font-bold text-ui-red bg-ui-red/20 px-2 py-0.5 rounded border border-ui-red">
-                              +{calcPopupHandScore(opponentCards)} ROUND PTS
+                              +{calculateHandScore(opponentCards)} ROUND PTS
                             </span>
                           </div>
                         </div>
@@ -516,11 +475,15 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
                     <div className="grid grid-cols-2 gap-4 p-4 bg-black/40 border-2 border-ui-border">
                       <div className="flex flex-col items-center">
                         <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{user.username}</span>
-                        <span className="text-2xl font-bold text-ui-green">{state.game.player1_total_score}</span>
+                        <span className="text-2xl font-bold text-ui-green">
+                          {userId === state.game.player1_id ? state.game.player1_total_score : state.game.player2_total_score}
+                        </span>
                       </div>
                       <div className="flex flex-col items-center border-l-2 border-ui-border">
                         <span className="text-xs text-ui-gray uppercase truncate max-w-[120px]">{opponentName}</span>
-                        <span className="text-2xl font-bold text-ui-red">{state.game.player2_total_score}</span>
+                        <span className="text-2xl font-bold text-ui-red">
+                          {userId === state.game.player1_id ? state.game.player2_total_score : state.game.player1_total_score}
+                        </span>
                       </div>
                     </div>
 
