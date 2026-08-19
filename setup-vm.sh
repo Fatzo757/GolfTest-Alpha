@@ -36,7 +36,8 @@ APP_DIR="golf-card-game"
 if [ -d "$APP_DIR" ]; then
   echo "Directory $APP_DIR already exists. Updating..."
   cd "$APP_DIR"
-  git pull
+  git fetch origin
+  git reset --hard "origin/$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
 else
   echo "Cloning repository..."
   git clone "$REPO_URL" "$APP_DIR"

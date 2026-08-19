@@ -1,4 +1,4 @@
-import { Card } from '../types';
+import type { Card } from '../types.ts';
 
 export function getPoints(value?: string | null): number {
   if (!value) return 0;
