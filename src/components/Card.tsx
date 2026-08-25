@@ -115,70 +115,102 @@ export const CardPattern = ({ backStyle, backColor, backSecondaryColor = 'white'
   );
 };
 
-export default function Card({ card, index, style, backStyle = 'classic', backColor = 'ui-red', backSecondaryColor = 'white', onClick, className = '', isDragging = false, forceFaceUp = false, showPoints = true }: CardProps) {
+export default function Card({
+  card,
+  index,
+  style,
+  backStyle = 'classic',
+  backColor = 'ui-red',
+  backSecondaryColor = 'white',
+  onClick,
+  className = '',
+  isDragging = false,
+  forceFaceUp = false,
+  showPoints = true,
+}: CardProps) {
   const isRed = card.suit === 'hearts' || card.suit === 'diamonds';
   const symbol = card.suit === 'hearts' ? '♥' : card.suit === 'diamonds' ? '♦' : card.suit === 'clubs' ? '♣' : '♠';
   const isFaceUp = card.is_face_up || forceFaceUp;
 
   const cMap = getCardBackColors(backColor);
 
-
   return (
-    <motion.div 
+    <motion.div
       onClick={onClick}
-      className={`geometric-card preserve-3d ${!isFaceUp ? 'geometric-card-back' : ''} ${className}`}
-      style={{ transformStyle: 'preserve-3d', ...(!isFaceUp ? { backgroundColor: cMap.hex } : {}) }}
+      className={`relative select-none [perspective:1000px] ${className}`}
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
-      <AnimatePresence initial={false}>
-        {!isFaceUp ? (
-          <motion.div 
-            key="back"
-            initial={{ rotateY: 90, opacity: 0.8 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ rotateY: -90, opacity: 0.8 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`card-pattern w-full h-full relative border-2 ${cMap.border} bg-transparent`}
+      <motion.div
+        className="w-full h-full relative [transform-style:preserve-3d]"
+        initial={false}
+        animate={{ rotateY: isFaceUp ? 0 : 180 }}
+        transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+      >
+        {/* Front Face */}
+        <div
+          className={`geometric-card absolute inset-0 w-full h-full flex flex-col items-start justify-between [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(0deg)] ${
+            style === 'sketch' ? 'font-handdrawn' : ''
+          }`}
+        >
+          <span
+            className={`font-bold ${isRed ? 'text-ui-red' : 'text-black'} ${
+              style === 'sketch' ? 'text-2xl sm:text-lg italic' : style === 'modern' ? 'text-4xl sm:text-2xl' : 'text-xl sm:text-sm'
+            } ${style === 'classic' ? 'tracking-tighter' : ''}`}
           >
-            <CardPattern backStyle={backStyle} backColor={backColor} backSecondaryColor={backSecondaryColor} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="front"
-            initial={{ rotateY: -90, opacity: 0.8 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ rotateY: 90, opacity: 0.8 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className={`w-full h-full flex flex-col items-start justify-between ${style === 'sketch' ? 'font-handdrawn' : ''}`}
-          >
-            <span className={`font-bold ${isRed ? 'text-ui-red' : 'text-black'} ${style === 'sketch' ? 'text-2xl sm:text-lg italic' : style === 'modern' ? 'text-4xl sm:text-2xl' : 'text-xl sm:text-sm'} ${style === 'classic' ? 'tracking-tighter' : ''}`}>
+            {card.value}
+          </span>
+
+          <div className={`flex-1 flex items-center justify-center w-full ${style === 'modern' ? 'scale-110' : ''}`}>
+            {style === 'modern' ? (
+              <div
+                className={`w-14 h-14 rounded-full flex items-center justify-center ${
+                  isRed ? 'bg-ui-red text-white shadow-sm' : 'bg-black text-white shadow-sm'
+                }`}
+              >
+                <span className="text-5xl sm:text-4xl">{symbol}</span>
+              </div>
+            ) : style === 'sketch' ? (
+              <div className={`text-5xl sm:text-4xl ${isRed ? 'text-ui-red' : 'text-black'} rotate-3`}>{symbol}</div>
+            ) : (
+              <span
+                className={`text-5xl sm:text-3xl ${isRed ? 'text-ui-red' : 'text-black'} ${
+                  style === 'classic' ? 'image-rendering-pixelated' : ''
+                }`}
+              >
+                {symbol}
+              </span>
+            )}
+          </div>
+
+          <div className="w-full flex justify-between items-center mt-auto">
+            <span
+              className={`${style === 'modern' ? 'text-xs sm:text-[0.625rem]' : 'text-[0.625rem] sm:text-[0.5rem]'} opacity-30 ${
+                style === 'sketch' ? 'font-handdrawn' : ''
+              }`}
+            >
+              {showPoints ? `${getPoints(card.value)} PT` : ''}
+            </span>
+            <span
+              className={`${style === 'modern' ? 'text-sm sm:text-xs' : 'text-xs sm:text-[0.625rem]'} font-bold self-end rotate-180 opacity-20 ${
+                isRed ? 'text-ui-red' : 'text-black'
+              }`}
+            >
               {card.value}
             </span>
-            
-            <div className={`flex-1 flex items-center justify-center w-full ${style === 'modern' ? 'scale-110' : ''}`}>
-               {style === 'modern' ? (
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center ${isRed ? 'bg-ui-red text-white shadow-sm' : 'bg-black text-white shadow-sm'}`}>
-                    <span className="text-5xl sm:text-4xl">{symbol}</span>
-                </div>
-               ) : style === 'sketch' ? (
-                <div className={`text-5xl sm:text-4xl ${isRed ? 'text-ui-red' : 'text-black'} rotate-3`}>
-                    {symbol}
-                </div>
-               ) : (
-                <span className={`text-5xl sm:text-3xl ${isRed ? 'text-ui-red' : 'text-black'} ${style === 'classic' ? 'image-rendering-pixelated' : ''}`}>
-                    {symbol}
-                </span>
-               )}
-            </div>
-            
-            <div className="w-full flex justify-between items-center mt-auto">
-               <span className={`${style === 'modern' ? 'text-xs sm:text-[0.625rem]' : 'text-[0.625rem] sm:text-[0.5rem]'} opacity-30 ${style === 'sketch' ? 'font-handdrawn' : ''}`}>{showPoints ? `${getPoints(card.value)} PT` : ''}</span>
-               <span className={`${style === 'modern' ? 'text-sm sm:text-xs' : 'text-xs sm:text-[0.625rem]'} font-bold self-end rotate-180 opacity-20 ${isRed ? 'text-ui-red' : 'text-black'}`}>{card.value}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Back Face */}
+        <div
+          className="geometric-card geometric-card-back absolute inset-0 w-full h-full [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(180deg)]"
+          style={{ backgroundColor: cMap.hex }}
+        >
+          <div className={`card-pattern w-full h-full relative border-2 ${cMap.border} bg-transparent`}>
+            <CardPattern backStyle={backStyle} backColor={backColor} backSecondaryColor={backSecondaryColor} />
+          </div>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }

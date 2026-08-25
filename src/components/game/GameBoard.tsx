@@ -136,7 +136,7 @@ export default function GameBoard({
           style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
         >
           {opponentCards.map((card, idx) => (
-            <div key={card.id || idx} className="relative w-full">
+            <div key={`opp-slot-${card.card_index ?? idx}`} className="relative w-full">
               {latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0, rotate: -45 }}
@@ -198,7 +198,7 @@ export default function GameBoard({
         >
           {myCards.map((card, idx) => (
             <div
-              key={card.id || idx}
+              key={`player-slot-${card.card_index ?? idx}`}
               ref={(el) => {
                 if (gridRefs.current) gridRefs.current[idx] = el;
               }}
