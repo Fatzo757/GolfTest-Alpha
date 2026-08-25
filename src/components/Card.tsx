@@ -137,7 +137,7 @@ export default function Card({
   return (
     <motion.div
       onClick={onClick}
-      className={`relative select-none [perspective:1000px] ${className}`}
+      className={`w-full aspect-[3/4] relative select-none [perspective:1000px] ${className}`}
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >

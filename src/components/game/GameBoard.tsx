@@ -136,7 +136,7 @@ export default function GameBoard({
           style={{ transform: 'scale(var(--card-scale, 1))', transformOrigin: 'center center' }}
         >
           {opponentCards.map((card, idx) => (
-            <div key={`opp-slot-${card.card_index ?? idx}`} className="relative w-full">
+            <div key={`opp-slot-${card.card_index ?? idx}`} className="relative w-full aspect-[3/4]">
               {latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0, rotate: -45 }}
@@ -202,7 +202,7 @@ export default function GameBoard({
               ref={(el) => {
                 if (gridRefs.current) gridRefs.current[idx] = el;
               }}
-              className="relative group w-full"
+              className="relative group w-full aspect-[3/4]"
             >
               {latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx && (
                 <motion.div
