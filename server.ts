@@ -564,9 +564,31 @@ async function startServer() {
 
   // Update Preferences
   app.post("/api/auth/preferences", authenticate, (req: any, res) => {
-    const { theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale, card_scale, push_game_invites, push_turn_reminders, scanlines_enabled, show_card_points } = req.body;
+    const existing: any = db.prepare("SELECT * FROM users WHERE id = ?").get(req.user.id);
+    if (!existing) return res.status(404).json({ error: "User not found" });
+
+    const theme = req.body.theme !== undefined ? req.body.theme : existing.theme;
+    const ui_mode = req.body.ui_mode !== undefined ? req.body.ui_mode : (existing.ui_mode || 'retro');
+    const card_style = req.body.card_style !== undefined ? req.body.card_style : existing.card_style;
+    const card_back_style = req.body.card_back_style !== undefined ? req.body.card_back_style : (existing.card_back_style || 'classic');
+    const card_back_color = req.body.card_back_color !== undefined ? req.body.card_back_color : (existing.card_back_color || 'ui-red');
+    const card_back_secondary_color = req.body.card_back_secondary_color !== undefined ? req.body.card_back_secondary_color : (existing.card_back_secondary_color || 'white');
+    const mute_sounds = req.body.mute_sounds !== undefined ? (req.body.mute_sounds ? 1 : 0) : (existing.mute_sounds ? 1 : 0);
+    const sound_volume = req.body.sound_volume !== undefined ? req.body.sound_volume : (existing.sound_volume ?? 1.0);
+    const sound_profile = req.body.sound_profile !== undefined ? req.body.sound_profile : (existing.sound_profile || 'classic');
+    const time_zone = req.body.time_zone !== undefined ? req.body.time_zone : existing.time_zone;
+    const time_format = req.body.time_format !== undefined ? req.body.time_format : existing.time_format;
+    const show_date = req.body.show_date !== undefined ? (req.body.show_date ? 1 : 0) : (existing.show_date ? 1 : 0);
+    const show_move_date = req.body.show_move_date !== undefined ? (req.body.show_move_date ? 1 : 0) : (existing.show_move_date ? 1 : 0);
+    const ui_scale = req.body.ui_scale !== undefined ? req.body.ui_scale : (existing.ui_scale ?? 1.0);
+    const card_scale = req.body.card_scale !== undefined ? req.body.card_scale : (existing.card_scale ?? 1.0);
+    const push_game_invites = req.body.push_game_invites !== undefined ? (req.body.push_game_invites === false || req.body.push_game_invites === 0 ? 0 : 1) : (existing.push_game_invites === false || existing.push_game_invites === 0 ? 0 : 1);
+    const push_turn_reminders = req.body.push_turn_reminders !== undefined ? (req.body.push_turn_reminders === false || req.body.push_turn_reminders === 0 ? 0 : 1) : (existing.push_turn_reminders === false || existing.push_turn_reminders === 0 ? 0 : 1);
+    const scanlines_enabled = req.body.scanlines_enabled !== undefined ? (req.body.scanlines_enabled === false || req.body.scanlines_enabled === 0 ? 0 : 1) : (existing.scanlines_enabled === false || existing.scanlines_enabled === 0 ? 0 : 1);
+    const show_card_points = req.body.show_card_points !== undefined ? (req.body.show_card_points === false || req.body.show_card_points === 0 ? 0 : 1) : (existing.show_card_points === false || existing.show_card_points === 0 ? 0 : 1);
+
     db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ?, card_scale = ?, push_game_invites = ?, push_turn_reminders = ?, scanlines_enabled = ?, show_card_points = ? WHERE id = ?")
-      .run(theme, ui_mode || 'retro', card_style, card_back_style || 'classic', card_back_color || 'ui-red', card_back_secondary_color || 'white', mute_sounds ? 1 : 0, sound_volume ?? 1.0, sound_profile || 'classic', time_zone, time_format, show_date ? 1 : 0, show_move_date ? 1 : 0, ui_scale ?? 1.0, card_scale ?? 1.0, push_game_invites === false ? 0 : 1, push_turn_reminders === false ? 0 : 1, scanlines_enabled === false || scanlines_enabled === 0 ? 0 : 1, show_card_points === false || show_card_points === 0 ? 0 : 1, req.user.id);
+      .run(theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale, card_scale, push_game_invites, push_turn_reminders, scanlines_enabled, show_card_points, req.user.id);
     res.json({ success: true });
   });
 

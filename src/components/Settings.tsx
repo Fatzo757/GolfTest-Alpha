@@ -207,6 +207,9 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
       if (res.ok && avatarRes.ok) {
         soundService.setMuted(muteSounds);
         soundService.setVolume(soundVolume);
+        try {
+          localStorage.setItem('golf_show_move_timestamps', showMoveDate ? 'true' : 'false');
+        } catch (e) {}
         onUpdate({
           ...user,
           theme,
@@ -464,7 +467,7 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
               <div className="flex items-center gap-4">
                 <Clock className={showMoveDate ? 'text-ui-yellow' : 'text-text-main'} size={20} />
                 <span className={`text-[12px] font-bold uppercase ${showMoveDate ? 'text-ui-yellow' : 'text-text-main'}`}>
-                  {showMoveDate ? 'Show Date in Move History' : 'Hide Date in Move History'}
+                  {showMoveDate ? 'Show Time & Date in Move History' : 'Hide Time & Date in Move History'}
                 </span>
               </div>
               <Check size={16} className={showMoveDate ? 'text-ui-yellow opacity-100' : 'opacity-0'} />

@@ -5,6 +5,9 @@ import { GameState, Card, Move, User } from '../../types';
 import CardComponent from '../Card';
 import UserAvatar from '../UserAvatar';
 import { calculateHandScore } from '../../lib/gameScoring';
+import { useAuthStore } from '../../store/useAuthStore';
+import { getApiUrl } from '../../lib/api';
+import { formatMatchTime } from '../../lib/timeUtils';
 
 interface GameBoardProps {
   state: GameState;
@@ -59,7 +62,51 @@ export default function GameBoard({
   handleReveal,
   handleMove,
 }: GameBoardProps) {
-  const [showTimestamps, setShowTimestamps] = useState(false);
+  const [showTimestamps, setShowTimestamps] = useState<boolean>(() => {
+    if (user && user.show_move_date !== undefined) {
+      return !!user.show_move_date;
+    }
+    try {
+      const saved = localStorage.getItem('golf_show_move_timestamps');
+      if (saved !== null) return saved === 'true';
+    } catch (e) {}
+    return false;
+  });
+
+  useEffect(() => {
+    if (user && user.show_move_date !== undefined) {
+      setShowTimestamps(!!user.show_move_date);
+    }
+  }, [user?.show_move_date]);
+
+  const handleToggleTimestamps = () => {
+    const nextVal = !showTimestamps;
+    setShowTimestamps(nextVal);
+    try {
+      localStorage.setItem('golf_show_move_timestamps', nextVal ? 'true' : 'false');
+    } catch (e) {}
+
+    const authState = useAuthStore.getState();
+    if (authState.user) {
+      authState.setUser({
+        ...authState.user,
+        show_move_date: nextVal ? 1 : 0,
+      });
+
+      if (authState.token) {
+        fetch(getApiUrl('/api/auth/preferences'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authState.token}`,
+          },
+          body: JSON.stringify({
+            show_move_date: nextVal ? 1 : 0,
+          }),
+        }).catch((err) => console.warn('Failed to update move timestamp preference:', err));
+      }
+    }
+  };
 
   // Keyboard Shortcuts Listener (1-9 to reveal/replace, 'd' deck, 's' discard)
   useEffect(() => {
@@ -154,11 +201,7 @@ export default function GameBoard({
                 backColor={user.card_back_color || 'ui-red'}
                 backSecondaryColor={user.card_back_secondary_color || 'white'}
                 showPoints={user.show_card_points !== 0}
-                className={`fluid ${
-                  latestGridMove?.player_id === opponentId && latestGridMove?.card_affected_index === idx
-                    ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]'
-                    : ''
-                }`}
+                className="fluid"
               />
             </div>
           ))}
@@ -229,14 +272,8 @@ export default function GameBoard({
                   }
                 }}
                 className={`fluid cursor-pointer ${
-                  latestGridMove?.player_id === userId && latestGridMove?.card_affected_index === idx
-                    ? 'ring-4 ring-ui-yellow shadow-[0_0_20px_rgba(255,205,117,0.5)]'
-                    : ''
-                } ${
-                  state.game.drawn_card
-                    ? 'ring-4 ring-ui-yellow ring-offset-4 ring-offset-bg-dark border-ui-yellow scale-105 z-10 shadow-[0_0_20px_rgba(255,205,117,0.4)]'
-                    : ''
-                } ${draggingOver?.type === 'grid' && draggingOver.index === idx ? 'scale-110 -translate-y-4 ring-ui-yellow ring-4' : ''} hover:y-[-10px] hover:scale-110 hover:shadow-[0_0_20px_rgba(56,217,115,0.4),8px_8px_0px_0px_rgba(0,0,0,0.4)]`}
+                  draggingOver?.type === 'grid' && draggingOver.index === idx ? 'scale-110 -translate-y-4 ring-ui-yellow ring-4' : ''
+                } hover:y-[-10px] hover:scale-110 hover:shadow-[0_0_20px_rgba(56,217,115,0.4),8px_8px_0px_0px_rgba(0,0,0,0.4)]`}
               />
 
               {state.game.status === 'initializing' && !card.is_face_up && (
@@ -244,12 +281,6 @@ export default function GameBoard({
                   <span className="text-xs text-ui-yellow font-bold opacity-0 group-hover:opacity-100 uppercase tracking-widest bg-bg-dark/80 px-2 py-1 border border-ui-yellow transition-opacity">
                     Reveal
                   </span>
-                </div>
-              )}
-
-              {state.game.drawn_card && !card.is_face_up && (
-                <div className="absolute inset-0 bg-ui-yellow/10 flex items-center justify-center z-20 pointer-events-none">
-                  <div className="text-xs text-center text-ui-yellow font-bold bg-bg-dark px-1 border border-ui-yellow">SWAP</div>
                 </div>
               )}
             </div>
@@ -269,7 +300,7 @@ export default function GameBoard({
           
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowTimestamps(!showTimestamps)}
+              onClick={handleToggleTimestamps}
               className={`px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 border transition-all cursor-pointer ${
                 showTimestamps
                   ? 'bg-ui-yellow text-black border-ui-yellow'
@@ -366,7 +397,7 @@ export default function GameBoard({
                     {showTimestamps && m.timestamp && (
                       <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-yellow/30">
                         <Clock size={13} className="shrink-0 text-ui-yellow" />
-                        <span className="tracking-wide">{formatMoveTimestamp(m.timestamp)}</span>
+                        <span className="tracking-wide">{formatMoveTimestamp(m.timestamp, user)}</span>
                       </div>
                     )}
                   </div>
@@ -408,7 +439,7 @@ export default function GameBoard({
                   {showTimestamps && m.timestamp && (
                     <div className="text-xs sm:text-sm font-bold text-ui-yellow flex items-center gap-1.5 pt-1.5 border-t border-ui-border/60">
                       <Clock size={13} className="shrink-0 text-ui-yellow" />
-                      <span className="tracking-wide">{formatMoveTimestamp(m.timestamp)}</span>
+                      <span className="tracking-wide">{formatMoveTimestamp(m.timestamp, user)}</span>
                     </div>
                   )}
                 </div>
@@ -441,27 +472,12 @@ export default function GameBoard({
   );
 }
 
-const formatMoveTimestamp = (timestamp?: string) => {
+const formatMoveTimestamp = (timestamp?: string, user?: User) => {
   if (!timestamp) return '';
-  const formattedTs = timestamp.includes('T') ? timestamp : timestamp.replace(' ', 'T') + 'Z';
-  const date = new Date(formattedTs);
-  if (isNaN(date.getTime())) {
-    const rawDate = new Date(timestamp);
-    if (isNaN(rawDate.getTime())) return timestamp;
-    return rawDate.toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  }
-  return date.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
+  return formatMatchTime(timestamp, {
+    timeZone: user?.time_zone,
+    timeFormat: user?.time_format,
+    showDate: true,
   });
 };
 
