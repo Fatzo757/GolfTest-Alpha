@@ -26,6 +26,23 @@ export function useGameState(gameId: string, token: string, user: User) {
   const [isOpponentOnline, setIsOpponentOnline] = useState(true);
   const [notification, setNotification] = useState<{ title: string; subtitle?: string } | null>(null);
 
+  // Auto-dismiss in-game toast notifications after 3 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  // Immediately clear notification if game leaves initializing state
+  useEffect(() => {
+    if (state?.game?.status && state.game.status !== 'initializing' && notification) {
+      setNotification(null);
+    }
+  }, [state?.game?.status, notification]);
+
   const prevTurnRef = useRef<string | null>(null);
   const prevStatusRef = useRef<string | null>(null);
   const prevStateRef = useRef<GameState | null>(null);
