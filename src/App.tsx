@@ -6,8 +6,9 @@ import Replay from './components/Replay.tsx';
 import Settings from './components/Settings.tsx';
 import AdminDashboard from './components/AdminDashboard.tsx';
 import UserAvatar from './components/UserAvatar.tsx';
-import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X, WifiOff } from 'lucide-react';
+import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X, WifiOff, Sparkles, ArrowRight } from 'lucide-react';
 import { soundService } from './services/soundService';
+import { hapticService } from './services/hapticService';
 import { clearAppBadge } from './lib/push';
 import { notifyAppReady, checkForLiveUpdate, applyLiveUpdate, getCurrentVersion, resetLiveUpdateBundle } from './services/liveUpdateService';
 import { getApiUrl } from './lib/api';
@@ -72,7 +73,7 @@ export default function App() {
             await applyLiveUpdate();
           } else {
             setPushToast({
-              title: '⚡ App Update Ready',
+              title: 'App Update Ready',
               body: 'Update will auto-apply when you exit your match.',
               url: '',
             });
@@ -203,6 +204,11 @@ export default function App() {
         if (currentGameId && (e.detail.title?.toUpperCase().includes('TURN') || e.detail.body?.toUpperCase().includes('TURN'))) {
           return;
         }
+
+        if (user && user.mute_sounds === 0) {
+          soundService.playNotification();
+        }
+        hapticService.medium();
 
         setPushToast({
           title: e.detail.title,
@@ -433,9 +439,9 @@ export default function App() {
         <AnimatePresence>
           {pushToast && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
               onClick={() => {
                 const urlObj = new URL(pushToast.url, window.location.origin);
                 const match = urlObj.pathname.match(/^\/game\/(.+)$/);
@@ -443,23 +449,32 @@ export default function App() {
                 setPushToast(null);
               }}
               className={cn(
-                'fixed left-1/2 -translate-x-1/2 z-[999999] p-4 bg-bg-dark border-4 border-ui-green text-ui-green shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-1 w-11/12 max-w-sm rounded-sm',
+                'fixed left-1/2 -translate-x-1/2 z-[999999] p-3.5 sm:p-4 bg-bg-dark border-4 border-ui-green text-ui-green shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer hover:bg-ui-green/10 transition-all flex flex-col gap-2 w-11/12 max-w-sm rounded-sm',
                 currentGameId || replayGameId ? 'top-[calc(env(safe-area-inset-top,0px)+5.5rem)]' : 'top-[calc(env(safe-area-inset-top,0px)+8.5rem)]'
               )}
             >
               <div className="flex justify-between items-center">
-                <span className="text-xs uppercase font-bold">{pushToast.title}</span>
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-ui-green animate-pulse" />
+                  <span className="text-xs uppercase font-black tracking-wider">{pushToast.title}</span>
+                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setPushToast(null);
                   }}
-                  className="text-xs hover:opacity-70"
+                  className="text-xs p-1 hover:opacity-70 font-bold"
+                  aria-label="Dismiss toast"
                 >
                   ✕
                 </button>
               </div>
-              <span className="text-xs opacity-80">{pushToast.body}</span>
+              <span className="text-[11px] text-white/90 font-medium">{pushToast.body}</span>
+              <div className="flex justify-end pt-1">
+                <span className="text-[10px] text-ui-green font-bold uppercase tracking-wider flex items-center gap-1 hover:underline">
+                  Open Game <ArrowRight size={12} />
+                </span>
+              </div>
             </motion.div>
           )}
 

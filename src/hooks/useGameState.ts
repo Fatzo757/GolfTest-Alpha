@@ -4,6 +4,7 @@ import { GameState, Card, Move, User } from '../types';
 import { fetcher } from '../lib/fetcher';
 import { useGameSocket } from './useGameSocket';
 import { soundService } from '../services/soundService';
+import { hapticService } from '../services/hapticService';
 import { getApiUrl } from '../lib/api';
 import { getPoints, calculatePlayerScore } from '../lib/gameScoring';
 
@@ -26,15 +27,20 @@ export function useGameState(gameId: string, token: string, user: User) {
   const [isOpponentOnline, setIsOpponentOnline] = useState(true);
   const [notification, setNotification] = useState<{ title: string; subtitle?: string } | null>(null);
 
-  // Auto-dismiss in-game toast notifications after 3 seconds
+  // Auto-dismiss in-game toast notifications after 3 seconds + sound & haptics
   useEffect(() => {
     if (notification) {
+      if (user.mute_sounds === 0) {
+        soundService.playNotification();
+      }
+      hapticService.light();
+
       const timer = setTimeout(() => {
         setNotification(null);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [notification]);
+  }, [notification, user.mute_sounds]);
 
   // Immediately clear notification if game leaves initializing state
   useEffect(() => {
@@ -59,12 +65,25 @@ export function useGameState(gameId: string, token: string, user: User) {
             new Notification('GOLF CARD GAME', {
               body: "IT'S YOUR TURN! Choose your next move.",
               tag: 'golf-turn',
+              icon: '/notification_icon.png',
             });
-          } catch (err) {}
+          } catch (err) {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then((reg) => {
+                reg.showNotification('GOLF CARD GAME', {
+                  body: "IT'S YOUR TURN! Choose your next move.",
+                  tag: 'golf-turn',
+                  icon: '/notification_icon.png',
+                  data: { url: `/game/${gameId}` },
+                });
+              }).catch(() => {});
+            }
+          }
         }
         if (user.mute_sounds === 0) {
           soundService.playTurn();
         }
+        hapticService.medium();
       }
 
       // Sound triggers

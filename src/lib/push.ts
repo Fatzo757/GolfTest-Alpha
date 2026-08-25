@@ -65,11 +65,11 @@ export async function subscribeUserToPush(token: string) {
 
       await PushNotifications.createChannel({
         id: 'fcm_default_channel',
-        name: 'Default',
-        description: 'Default notification channel',
+        name: 'Game Updates',
+        description: 'Notifications for turns, invites, and messages',
         importance: 4, // HIGH importance for heads-up
         visibility: 1,
-        sound: 'beep.wav',
+        vibration: true,
       });
 
       PushNotifications.addListener('registration', async (tokenObj) => {

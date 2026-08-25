@@ -201,6 +201,26 @@ class SoundService {
         break;
     }
   }
+
+  playNotification() {
+    switch (this.profile) {
+      case 'arcade':
+        this.playTone(587.33, 'square', 0.08, 0.05, 880);
+        break;
+      case 'casino':
+        this.playTone(1046.50, 'sine', 0.08, 0.08);
+        setTimeout(() => this.playTone(1318.51, 'sine', 0.1, 0.08), 70);
+        break;
+      case 'minimal':
+        this.playTone(400, 'sine', 0.05, 0.04);
+        break;
+      case 'classic':
+      default:
+        this.playTone(523.25, 'sine', 0.08, 0.05);
+        setTimeout(() => this.playTone(783.99, 'sine', 0.12, 0.05), 80);
+        break;
+    }
+  }
 }
 
 export const soundService = new SoundService();

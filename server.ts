@@ -338,15 +338,20 @@ async function startServer() {
   async function sendPushNotification(userId: string, title: string, body: string, url: string = '/', tag?: string) {
     if (!tag) {
        const match = url.match(/\/game\/([a-zA-Z0-9_-]+)/);
-       if (match) tag = `game_${match[1]}`;
-       else tag = 'golf_update';
+       if (title.toLowerCase().includes('turn')) {
+         tag = match ? `your_turn_${match[1]}` : 'your_turn';
+       } else if (title.toLowerCase().includes('invite') || title.toLowerCase().includes('started') || title.toLowerCase().includes('joined')) {
+         tag = match ? `game_invite_${match[1]}` : 'game_invite';
+       } else {
+         tag = match ? `game_${match[1]}` : 'golf_update';
+       }
     }
     
     try {
       // Check user preferences
       const userPrefs: any = db.prepare("SELECT push_game_invites, push_turn_reminders FROM users WHERE id = ?").get(userId);
       if (userPrefs) {
-        if (tag.startsWith('game_') && !userPrefs.push_game_invites) return;
+        if ((tag.startsWith('game_') || tag.startsWith('game_invite_')) && !userPrefs.push_game_invites) return;
         if (tag.startsWith('your_turn_') && !userPrefs.push_turn_reminders) return;
       }
 
@@ -668,7 +673,7 @@ async function startServer() {
       setupNewRound(gameId, userId, targetUserId);
       
       // Notify target user
-      sendPushNotification(targetUserId, "New Game Started", `${req.user.username} started a new game with you!`, `/game/${gameId}`, `your_turn_${gameId}`);
+      sendPushNotification(targetUserId, "New Game Started", `${req.user.username} started a new game with you!`, `/game/${gameId}`, `game_invite_${gameId}`);
 
       res.json({ success: true, gameId });
     } catch (err) {
@@ -751,7 +756,7 @@ async function startServer() {
         game.current_turn_player_id, 
         "It's your turn!", 
         `${playerName} is waiting for you to make a move in Golf.`, 
-        `/play/${gameId}`,
+        `/game/${gameId}`,
         `your_turn_${gameId}`
       );
       
@@ -943,7 +948,7 @@ async function startServer() {
       if (game) {
         const opponentId = game.player1_id === userId ? game.player2_id : game.player1_id;
         if (opponentId && opponentId !== 'cpu') {
-           sendPushNotification(opponentId, "New Message", `${req.user.username}: ${content}`, `/play/${gameId}`, `chat_${gameId}`);
+           sendPushNotification(opponentId, "New Message", `${req.user.username}: ${content}`, `/game/${gameId}`, `chat_${gameId}`);
         }
       }
     } catch (err) {
