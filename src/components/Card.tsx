@@ -137,21 +137,23 @@ export default function Card({
   return (
     <motion.div
       onClick={onClick}
-      className={`w-full aspect-[3/4] relative select-none [perspective:1000px] ${className}`}
+      className={`w-full h-full aspect-[3/4] relative select-none [perspective:1000px] ${className}`}
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
       <motion.div
-        className="w-full h-full relative [transform-style:preserve-3d]"
+        className="w-full h-full absolute inset-0 [transform-style:preserve-3d]"
         initial={false}
         animate={{ rotateY: isFaceUp ? 0 : 180 }}
         transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+        style={{ transformOrigin: 'center center' }}
       >
         {/* Front Face */}
         <div
           className={`geometric-card absolute inset-0 w-full h-full flex flex-col items-start justify-between [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(0deg)] ${
             style === 'sketch' ? 'font-handdrawn' : ''
           }`}
+          style={{ transformOrigin: 'center center' }}
         >
           <span
             className={`font-bold ${isRed ? 'text-ui-red' : 'text-black'} ${
@@ -204,7 +206,7 @@ export default function Card({
         {/* Back Face */}
         <div
           className="geometric-card geometric-card-back absolute inset-0 w-full h-full [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(180deg)]"
-          style={{ backgroundColor: cMap.hex }}
+          style={{ backgroundColor: cMap.hex, transformOrigin: 'center center' }}
         >
           <div className={`card-pattern w-full h-full relative border-2 ${cMap.border} bg-transparent`}>
             <CardPattern backStyle={backStyle} backColor={backColor} backSecondaryColor={backSecondaryColor} />
