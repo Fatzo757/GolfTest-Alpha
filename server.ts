@@ -95,6 +95,10 @@ interface ActiveWebSocket extends WebSocket {
 async function startServer() {
   console.log("SERVER: Initializing server...");
   const app = express();
+
+  // Trust reverse proxy headers (e.g. Nginx, Cloudflare, Caddy) for proper IP resolution and rate limiting
+  app.set("trust proxy", 1);
+
   app.use(cors({
     origin: true,
     credentials: true,
@@ -109,6 +113,7 @@ async function startServer() {
     max: 30, // max 30 attempts per IP
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false },
     message: { error: "Too many authentication attempts, please try again after 15 minutes." }
   });
 
@@ -117,6 +122,7 @@ async function startServer() {
     max: 300, // max 300 requests per minute
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false },
     message: { error: "Too many requests, please slow down." }
   });
 
