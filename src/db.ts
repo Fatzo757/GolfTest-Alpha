@@ -13,6 +13,18 @@ db.pragma('foreign_keys = ON');
 db.pragma('journal_mode = WAL');
 db.pragma('busy_timeout = 5000');
 
+// Transparent high-performance prepared statement cache
+const originalPrepare = db.prepare.bind(db);
+const statementCache = new Map<string, any>();
+(db as any).prepare = function (sql: string) {
+  let stmt = statementCache.get(sql);
+  if (!stmt) {
+    stmt = originalPrepare(sql);
+    statementCache.set(sql, stmt);
+  }
+  return stmt;
+};
+
 // Initialize schema idempotently without data loss
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -131,6 +143,9 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_moves_game_id ON moves(game_id);
   CREATE INDEX IF NOT EXISTS idx_messages_game_id ON messages(game_id);
   CREATE INDEX IF NOT EXISTS idx_push_user_id ON push_subscriptions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_game_cards_lookup ON game_cards(game_id, player_id, is_face_up);
+  CREATE INDEX IF NOT EXISTS idx_moves_game_round ON moves(game_id, round_number);
+  CREATE INDEX IF NOT EXISTS idx_games_active_user ON games(player1_id, player2_id, status);
 `);
 
 // Safe non-destructive column migration utility

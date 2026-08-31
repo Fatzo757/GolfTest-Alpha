@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card as CardType } from '../types.ts';
 import { getPoints } from '../lib/gameScoring.ts';
@@ -18,34 +18,44 @@ interface CardProps {
   key?: any;
 }
 
+const CARD_BACK_COLORS: Record<string, any> = {
+  'ui-red': { border: 'border-red-600', border30: 'border-red-600/30', border50: 'border-red-600/50', bg20: 'bg-red-600/20', bg50: 'bg-red-600/50', bg: 'bg-red-600', text: 'text-red-600', hex: '#dc2626' },
+  'red': { border: 'border-red-600', border30: 'border-red-600/30', border50: 'border-red-600/50', bg20: 'bg-red-600/20', bg50: 'bg-red-600/50', bg: 'bg-red-600', text: 'text-red-600', hex: '#dc2626' },
+  'blue': { border: 'border-blue-600', border30: 'border-blue-600/30', border50: 'border-blue-600/50', bg20: 'bg-blue-600/20', bg50: 'bg-blue-600/50', bg: 'bg-blue-600', text: 'text-blue-600', hex: '#2563eb' },
+  'green': { border: 'border-green-600', border30: 'border-green-600/30', border50: 'border-green-600/50', bg20: 'bg-green-600/20', bg50: 'bg-green-600/50', bg: 'bg-green-600', text: 'text-green-600', hex: '#16a34a' },
+  'yellow': { border: 'border-yellow-500', border30: 'border-yellow-500/30', border50: 'border-yellow-500/50', bg20: 'bg-yellow-500/20', bg50: 'bg-yellow-500/50', bg: 'bg-yellow-500', text: 'text-yellow-500', hex: '#eab308' },
+  'orange': { border: 'border-orange-500', border30: 'border-orange-500/30', border50: 'border-orange-500/50', bg20: 'bg-orange-500/20', bg50: 'bg-orange-500/50', bg: 'bg-orange-500', text: 'text-orange-500', hex: '#f97316' },
+  'purple': { border: 'border-purple-600', border30: 'border-purple-600/30', border50: 'border-purple-600/50', bg20: 'bg-purple-600/20', bg50: 'bg-purple-600/50', bg: 'bg-purple-600', text: 'text-purple-600', hex: '#9333ea' },
+};
+
+const SECONDARY_COLORS: Record<string, any> = {
+  'white': { border: 'border-white', border80: 'border-white/80', border70: 'border-white/70', border60: 'border-white/60', border50: 'border-white/50', border40: 'border-white/40', border30: 'border-white/30', border20: 'border-white/20', bg60: 'bg-white/60', bg50: 'bg-white/50', bg40: 'bg-white/40', bg20: 'bg-white/20', stroke: 'text-white/60', hex: '#ffffff' },
+  'black': { border: 'border-black', border80: 'border-black/80', border70: 'border-black/70', border60: 'border-black/60', border50: 'border-black/50', border40: 'border-black/40', border30: 'border-black/30', border20: 'border-black/20', bg60: 'bg-black/60', bg50: 'bg-black/50', bg40: 'bg-black/40', bg20: 'bg-black/20', stroke: 'text-black/60', hex: '#000000' },
+  'red': { border: 'border-red-600', border80: 'border-red-600/80', border70: 'border-red-600/70', border60: 'border-red-600/60', border50: 'border-red-600/50', border40: 'border-red-600/40', border30: 'border-red-600/30', border20: 'border-red-600/20', bg60: 'bg-red-600/60', bg50: 'bg-red-600/50', bg40: 'bg-red-600/40', bg20: 'bg-red-600/20', stroke: 'text-red-600/60', hex: '#dc2626' },
+  'blue': { border: 'border-blue-600', border80: 'border-blue-600/80', border70: 'border-blue-600/70', border60: 'border-blue-600/60', border50: 'border-blue-600/50', border40: 'border-blue-600/40', border30: 'border-blue-600/30', border20: 'border-blue-600/20', bg60: 'bg-blue-600/60', bg50: 'bg-blue-600/50', bg40: 'bg-blue-600/40', bg20: 'bg-blue-600/20', stroke: 'text-blue-600/60', hex: '#2563eb' },
+  'green': { border: 'border-green-600', border80: 'border-green-600/80', border70: 'border-green-600/70', border60: 'border-green-600/60', border50: 'border-green-600/50', border40: 'border-green-600/40', border30: 'border-green-600/30', border20: 'border-green-600/20', bg60: 'bg-green-600/60', bg50: 'bg-green-600/50', bg40: 'bg-green-600/40', bg20: 'bg-green-600/20', stroke: 'text-green-600/60', hex: '#16a34a' },
+  'yellow': { border: 'border-yellow-500', border80: 'border-yellow-500/80', border70: 'border-yellow-500/70', border60: 'border-yellow-500/60', border50: 'border-yellow-500/50', border40: 'border-yellow-500/40', border30: 'border-yellow-500/30', border20: 'border-yellow-500/20', bg60: 'bg-yellow-500/60', bg50: 'bg-yellow-500/50', bg40: 'bg-yellow-500/40', bg20: 'bg-yellow-500/20', stroke: 'text-yellow-500/60', hex: '#eab308' },
+  'orange': { border: 'border-orange-500', border80: 'border-orange-500/80', border70: 'border-orange-500/70', border60: 'border-orange-500/60', border50: 'border-orange-500/50', border40: 'border-orange-500/40', border30: 'border-orange-500/30', border20: 'border-orange-500/20', bg60: 'bg-orange-500/60', bg50: 'bg-orange-500/50', bg40: 'bg-orange-500/40', bg20: 'bg-orange-500/20', stroke: 'text-orange-500/60', hex: '#f97316' },
+  'purple': { border: 'border-purple-600', border80: 'border-purple-600/80', border70: 'border-purple-600/70', border60: 'border-purple-600/60', border50: 'border-purple-600/50', border40: 'border-purple-600/40', border30: 'border-purple-600/30', border20: 'border-purple-600/20', bg60: 'bg-purple-600/60', bg50: 'bg-purple-600/50', bg40: 'bg-purple-600/40', bg20: 'bg-purple-600/20', stroke: 'text-purple-600/60', hex: '#9333ea' },
+};
+
 export const getCardBackColors = (backColor: string) => {
-  const colorMap: Record<string, any> = {
-    'ui-red': { border: 'border-red-600', border30: 'border-red-600/30', border50: 'border-red-600/50', bg20: 'bg-red-600/20', bg50: 'bg-red-600/50', bg: 'bg-red-600', text: 'text-red-600', hex: '#dc2626' },
-    'red': { border: 'border-red-600', border30: 'border-red-600/30', border50: 'border-red-600/50', bg20: 'bg-red-600/20', bg50: 'bg-red-600/50', bg: 'bg-red-600', text: 'text-red-600', hex: '#dc2626' },
-    'blue': { border: 'border-blue-600', border30: 'border-blue-600/30', border50: 'border-blue-600/50', bg20: 'bg-blue-600/20', bg50: 'bg-blue-600/50', bg: 'bg-blue-600', text: 'text-blue-600', hex: '#2563eb' },
-    'green': { border: 'border-green-600', border30: 'border-green-600/30', border50: 'border-green-600/50', bg20: 'bg-green-600/20', bg50: 'bg-green-600/50', bg: 'bg-green-600', text: 'text-green-600', hex: '#16a34a' },
-    'yellow': { border: 'border-yellow-500', border30: 'border-yellow-500/30', border50: 'border-yellow-500/50', bg20: 'bg-yellow-500/20', bg50: 'bg-yellow-500/50', bg: 'bg-yellow-500', text: 'text-yellow-500', hex: '#eab308' },
-    'orange': { border: 'border-orange-500', border30: 'border-orange-500/30', border50: 'border-orange-500/50', bg20: 'bg-orange-500/20', bg50: 'bg-orange-500/50', bg: 'bg-orange-500', text: 'text-orange-500', hex: '#f97316' },
-    'purple': { border: 'border-purple-600', border30: 'border-purple-600/30', border50: 'border-purple-600/50', bg20: 'bg-purple-600/20', bg50: 'bg-purple-600/50', bg: 'bg-purple-600', text: 'text-purple-600', hex: '#9333ea' },
-  };
-  return colorMap[backColor] || colorMap['red'];
+  return CARD_BACK_COLORS[backColor] || CARD_BACK_COLORS['red'];
 };
 
 export const getSecondaryColors = (color: string) => {
-  const colorMap: Record<string, any> = {
-    'white': { border: 'border-white', border80: 'border-white/80', border70: 'border-white/70', border60: 'border-white/60', border50: 'border-white/50', border40: 'border-white/40', border30: 'border-white/30', border20: 'border-white/20', bg60: 'bg-white/60', bg50: 'bg-white/50', bg40: 'bg-white/40', bg20: 'bg-white/20', stroke: 'text-white/60', hex: '#ffffff' },
-    'black': { border: 'border-black', border80: 'border-black/80', border70: 'border-black/70', border60: 'border-black/60', border50: 'border-black/50', border40: 'border-black/40', border30: 'border-black/30', border20: 'border-black/20', bg60: 'bg-black/60', bg50: 'bg-black/50', bg40: 'bg-black/40', bg20: 'bg-black/20', stroke: 'text-black/60', hex: '#000000' },
-    'red': { border: 'border-red-600', border80: 'border-red-600/80', border70: 'border-red-600/70', border60: 'border-red-600/60', border50: 'border-red-600/50', border40: 'border-red-600/40', border30: 'border-red-600/30', border20: 'border-red-600/20', bg60: 'bg-red-600/60', bg50: 'bg-red-600/50', bg40: 'bg-red-600/40', bg20: 'bg-red-600/20', stroke: 'text-red-600/60', hex: '#dc2626' },
-    'blue': { border: 'border-blue-600', border80: 'border-blue-600/80', border70: 'border-blue-600/70', border60: 'border-blue-600/60', border50: 'border-blue-600/50', border40: 'border-blue-600/40', border30: 'border-blue-600/30', border20: 'border-blue-600/20', bg60: 'bg-blue-600/60', bg50: 'bg-blue-600/50', bg40: 'bg-blue-600/40', bg20: 'bg-blue-600/20', stroke: 'text-blue-600/60', hex: '#2563eb' },
-    'green': { border: 'border-green-600', border80: 'border-green-600/80', border70: 'border-green-600/70', border60: 'border-green-600/60', border50: 'border-green-600/50', border40: 'border-green-600/40', border30: 'border-green-600/30', border20: 'border-green-600/20', bg60: 'bg-green-600/60', bg50: 'bg-green-600/50', bg40: 'bg-green-600/40', bg20: 'bg-green-600/20', stroke: 'text-green-600/60', hex: '#16a34a' },
-    'yellow': { border: 'border-yellow-500', border80: 'border-yellow-500/80', border70: 'border-yellow-500/70', border60: 'border-yellow-500/60', border50: 'border-yellow-500/50', border40: 'border-yellow-500/40', border30: 'border-yellow-500/30', border20: 'border-yellow-500/20', bg60: 'bg-yellow-500/60', bg50: 'bg-yellow-500/50', bg40: 'bg-yellow-500/40', bg20: 'bg-yellow-500/20', stroke: 'text-yellow-500/60', hex: '#eab308' },
-    'orange': { border: 'border-orange-500', border80: 'border-orange-500/80', border70: 'border-orange-500/70', border60: 'border-orange-500/60', border50: 'border-orange-500/50', border40: 'border-orange-500/40', border30: 'border-orange-500/30', border20: 'border-orange-500/20', bg60: 'bg-orange-500/60', bg50: 'bg-orange-500/50', bg40: 'bg-orange-500/40', bg20: 'bg-orange-500/20', stroke: 'text-orange-500/60', hex: '#f97316' },
-    'purple': { border: 'border-purple-600', border80: 'border-purple-600/80', border70: 'border-purple-600/70', border60: 'border-purple-600/60', border50: 'border-purple-600/50', border40: 'border-purple-600/40', border30: 'border-purple-600/30', border20: 'border-purple-600/20', bg60: 'bg-purple-600/60', bg50: 'bg-purple-600/50', bg40: 'bg-purple-600/40', bg20: 'bg-purple-600/20', stroke: 'text-purple-600/60', hex: '#9333ea' },
-  };
-  return colorMap[color] || colorMap['white'];
+  return SECONDARY_COLORS[color] || SECONDARY_COLORS['white'];
 };
 
-export const CardPattern = ({ backStyle, backColor, backSecondaryColor = 'white' }: { backStyle: string, backColor: string, backSecondaryColor?: string }) => {
+export const CardPattern = memo(function CardPattern({
+  backStyle,
+  backColor,
+  backSecondaryColor = 'white',
+}: {
+  backStyle: string;
+  backColor: string;
+  backSecondaryColor?: string;
+}) {
   const cMap = getCardBackColors(backColor);
   const sMap = getSecondaryColors(backSecondaryColor);
   
@@ -113,9 +123,9 @@ export const CardPattern = ({ backStyle, backColor, backSecondaryColor = 'white'
       )}
     </>
   );
-};
+});
 
-export default function Card({
+function CardComponent({
   card,
   index,
   style,
@@ -219,3 +229,21 @@ export default function Card({
     </motion.div>
   );
 }
+
+export default memo(CardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.card?.id === nextProps.card?.id &&
+    prevProps.card?.suit === nextProps.card?.suit &&
+    prevProps.card?.value === nextProps.card?.value &&
+    prevProps.card?.is_face_up === nextProps.card?.is_face_up &&
+    prevProps.index === nextProps.index &&
+    prevProps.style === nextProps.style &&
+    prevProps.backStyle === nextProps.backStyle &&
+    prevProps.backColor === nextProps.backColor &&
+    prevProps.backSecondaryColor === nextProps.backSecondaryColor &&
+    prevProps.className === nextProps.className &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.forceFaceUp === nextProps.forceFaceUp &&
+    prevProps.showPoints === nextProps.showPoints
+  );
+});

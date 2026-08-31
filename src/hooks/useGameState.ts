@@ -16,11 +16,15 @@ export function useGameState(gameId: string, token: string, user: User) {
   // Real-time WebSocket room updates
   useGameSocket(gameId);
 
-  // SWR data fetching
+  // SWR data fetching - WebSocket pushed invalidations drive real-time updates
   const { data: state, error: swrError, isLoading: loading, mutate: revalidateState } = useSWR<GameState>(
     gameId && token ? `/api/games/${gameId}` : null,
     fetcher,
-    { refreshInterval: 10000 }
+    {
+      revalidateOnFocus: true,
+      dedupingInterval: 2000,
+      refreshInterval: 0, // Driven by WebSocket 'GAME_UPDATED' push events
+    }
   );
 
   const error = swrError ? (swrError.status === 404 ? 'Match not found or has been archived.' : swrError.message) : null;
@@ -123,7 +127,7 @@ export function useGameState(gameId: string, token: string, user: User) {
           }
         }
       } catch (err) {}
-    }, 5000);
+    }, 12000);
 
     return () => {
       clearInterval(heartbeatId);

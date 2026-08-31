@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import Auth from './components/Auth.tsx';
 import Lobby from './components/Lobby.tsx';
 import Game from './components/Game.tsx';
-import Replay from './components/Replay.tsx';
-import Settings from './components/Settings.tsx';
-import AdminDashboard from './components/AdminDashboard.tsx';
+
+const Replay = lazy(() => import('./components/Replay.tsx'));
+const Settings = lazy(() => import('./components/Settings.tsx'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard.tsx'));
 import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X, WifiOff, Sparkles, ArrowRight } from 'lucide-react';
 import { soundService } from './services/soundService';
@@ -529,12 +530,22 @@ export default function App() {
               </motion.div>
             ) : replayGameId ? (
               <motion.div key="replay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
-                <Replay
-                  gameId={replayGameId}
-                  token={token!}
-                  user={user}
-                  onExit={() => setReplayGameId(null)}
-                />
+                <Suspense
+                  fallback={
+                    <div className="flex items-center justify-center min-h-[50vh]">
+                      <div className="text-ui-yellow font-mono text-xs animate-pulse tracking-widest uppercase">
+                        Loading Replay...
+                      </div>
+                    </div>
+                  }
+                >
+                  <Replay
+                    gameId={replayGameId}
+                    token={token!}
+                    user={user}
+                    onExit={() => setReplayGameId(null)}
+                  />
+                </Suspense>
               </motion.div>
             ) : (
               <motion.div
@@ -567,12 +578,16 @@ export default function App() {
 
       {showSettings && user && (
         <div className="relative z-[99999]">
-          <Settings user={user} token={token!} onUpdate={setUser} onClose={() => setShowSettings(false)} />
+          <Suspense fallback={null}>
+            <Settings user={user} token={token!} onUpdate={setUser} onClose={() => setShowSettings(false)} />
+          </Suspense>
         </div>
       )}
 
       {showAdmin && user && isAdmin && (
-        <AdminDashboard token={token!} onClose={() => setShowAdmin(false)} />
+        <Suspense fallback={null}>
+          <AdminDashboard token={token!} onClose={() => setShowAdmin(false)} />
+        </Suspense>
       )}
     </div>
   );

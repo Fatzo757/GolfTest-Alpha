@@ -33,26 +33,40 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
   const [confirmClearAction, setConfirmClearAction] = useState<'all' | 'old' | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  const refreshLobbyData = async () => {
+    if (document.hidden) return;
+    await Promise.allSettled([
+      fetchHistory(),
+      fetchOnlineUsers(),
+      fetchActiveMatches(),
+      fetchJoinableGames(),
+    ]);
+  };
+
   useEffect(() => {
     registerServiceWorker()
       .then(() => subscribeUserToPush(token))
       .catch((err) => console.error('Failed to register push:', err));
     
     fetchStats();
-    fetchHistory();
-    fetchOnlineUsers();
-    fetchActiveMatches();
-    fetchJoinableGames();
+    refreshLobbyData();
     
-    // Polling for updates
+    // Polling for updates every 12s with visibility check
     const timer = setInterval(() => {
-      fetchHistory();
-      fetchOnlineUsers();
-      fetchActiveMatches();
-      fetchJoinableGames();
-    }, 8000);
+      refreshLobbyData();
+    }, 12000);
 
-    return () => clearInterval(timer);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshLobbyData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [token]);
 
   const fetchActiveMatches = async () => {
