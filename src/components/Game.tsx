@@ -121,22 +121,33 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
 
   const prevRoundRef = useRef<number | null>(null);
 
-  // Automatically switch mobileTab to player's playfield ('me') on start of new round or initializing phase
+  // Automatically switch mobileTab:
+  // - On new round: switch to player's grid ('me')
+  // - In 'initializing' phase: if player has flipped their starting cards (>= 2 cards face up), switch to 'opponent', else stay on 'me'
+  // - In 'playing' or 'last_turns': switch to 'me' if isMyTurn, otherwise switch to 'opponent'
   useEffect(() => {
     const currentRound = state?.game?.round_number || 1;
     const isNewRound = prevRoundRef.current !== null && prevRoundRef.current !== currentRound;
     prevRoundRef.current = currentRound;
 
-    if (state?.game?.status === 'initializing' || isNewRound) {
+    const myFaceUpCount = myCards.filter((c) => c.is_face_up).length;
+
+    if (isNewRound) {
       setMobileTab('me');
-    } else if (state?.game?.status === 'playing') {
+    } else if (state?.game?.status === 'initializing') {
+      if (myFaceUpCount >= 2) {
+        setMobileTab('opponent');
+      } else {
+        setMobileTab('me');
+      }
+    } else if (state?.game?.status === 'playing' || state?.game?.status === 'last_turns') {
       if (isMyTurn) {
         setMobileTab('me');
       } else {
         setMobileTab('opponent');
       }
     }
-  }, [isMyTurn, state?.game?.status, state?.game?.round_number, state?.game?.current_turn_player_id]);
+  }, [isMyTurn, state?.game?.status, state?.game?.round_number, state?.game?.current_turn_player_id, myCards]);
 
   const handleRematchClick = async () => {
     if (!state || !onRematch) {

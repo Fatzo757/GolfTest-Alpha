@@ -206,6 +206,26 @@ export function useGameState(gameId: string, token: string, user: User) {
       }
     }
 
+    // Optimistically update card face up state
+    if (state) {
+      const updatedCards = state.cards.map((c) => {
+        if (c.player_id === userId && c.card_index === cardIndex) {
+          return {
+            ...c,
+            is_face_up: true,
+          };
+        }
+        return c;
+      });
+
+      const optimisticState: GameState = {
+        ...state,
+        cards: updatedCards,
+      };
+
+      revalidateState(optimisticState, false);
+    }
+
     try {
       const res = await fetch(getApiUrl(`/api/games/${gameId}/reveal`), {
         method: 'POST',
@@ -217,9 +237,12 @@ export function useGameState(gameId: string, token: string, user: User) {
       });
       if (res.ok) {
         revalidateState();
+      } else {
+        revalidateState();
       }
     } catch (err) {
       console.error(err);
+      revalidateState();
     }
   };
 

@@ -122,10 +122,10 @@ export default function GameBoard({
       if (!isNaN(num) && num >= 1 && num <= 9) {
         if (state.game.status === 'initializing') {
           handleReveal(num - 1);
-        } else if (state.game.status === 'playing' && state.game.drawn_card) {
+        } else if ((state.game.status === 'playing' || state.game.status === 'last_turns') && state.game.drawn_card) {
           handleMove(num - 1, 'replace');
         }
-      } else if (state.game.status === 'playing') {
+      } else if (state.game.status === 'playing' || state.game.status === 'last_turns') {
         if (e.key.toLowerCase() === 'd') {
           if (!state.game.drawn_card) {
             handleDraw('deck');
@@ -157,7 +157,7 @@ export default function GameBoard({
     <div className="flex-1 w-full max-w-2xl">
       <div
         className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-red/20 border-4 transition-colors duration-75 lg:transition-none ${
-          !isMyTurn && state.game.status === 'playing' ? 'border-ui-red shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-ui-border'
+          !isMyTurn && (state.game.status === 'playing' || state.game.status === 'last_turns') ? 'border-ui-red shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-ui-border'
         }`}
       >
         <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-red z-10">
@@ -173,7 +173,7 @@ export default function GameBoard({
               {opponentId ? calculateScore(opponentId) : calculateScore('cpu')} PTS
             </div>
           </div>
-          {!isMyTurn && state.game.status === 'playing' && (
+          {!isMyTurn && (state.game.status === 'playing' || state.game.status === 'last_turns') && (
             <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-red/10">{turnIndicator('text-ui-red')}</div>
           )}
         </div>
@@ -214,7 +214,7 @@ export default function GameBoard({
     <div className="flex-1 w-full max-w-2xl">
       <div
         className={`relative px-4 pb-4 pt-10 md:px-6 md:pb-6 md:pt-16 bg-ui-green/20 border-4 transition-colors duration-75 lg:transition-none ${
-          isMyTurn && state.game.status === 'playing' ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'
+          isMyTurn && (state.game.status === 'playing' || state.game.status === 'last_turns') ? 'border-ui-green shadow-[0_0_15px_rgba(56,217,115,0.2)]' : 'border-ui-border'
         }`}
       >
         <div className="absolute top-0 -translate-y-1/2 left-4 md:left-6 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)] bg-bg-dark tracking-widest uppercase flex items-stretch overflow-hidden border-2 border-ui-green z-10">
@@ -230,7 +230,7 @@ export default function GameBoard({
               {calculateScore(userId)} PTS
             </div>
           </div>
-          {isMyTurn && state.game.status === 'playing' && (
+          {isMyTurn && (state.game.status === 'playing' || state.game.status === 'last_turns') && (
             <div className="shrink-0 flex items-center border-l border-white/10 bg-ui-green/10">{turnIndicator('text-ui-yellow')}</div>
           )}
         </div>
