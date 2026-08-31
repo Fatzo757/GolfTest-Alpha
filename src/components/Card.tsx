@@ -230,20 +230,4 @@ function CardComponent({
   );
 }
 
-export default memo(CardComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.card?.id === nextProps.card?.id &&
-    prevProps.card?.suit === nextProps.card?.suit &&
-    prevProps.card?.value === nextProps.card?.value &&
-    prevProps.card?.is_face_up === nextProps.card?.is_face_up &&
-    prevProps.index === nextProps.index &&
-    prevProps.style === nextProps.style &&
-    prevProps.backStyle === nextProps.backStyle &&
-    prevProps.backColor === nextProps.backColor &&
-    prevProps.backSecondaryColor === nextProps.backSecondaryColor &&
-    prevProps.className === nextProps.className &&
-    prevProps.isDragging === nextProps.isDragging &&
-    prevProps.forceFaceUp === nextProps.forceFaceUp &&
-    prevProps.showPoints === nextProps.showPoints
-  );
-});
+export default memo(CardComponent);

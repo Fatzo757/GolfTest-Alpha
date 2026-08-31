@@ -96,19 +96,46 @@ export default function GameControls({
                 className="relative z-50 flex items-center justify-center w-full"
               >
                 <motion.div
+                  data-draggable="true"
                   drag={isMyTurn}
                   dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                   dragSnapToOrigin={!droppedOnTarget}
+                  style={{ touchAction: 'none' }}
                   onDragStart={() => {
                     setDroppedOnTarget(false);
                     soundService.playDraw();
                   }}
                   onDrag={(e, info) => {
-                    const x = info.point.x;
-                    const y = info.point.y;
+                    const clientX = (e as any).clientX ?? (e as any).touches?.[0]?.clientX ?? (e as any).changedTouches?.[0]?.clientX ?? info?.point?.x;
+                    const clientY = (e as any).clientY ?? (e as any).touches?.[0]?.clientY ?? (e as any).changedTouches?.[0]?.clientY ?? info?.point?.y;
 
+                    if (clientX === undefined || clientY === undefined) {
+                      setDraggingOver(null);
+                      return;
+                    }
+
+                    // 1. Elements stacked at point (immune to scroll offset)
+                    if (typeof document !== 'undefined' && document.elementsFromPoint) {
+                      const elements = document.elementsFromPoint(clientX, clientY);
+                      for (const el of elements) {
+                        const gridEl = el.closest('[data-grid-index]');
+                        if (gridEl) {
+                          const idxStr = gridEl.getAttribute('data-grid-index');
+                          if (idxStr !== null) {
+                            setDraggingOver({ type: 'grid', index: parseInt(idxStr, 10) });
+                            return;
+                          }
+                        }
+                        if (el.closest('[data-drop-target="discard"]')) {
+                          setDraggingOver({ type: 'discard' });
+                          return;
+                        }
+                      }
+                    }
+
+                    // 2. Fallback to bounding client rects
                     const discardRect = discardPileRef.current?.getBoundingClientRect();
-                    if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
+                    if (discardRect && clientX >= discardRect.left && clientX <= discardRect.right && clientY >= discardRect.top && clientY <= discardRect.bottom) {
                       setDraggingOver({ type: 'discard' });
                       return;
                     }
@@ -116,7 +143,7 @@ export default function GameControls({
                     if (gridRefs.current) {
                       for (let i = 0; i < gridRefs.current.length; i++) {
                         const rect = gridRefs.current[i]?.getBoundingClientRect();
-                        if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                        if (rect && clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
                           setDraggingOver({ type: 'grid', index: i });
                           return;
                         }
@@ -125,22 +152,48 @@ export default function GameControls({
                     setDraggingOver(null);
                   }}
                   onDragEnd={(e, info) => {
-                    const x = info.point.x;
-                    const y = info.point.y;
+                    const clientX = (e as any).clientX ?? (e as any).touches?.[0]?.clientX ?? (e as any).changedTouches?.[0]?.clientX ?? info?.point?.x;
+                    const clientY = (e as any).clientY ?? (e as any).touches?.[0]?.clientY ?? (e as any).changedTouches?.[0]?.clientY ?? info?.point?.y;
+
                     setDraggingOver(null);
-                    const discardRect = discardPileRef.current?.getBoundingClientRect();
-                    if (discardRect && x >= discardRect.left && x <= discardRect.right && y >= discardRect.top && y <= discardRect.bottom) {
-                      setDroppedOnTarget(true);
-                      handleMove(0, 'discard_drawn');
-                      return;
-                    }
-                    if (gridRefs.current) {
-                      for (let i = 0; i < gridRefs.current.length; i++) {
-                        const rect = gridRefs.current[i]?.getBoundingClientRect();
-                        if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                          setDroppedOnTarget(true);
-                          handleMove(i, 'replace');
-                          return;
+
+                    if (clientX !== undefined && clientY !== undefined) {
+                      // 1. Elements stacked at point
+                      if (typeof document !== 'undefined' && document.elementsFromPoint) {
+                        const elements = document.elementsFromPoint(clientX, clientY);
+                        for (const el of elements) {
+                          const gridEl = el.closest('[data-grid-index]');
+                          if (gridEl) {
+                            const idxStr = gridEl.getAttribute('data-grid-index');
+                            if (idxStr !== null) {
+                              setDroppedOnTarget(true);
+                              handleMove(parseInt(idxStr, 10), 'replace');
+                              return;
+                            }
+                          }
+                          if (el.closest('[data-drop-target="discard"]')) {
+                            setDroppedOnTarget(true);
+                            handleMove(0, 'discard_drawn');
+                            return;
+                          }
+                        }
+                      }
+
+                      // 2. Fallback to bounding rects
+                      const discardRect = discardPileRef.current?.getBoundingClientRect();
+                      if (discardRect && clientX >= discardRect.left && clientX <= discardRect.right && clientY >= discardRect.top && clientY <= discardRect.bottom) {
+                        setDroppedOnTarget(true);
+                        handleMove(0, 'discard_drawn');
+                        return;
+                      }
+                      if (gridRefs.current) {
+                        for (let i = 0; i < gridRefs.current.length; i++) {
+                          const rect = gridRefs.current[i]?.getBoundingClientRect();
+                          if (rect && clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                            setDroppedOnTarget(true);
+                            handleMove(i, 'replace');
+                            return;
+                          }
                         }
                       }
                     }
@@ -148,7 +201,7 @@ export default function GameControls({
                   }}
                   whileHover={isMyTurn ? { scale: 1.05 } : {}}
                   whileDrag={{ scale: 1.15, zIndex: 100 }}
-                  className={`${isMyTurn ? 'cursor-grab active:cursor-grabbing' : ''} w-full aspect-[3/4] min-w-[70px] max-w-[120px]`}
+                  className={`${isMyTurn ? 'cursor-grab active:cursor-grabbing touch-none' : ''} w-full aspect-[3/4] min-w-[70px] max-w-[120px]`}
                 >
                   <CardComponent
                     key={state.game.drawn_card.id}
@@ -188,6 +241,7 @@ export default function GameControls({
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex flex-col items-center gap-1 flex-1 max-w-[110px]">
         <div
           ref={discardPileRef}
+          data-drop-target="discard"
           onClick={() => {
             if (state.game.drawn_card) {
               handleMove(0, 'discard_drawn');

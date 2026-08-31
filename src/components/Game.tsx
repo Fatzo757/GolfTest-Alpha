@@ -87,6 +87,12 @@ export default function Game({ gameId, token, user, onExit, onRematch }: GamePro
   const touchStartY = useRef<number | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('button, [data-draggable="true"], .geometric-card, input, textarea')) {
+      touchStartX.current = null;
+      touchStartY.current = null;
+      return;
+    }
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
   };

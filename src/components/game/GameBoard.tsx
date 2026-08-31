@@ -242,6 +242,7 @@ export default function GameBoard({
           {myCards.map((card, idx) => (
             <div
               key={`player-slot-${card.card_index ?? idx}`}
+              data-grid-index={idx}
               ref={(el) => {
                 if (gridRefs.current) gridRefs.current[idx] = el;
               }}
