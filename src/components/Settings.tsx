@@ -73,6 +73,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
   const [showMoveDate, setShowMoveDate] = useState(!!user.show_move_date);
   const [pushGameInvites, setPushGameInvites] = useState(user.push_game_invites !== 0);
   const [pushTurnReminders, setPushTurnReminders] = useState(user.push_turn_reminders !== 0);
+  const [autoNudgeEnabled, setAutoNudgeEnabled] = useState(!!user.auto_nudge_enabled);
+  const [autoNudgeDelay, setAutoNudgeDelay] = useState(user.auto_nudge_delay ? Math.min(60, Math.max(10, user.auto_nudge_delay)) : 30);
   const [uiScale, setUiScale] = useState(user.ui_scale || 1.0);
   const [cardScale, setCardScale] = useState(user.card_scale || 1.0);
   const [scanlinesEnabled, setScanlinesEnabled] = useState(user.scanlines_enabled !== 0);
@@ -188,6 +190,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           show_move_date: showMoveDate,
           push_game_invites: pushGameInvites,
           push_turn_reminders: pushTurnReminders,
+          auto_nudge_enabled: autoNudgeEnabled ? 1 : 0,
+          auto_nudge_delay: autoNudgeDelay,
           ui_scale: uiScale,
           card_scale: cardScale,
           scanlines_enabled: scanlinesEnabled ? 1 : 0,
@@ -228,6 +232,8 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
           show_move_date: showMoveDate ? 1 : 0,
           push_game_invites: pushGameInvites ? 1 : 0,
           push_turn_reminders: pushTurnReminders ? 1 : 0,
+          auto_nudge_enabled: autoNudgeEnabled ? 1 : 0,
+          auto_nudge_delay: autoNudgeDelay,
           ui_scale: uiScale,
           card_scale: cardScale,
           scanlines_enabled: scanlinesEnabled ? 1 : 0,
@@ -818,6 +824,70 @@ export default function Settings({ user, token, onUpdate, onClose }: SettingsPro
                 </div>
                 <Check size={16} className={pushTurnReminders ? 'text-ui-green opacity-100' : 'opacity-0'} />
               </button>
+
+              <div className={`p-4 border-4 transition-all ${autoNudgeEnabled ? 'border-ui-yellow bg-ui-yellow/5' : 'border-ui-border'}`}>
+                <div 
+                  onClick={() => setAutoNudgeEnabled(!autoNudgeEnabled)}
+                  className="flex items-center justify-between cursor-pointer select-none"
+                >
+                  <div className="flex flex-col">
+                    <span className={`text-[12px] font-bold uppercase ${autoNudgeEnabled ? 'text-ui-yellow' : 'text-text-main'}`}>
+                      Auto Turn Reminder (Self-Nudge)
+                    </span>
+                    <span className="text-[10px] text-white/50 normal-case">
+                      Remind yourself if it's your turn and you haven't moved
+                    </span>
+                  </div>
+                  <Check size={16} className={autoNudgeEnabled ? 'text-ui-yellow opacity-100' : 'opacity-0'} />
+                </div>
+
+                {autoNudgeEnabled && (
+                  <div className="mt-4 pt-3 border-t border-ui-border/50 space-y-3">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-white/70 font-semibold uppercase flex items-center gap-1.5">
+                        <Clock size={12} className="text-ui-yellow" /> Remind after inactivity:
+                      </span>
+                      <span className="font-bold text-ui-yellow font-mono text-xs">
+                        {autoNudgeDelay} min
+                      </span>
+                    </div>
+
+                    <input 
+                      type="range" 
+                      min="10" 
+                      max="60" 
+                      step="5"
+                      value={autoNudgeDelay}
+                      onChange={(e) => setAutoNudgeDelay(parseInt(e.target.value, 10))}
+                      className="w-full accent-ui-yellow cursor-pointer h-2 bg-black/40 rounded-lg appearance-none"
+                    />
+
+                    <div className="flex justify-between items-center gap-1 pt-1">
+                      {[10, 15, 20, 30, 45, 60].map((mins) => (
+                        <button
+                          key={mins}
+                          type="button"
+                          onClick={() => setAutoNudgeDelay(mins)}
+                          className={`flex-1 py-1 text-[10px] font-bold font-mono border transition-all ${autoNudgeDelay === mins ? 'border-ui-yellow bg-ui-yellow text-bg-dark' : 'border-ui-border text-white/60 hover:text-white hover:border-white/50'}`}
+                        >
+                          {mins}m
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Android Instant Notifications Advisory */}
+            <div className="p-3 border border-ui-blue/40 bg-ui-blue/10 rounded text-[11px] text-white/70 flex items-start gap-2.5 mb-4">
+              <span className="text-ui-blue text-sm flex-shrink-0">⚡</span>
+              <div>
+                <strong className="text-white font-semibold">Android Notification Delivery Tip:</strong>
+                <p className="text-white/60 mt-0.5">
+                  If notifications are delayed when your screen is off or idle, go to Android <em>Settings &rarr; Apps &rarr; Golf &rarr; App battery usage</em> and select <strong>Unrestricted</strong>.
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

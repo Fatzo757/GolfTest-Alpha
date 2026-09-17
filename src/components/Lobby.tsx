@@ -96,9 +96,18 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
 
   const remindOpponent = async (gameId: string) => {
     const lastNudgeStr = localStorage.getItem(`last_nudge_${gameId}`);
+    const match = activeMatches.find((g: any) => g.id === gameId);
     const now = Date.now();
-    if (lastNudgeStr) {
-      const lastNudge = parseInt(lastNudgeStr, 10);
+    let lastNudge = lastNudgeStr ? parseInt(lastNudgeStr, 10) : 0;
+    if (match?.last_nudge_at) {
+      const iso = match.last_nudge_at.includes('T') ? match.last_nudge_at : match.last_nudge_at.replace(' ', 'T');
+      const serverNudgeTime = new Date(iso.endsWith('Z') ? iso : iso + 'Z').getTime();
+      if (!isNaN(serverNudgeTime) && serverNudgeTime > lastNudge) {
+        lastNudge = serverNudgeTime;
+      }
+    }
+
+    if (lastNudge > 0) {
       const timeSinceNudge = now - lastNudge;
       const tenMinutes = 10 * 60 * 1000;
       if (timeSinceNudge < tenMinutes) {
@@ -116,6 +125,7 @@ export default function Lobby({ token, user, onJoinGame, onViewReplay, currentVi
       });
       if (res.ok) {
         localStorage.setItem(`last_nudge_${gameId}`, now.toString());
+        fetchActiveMatches();
         setStatusMsg({ type: 'success', text: 'Nudge sent successfully!' });
         setTimeout(() => setStatusMsg(null), 3000);
       } else {

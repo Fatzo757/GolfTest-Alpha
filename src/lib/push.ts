@@ -67,9 +67,10 @@ export async function subscribeUserToPush(token: string) {
         id: 'fcm_default_channel',
         name: 'Game Updates',
         description: 'Notifications for turns, invites, and messages',
-        importance: 4, // HIGH importance for heads-up
+        importance: 5, // High/Max importance for immediate heads-up and sound
         visibility: 1,
         vibration: true,
+        lights: true,
       });
 
       PushNotifications.addListener('registration', async (tokenObj) => {

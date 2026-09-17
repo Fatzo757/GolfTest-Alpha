@@ -20,6 +20,10 @@ export interface User {
   scanlines_enabled?: number;
   show_card_points?: number;
   ui_mode?: string;
+  push_game_invites?: number;
+  push_turn_reminders?: number;
+  auto_nudge_enabled?: number;
+  auto_nudge_delay?: number;
 }
 
 export interface Card {
@@ -76,6 +80,8 @@ export interface GameState {
     drawn_card?: Card | null;
     round_number?: number;
     next_game_id?: string | null;
+    last_nudge_at?: string | null;
+    last_self_reminder_at?: string | null;
   };
   cards: Card[];
   moves: Move[];

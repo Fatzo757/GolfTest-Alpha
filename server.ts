@@ -307,6 +307,21 @@ async function startServer() {
      if (!colNames.includes("push_turn_reminders")) {
        db.prepare("ALTER TABLE users ADD COLUMN push_turn_reminders INTEGER DEFAULT 1").run();
      }
+     if (!colNames.includes("auto_nudge_enabled")) {
+       db.prepare("ALTER TABLE users ADD COLUMN auto_nudge_enabled INTEGER DEFAULT 0").run();
+     }
+     if (!colNames.includes("auto_nudge_delay")) {
+       db.prepare("ALTER TABLE users ADD COLUMN auto_nudge_delay INTEGER DEFAULT 30").run();
+     }
+
+     const gameCols = db.pragma("table_info(games)") as any[];
+     const gameColNames = gameCols.map(c => c.name);
+     if (!gameColNames.includes("last_nudge_at")) {
+       db.prepare("ALTER TABLE games ADD COLUMN last_nudge_at DATETIME").run();
+     }
+     if (!gameColNames.includes("last_self_reminder_at")) {
+       db.prepare("ALTER TABLE games ADD COLUMN last_self_reminder_at DATETIME").run();
+     }
   } catch (e) {
      console.error("SERVER: Failed to verify schema:", e);
   }
@@ -339,12 +354,18 @@ async function startServer() {
     }
   };
 
-
+  function parseSqliteUtc(dateStr: string | null | undefined): number | null {
+    if (!dateStr) return null;
+    const iso = dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T');
+    return new Date(iso.endsWith('Z') ? iso : iso + 'Z').getTime();
+  }
 
   async function sendPushNotification(userId: string, title: string, body: string, url: string = '/', tag?: string) {
     if (!tag) {
        const match = url.match(/\/game\/([a-zA-Z0-9_-]+)/);
-       if (title.toLowerCase().includes('turn')) {
+       if (title.toLowerCase().includes('reminder') || title.toLowerCase().includes('nudge')) {
+         tag = match ? `turn_reminder_${match[1]}` : 'turn_reminder';
+       } else if (title.toLowerCase().includes('turn')) {
          tag = match ? `your_turn_${match[1]}` : 'your_turn';
        } else if (title.toLowerCase().includes('invite') || title.toLowerCase().includes('started') || title.toLowerCase().includes('joined')) {
          tag = match ? `game_invite_${match[1]}` : 'game_invite';
@@ -358,7 +379,7 @@ async function startServer() {
       const userPrefs: any = db.prepare("SELECT push_game_invites, push_turn_reminders FROM users WHERE id = ?").get(userId);
       if (userPrefs) {
         if ((tag.startsWith('game_') || tag.startsWith('game_invite_')) && !userPrefs.push_game_invites) return;
-        if (tag.startsWith('your_turn_') && !userPrefs.push_turn_reminders) return;
+        if ((tag.startsWith('your_turn_') || tag.startsWith('turn_reminder_')) && !userPrefs.push_turn_reminders) return;
       }
 
       const subscriptions = db.prepare("SELECT subscription FROM push_subscriptions WHERE user_id = ?").all(userId) as any[];
@@ -385,8 +406,15 @@ async function startServer() {
                 const messagePayload: any = {
                   token: subscriptionPayload.token,
                   notification: { title, body },
-                  data: { url },
+                  data: { 
+                    url: url || '/',
+                    title,
+                    body,
+                    tag: tag || 'golf_update'
+                  },
                   android: {
+                    priority: 'high',
+                    ttl: 86400 * 1000,
                     notification: {
                       title,
                       body,
@@ -395,11 +423,14 @@ async function startServer() {
                       color: '#29366f',
                       tag: tag || 'golf_update',
                       sound: 'default',
+                      defaultSound: true,
+                      defaultVibrateTimings: true,
+                      priority: 'high',
                       notificationCount: 1
                     }
                   }
                 };
-                console.log(`SERVER: Sending FCM message to token: ${subscriptionPayload.token.substring(0, 10)}...`);
+                console.log(`SERVER: Sending FCM high-priority message to token: ${subscriptionPayload.token.substring(0, 10)}...`);
                 const response = await getMessaging().send(messagePayload);
                 console.log(`SERVER: FCM message sent successfully, response: ${response}`);
               } else {
@@ -413,7 +444,10 @@ async function startServer() {
                 url,
                 icon: '/notification_icon.png',
                 tag
-              }));
+              }), {
+                urgency: 'high',
+                TTL: 86400
+              });
             }
           } catch (err: any) {
             if (err.statusCode === 410 || err.statusCode === 404 || err.statusCode === 401 || err.statusCode === 403 || err.statusCode === 400 || (err.code && typeof err.code === 'string' && err.code.includes('messaging/registration-token-not-registered'))) {
@@ -471,7 +505,7 @@ async function startServer() {
       db.prepare("INSERT INTO moves (id, game_id, player_id, move_type, card_suit, card_value) VALUES (?, ?, ?, 'initial_discard', ?, ?)")
         .run(nanoid(), gameId, 'system', discard[0].suit, discard[0].value);
 
-      db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, status = 'initializing', current_turn_player_id = ?, first_revealer_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+      db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, status = 'initializing', current_turn_player_id = ?, first_revealer_id = NULL, last_nudge_at = NULL, last_self_reminder_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
         .run(JSON.stringify(deck), JSON.stringify(discard), actualStarter, gameId);
       
       if (p2ActualId === "cpu") {
@@ -540,7 +574,7 @@ async function startServer() {
 
   // Get Current User
   app.get("/api/auth/me", authenticate, (req: any, res) => {
-    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin, ui_scale, card_scale, push_game_invites, push_turn_reminders, scanlines_enabled, show_card_points FROM users WHERE id = ?").get(req.user.id);
+    const user: any = db.prepare("SELECT id, username, theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, avatar, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, is_admin, ui_scale, card_scale, push_game_invites, push_turn_reminders, auto_nudge_enabled, auto_nudge_delay, scanlines_enabled, show_card_points FROM users WHERE id = ?").get(req.user.id);
     res.json({ user });
   });
 
@@ -590,11 +624,13 @@ async function startServer() {
     const card_scale = req.body.card_scale !== undefined ? req.body.card_scale : (existing.card_scale ?? 1.0);
     const push_game_invites = req.body.push_game_invites !== undefined ? (req.body.push_game_invites === false || req.body.push_game_invites === 0 ? 0 : 1) : (existing.push_game_invites === false || existing.push_game_invites === 0 ? 0 : 1);
     const push_turn_reminders = req.body.push_turn_reminders !== undefined ? (req.body.push_turn_reminders === false || req.body.push_turn_reminders === 0 ? 0 : 1) : (existing.push_turn_reminders === false || existing.push_turn_reminders === 0 ? 0 : 1);
+    const auto_nudge_enabled = req.body.auto_nudge_enabled !== undefined ? (req.body.auto_nudge_enabled === false || req.body.auto_nudge_enabled === 0 ? 0 : 1) : (existing.auto_nudge_enabled === false || existing.auto_nudge_enabled === 0 ? 0 : 1);
+    const auto_nudge_delay = req.body.auto_nudge_delay !== undefined ? Math.min(60, Math.max(10, parseInt(req.body.auto_nudge_delay, 10) || 30)) : (existing.auto_nudge_delay || 30);
     const scanlines_enabled = req.body.scanlines_enabled !== undefined ? (req.body.scanlines_enabled === false || req.body.scanlines_enabled === 0 ? 0 : 1) : (existing.scanlines_enabled === false || existing.scanlines_enabled === 0 ? 0 : 1);
     const show_card_points = req.body.show_card_points !== undefined ? (req.body.show_card_points === false || req.body.show_card_points === 0 ? 0 : 1) : (existing.show_card_points === false || existing.show_card_points === 0 ? 0 : 1);
 
-    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ?, card_scale = ?, push_game_invites = ?, push_turn_reminders = ?, scanlines_enabled = ?, show_card_points = ? WHERE id = ?")
-      .run(theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale, card_scale, push_game_invites, push_turn_reminders, scanlines_enabled, show_card_points, req.user.id);
+    db.prepare("UPDATE users SET theme = ?, ui_mode = ?, card_style = ?, card_back_style = ?, card_back_color = ?, card_back_secondary_color = ?, mute_sounds = ?, sound_volume = ?, sound_profile = ?, time_zone = ?, time_format = ?, show_date = ?, show_move_date = ?, ui_scale = ?, card_scale = ?, push_game_invites = ?, push_turn_reminders = ?, auto_nudge_enabled = ?, auto_nudge_delay = ?, scanlines_enabled = ?, show_card_points = ? WHERE id = ?")
+      .run(theme, ui_mode, card_style, card_back_style, card_back_color, card_back_secondary_color, mute_sounds, sound_volume, sound_profile, time_zone, time_format, show_date, show_move_date, ui_scale, card_scale, push_game_invites, push_turn_reminders, auto_nudge_enabled, auto_nudge_delay, scanlines_enabled, show_card_points, req.user.id);
     res.json({ success: true });
   });
 
@@ -777,6 +813,17 @@ async function startServer() {
       if (game.status !== 'playing' && game.status !== 'initializing' && game.status !== 'last_turns') return res.status(400).json({ error: "Game is not active" });
       if (game.current_turn_player_id === userId) return res.status(400).json({ error: "It is your turn" });
       if (game.current_turn_player_id === 'cpu') return res.status(400).json({ error: "Cannot nudge CPU" });
+
+      if (game.last_nudge_at) {
+        const lastNudgeTime = parseSqliteUtc(game.last_nudge_at);
+        if (lastNudgeTime) {
+          const diffMs = Date.now() - lastNudgeTime;
+          if (diffMs < 10 * 60 * 1000) {
+            const minutesLeft = Math.ceil((10 * 60 * 1000 - diffMs) / 60000);
+            return res.status(429).json({ error: `Please wait ${minutesLeft} min before nudging again` });
+          }
+        }
+      }
       
       const playerName = req.user.username;
 
@@ -787,6 +834,8 @@ async function startServer() {
         `/game/${gameId}`,
         `your_turn_${gameId}`
       );
+
+      db.prepare("UPDATE games SET last_nudge_at = CURRENT_TIMESTAMP WHERE id = ?").run(gameId);
       
       res.json({ success: true });
     } catch (err) {
@@ -897,6 +946,66 @@ async function startServer() {
       if (now - time > 10000) {
         lastMessageTime.delete(key);
       }
+    }
+  }, 60000);
+
+  // --- Auto Turn Reminder (Self-Nudge) Worker ---
+  setInterval(async () => {
+    try {
+      const activeGames = db.prepare(`
+        SELECT g.id, g.player1_id, g.player2_id, g.current_turn_player_id, g.status, g.updated_at, g.last_self_reminder_at,
+               u.username as current_player_name, u.auto_nudge_enabled, u.auto_nudge_delay, u.push_turn_reminders,
+               op.username as opponent_name
+        FROM games g
+        JOIN users u ON g.current_turn_player_id = u.id
+        LEFT JOIN users op ON op.id = (CASE WHEN g.current_turn_player_id = g.player1_id THEN g.player2_id ELSE g.player1_id END)
+        WHERE g.status IN ('playing', 'initializing', 'last_turns')
+          AND g.is_vs_cpu = 0
+          AND g.current_turn_player_id IS NOT NULL
+          AND g.current_turn_player_id != 'cpu'
+          AND u.auto_nudge_enabled = 1
+          AND (u.push_turn_reminders IS NULL OR u.push_turn_reminders = 1)
+      `).all() as any[];
+
+      const now = Date.now();
+      for (const game of activeGames) {
+        const delayMinutes = Math.min(60, Math.max(10, game.auto_nudge_delay || 30));
+        const delayMs = delayMinutes * 60 * 1000;
+
+        const turnStartTime = parseSqliteUtc(game.updated_at);
+        if (!turnStartTime) continue;
+
+        const timeSinceTurnStart = now - turnStartTime;
+        if (timeSinceTurnStart < delayMs) {
+          continue;
+        }
+
+        // If a reminder was already sent for this turn, check if another delay interval has passed
+        if (game.last_self_reminder_at) {
+          const lastReminderTime = parseSqliteUtc(game.last_self_reminder_at);
+          if (lastReminderTime && lastReminderTime >= turnStartTime) {
+            const timeSinceLastReminder = now - lastReminderTime;
+            if (timeSinceLastReminder < delayMs) {
+              continue;
+            }
+          }
+        }
+
+        const opponentLabel = game.opponent_name || 'your opponent';
+        console.log(`SERVER: Auto turn reminder triggered for ${game.current_player_name} in game ${game.id} (Delay: ${delayMinutes}m)`);
+
+        sendPushNotification(
+          game.current_turn_player_id,
+          "Turn Reminder",
+          `Don't forget your turn against ${opponentLabel} in Golf!`,
+          `/game/${game.id}`,
+          `turn_reminder_${game.id}`
+        );
+
+        db.prepare("UPDATE games SET last_self_reminder_at = CURRENT_TIMESTAMP WHERE id = ?").run(game.id);
+      }
+    } catch (err) {
+      console.error("SERVER: Auto turn reminder worker error:", err);
     }
   }, 60000);
 
@@ -1077,7 +1186,7 @@ async function startServer() {
 
     db.transaction(() => {
       const currentTurn = game.player1_id;
-      db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', current_turn_player_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, currentTurn, game.id);
+      db.prepare("UPDATE games SET player2_id = ?, status = 'initializing', current_turn_player_id = ?, last_nudge_at = NULL, last_self_reminder_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.user.id, currentTurn, game.id);
       db.prepare("UPDATE game_cards SET player_id = ? WHERE game_id = ? AND player_id = 'cpu'").run(req.user.id, game.id);
       
       // Notify player1
@@ -1269,7 +1378,7 @@ async function startServer() {
               .run(JSON.stringify(deck), JSON.stringify(discard), p1Total, p2Total, gameId);
           }
         } else {
-          db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+          db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, last_nudge_at = NULL, last_self_reminder_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
             .run(JSON.stringify(deck), JSON.stringify(discard), nextPlayer, status, firstRevealerId, gameId);
             
           if (nextPlayer && nextPlayer !== 'cpu') {
@@ -1471,7 +1580,7 @@ async function startServer() {
             .run(JSON.stringify(deck), JSON.stringify(discard), p1Total, p2Total, gameId);
         }
       } else {
-        db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        db.prepare("UPDATE games SET deck_json = ?, discard_json = ?, drawn_card_json = NULL, current_turn_player_id = ?, status = ?, first_revealer_id = ?, last_nudge_at = NULL, last_self_reminder_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
           .run(JSON.stringify(deck), JSON.stringify(discard), nextPlayer, status, firstRevealerId, gameId);
       }
       

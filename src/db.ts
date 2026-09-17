@@ -51,7 +51,11 @@ db.exec(`
     ui_scale REAL DEFAULT 1.0,
     card_scale REAL DEFAULT 1.0,
     scanlines_enabled INTEGER DEFAULT 0,
-    show_card_points INTEGER DEFAULT 1
+    show_card_points INTEGER DEFAULT 1,
+    push_game_invites INTEGER DEFAULT 1,
+    push_turn_reminders INTEGER DEFAULT 1,
+    auto_nudge_enabled INTEGER DEFAULT 0,
+    auto_nudge_delay INTEGER DEFAULT 30
   );
 
   CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -80,6 +84,8 @@ db.exec(`
     is_hidden_from_history BOOLEAN DEFAULT 0,
     round_number INTEGER DEFAULT 1,
     next_game_id TEXT,
+    last_nudge_at DATETIME,
+    last_self_reminder_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -182,6 +188,10 @@ try {
   addColumn('users', 'ui_scale', "REAL DEFAULT 1.0");
   addColumn('users', 'card_scale', "REAL DEFAULT 1.0");
   addColumn('users', 'scanlines_enabled', "INTEGER DEFAULT 0");
+  addColumn('users', 'push_game_invites', "INTEGER DEFAULT 1");
+  addColumn('users', 'push_turn_reminders', "INTEGER DEFAULT 1");
+  addColumn('users', 'auto_nudge_enabled', "INTEGER DEFAULT 0");
+  addColumn('users', 'auto_nudge_delay', "INTEGER DEFAULT 30");
 
   addColumn('games', 'drawn_card_json', 'TEXT');
   addColumn('games', 'cpu_difficulty', "TEXT DEFAULT 'normal'");
@@ -189,6 +199,8 @@ try {
   addColumn('games', 'is_hidden_from_history', 'BOOLEAN DEFAULT 0');
   addColumn('games', 'round_number', 'INTEGER DEFAULT 1');
   addColumn('games', 'next_game_id', 'TEXT');
+  addColumn('games', 'last_nudge_at', 'DATETIME');
+  addColumn('games', 'last_self_reminder_at', 'DATETIME');
 
   addColumn('moves', 'snapshot_json', 'TEXT');
   addColumn('moves', 'round_number', 'INTEGER DEFAULT 1');
