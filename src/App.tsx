@@ -10,7 +10,7 @@ import UserAvatar from './components/UserAvatar.tsx';
 import { Trophy, LogOut, Settings as SettingsIcon, ShieldAlert, CreditCard, Menu, X, WifiOff, Sparkles, ArrowRight } from 'lucide-react';
 import { soundService } from './services/soundService';
 import { hapticService } from './services/hapticService';
-import { clearAppBadge } from './lib/push';
+import { clearAppBadge, getAndClearPendingPushUrl } from './lib/push';
 import { notifyAppReady, checkForLiveUpdate, applyLiveUpdate, getCurrentVersion, resetLiveUpdateBundle } from './services/liveUpdateService';
 import { getApiUrl } from './lib/api';
 import { motion, AnimatePresence } from 'motion/react';
@@ -228,6 +228,12 @@ export default function App() {
     window.addEventListener('push-navigate', handlePushNavigate);
     window.addEventListener('push-received', handlePushReceived);
     window.addEventListener('sw-update', handleSwUpdate);
+
+    // Process any cold-start push notification navigation buffered before listeners were attached
+    const pendingPushUrl = getAndClearPendingPushUrl();
+    if (pendingPushUrl) {
+      handlePushNavigate(new CustomEvent('push-navigate', { detail: pendingPushUrl }));
+    }
 
     return () => {
       navigator.serviceWorker?.removeEventListener('message', handleMessage);
